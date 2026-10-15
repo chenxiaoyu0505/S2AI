@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   ListChecks, Compass, Link2, Briefcase, Network, Images, Target,
   CheckCircle2, Layers, ExternalLink, Sparkles, RotateCcw, Circle,
-  Map as MapIcon, Cpu,
+  Map as MapIcon, Cpu, Inbox as InboxIcon,
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,6 +22,7 @@ import {
 } from '@/data/resources'
 import TheoryMap from '@/sections/TheoryMap'
 import ModelCards from '@/sections/ModelCards'
+import Inbox from '@/sections/Inbox'
 
 const STORE_KEY = 'ai-study-progress-v1'
 
@@ -173,6 +174,7 @@ export default function Home() {
             <TabsTrigger value="jepa" className="gap-1.5"><Network className="h-3.5 w-3.5" />JEPA · REA</TabsTrigger>
             <TabsTrigger value="multimodal" className="gap-1.5"><Images className="h-3.5 w-3.5" />多模态</TabsTrigger>
             <TabsTrigger value="models" className="gap-1.5"><Cpu className="h-3.5 w-3.5" />模型卡片</TabsTrigger>
+            <TabsTrigger value="inbox" className="gap-1.5"><InboxIcon className="h-3.5 w-3.5" />项目收集箱</TabsTrigger>
             <TabsTrigger value="works" className="gap-1.5"><Target className="h-3.5 w-3.5" />作品目标</TabsTrigger>
           </TabsList>
 
@@ -544,6 +546,11 @@ export default function Home() {
           {/* 模型卡片 */}
           <TabsContent value="models">
             <ModelCards />
+          </TabsContent>
+
+          {/* 项目收集箱 */}
+          <TabsContent value="inbox">
+            <Inbox />
           </TabsContent>
 
           {/* 作品目标 */}

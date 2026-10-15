@@ -27,6 +27,12 @@
 
 你的个人内容（面经、复盘、自己的拆解笔记）写在 `src/data/content.local.ts` 即可——它已被 git 排除，只存在你自己的机器上，公开版本看不到。
 
+三种更新方式，按顺手程度任选：
+
+- **直接发链接**：在对话里把项目网址丢给 Agent 说「收录」，自动解析、归类、上线（进「项目收集箱」）
+- **让 Agent 改造**：克隆后让它读 `AGENTS.md`，按任务手册扩展任意板块
+- **自己动手**：数据都在 `src/data/*.ts`，改完 `npm run build` + push 即上线
+
 ```bash
 git clone https://github.com/chenxiaoyu0505/S2AI.git my-station
 # 然后对你的 Agent 说：读 AGENTS.md，帮我把它改造成我的 AI 学习站
