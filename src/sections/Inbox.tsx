@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Inbox as InboxIcon, ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { INBOX, type InboxLevel } from '@/data/inbox'
 
 const LEVEL_STYLE: Record<InboxLevel, string> = {
