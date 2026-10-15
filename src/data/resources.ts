@@ -41,8 +41,6 @@ export const RESOURCES: ResCat[] = [
     { name: 'pgvector', url: 'https://github.com/pgvector/pgvector', intro: 'PostgreSQL 向量检索扩展', learn: '在已有业务库上做向量检索，HNSW 索引' },
     { name: 'Milvus', url: 'https://milvus.io/docs', intro: '面向大规模分布式向量检索', learn: '集群部署、分区、GPU 索引' },
     { name: 'Ragas', url: 'https://docs.ragas.io/', intro: 'RAG 评估框架', learn: '检索质量、答案忠实度、相关性评测指标' },
-    { name: 'WeKnora', url: 'https://github.com/Tencent/WeKnora', intro: '腾讯开源企业级知识平台（RAG + Agent + Wiki）', learn: '拆解异步解析 Pipeline、混合检索、Wiki 自动维护（见面试拆解页）' },
-    { name: 'Onyx', url: 'https://www.onyx.app/', intro: '开源企业搜索 + RAG 助手（原 Danswer）', learn: '连接器同步、文档级权限传播、Assistant 定制（见面试拆解页）' },
   ]},
   { name: 'LLM 后训练', links: [
     { name: 'Transformers', url: 'https://huggingface.co/docs/transformers/', intro: '模型加载与训练基础库', learn: 'Trainer、模型卡、推理 API' },

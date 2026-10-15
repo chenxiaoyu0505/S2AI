@@ -1,5 +1,5 @@
-// AI 学习站 · 全部内容数据
-// 数据来源：AI学习路线(1).md + 看板清单 + WeKnora/Onyx 面试拆解笔记
+// AI 学习站 · 全部内容数据（公开版）
+// 个人化内容（如面试拆解）只放在 src/data/content.local.ts，不进 git
 
 export interface ChecklistItem {
   id: string

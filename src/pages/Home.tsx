@@ -583,8 +583,12 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-6 py-5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span>S2AI · science to AI ｜ 理论考点地图 + 实操学习清单 · 数据驱动、可自学习扩展</span>
           <span className="ml-auto flex gap-4">
-            <a href="https://github.com/Tencent/WeKnora" target="_blank" rel="noreferrer" className="hover:underline inline-flex items-center gap-1">WeKnora <ExternalLink className="h-3 w-3" /></a>
-            <a href="https://www.onyx.app/" target="_blank" rel="noreferrer" className="hover:underline inline-flex items-center gap-1">Onyx <ExternalLink className="h-3 w-3" /></a>
+            {SHOW_TEARDOWN && (
+              <>
+                <a href="https://github.com/Tencent/WeKnora" target="_blank" rel="noreferrer" className="hover:underline inline-flex items-center gap-1">WeKnora <ExternalLink className="h-3 w-3" /></a>
+                <a href="https://www.onyx.app/" target="_blank" rel="noreferrer" className="hover:underline inline-flex items-center gap-1">Onyx <ExternalLink className="h-3 w-3" /></a>
+              </>
+            )}
             <a href="https://rea.run/zh/docs/install-demo/" target="_blank" rel="noreferrer" className="hover:underline inline-flex items-center gap-1">REA 文档 <ExternalLink className="h-3 w-3" /></a>
           </span>
         </div>
