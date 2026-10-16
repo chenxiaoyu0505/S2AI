@@ -99,6 +99,12 @@ export const CHECKLIST: ChecklistCat[] = [
     { id: 'ad-nuplan', t: 'nuPlan 规划与闭环评测' },
     { id: 'ad-ctrl', t: 'PID / MPC / RL 控制器对比' },
   ]},
+  { name: '量化交易', items: [
+    { id: 'qt-qlib', t: 'Qlib 跑通完整流程', e: '数据准备 → 模型训练 → 回测，理解框架分层' },
+    { id: 'qt-alpha', t: '因子挖掘实战', e: '遗传规划（AlphaGen 思路）或 LLM 辅助生成因子，检验 IC / 分层收益' },
+    { id: 'qt-backtest', t: '回测框架与常见陷阱', e: '前视偏差、过拟合、交易成本与滑点（vectorbt / backtrader）' },
+    { id: 'qt-rl', t: 'RL 用于交易决策', e: '组合管理或交易执行场景，封装 gym 化环境', ref: '05-M1.3–1.4' },
+  ]},
   { name: '量子计算', opt: true, items: [
     { id: 'q-qiskit', t: 'Qiskit 电路构建与云端真机' },
     { id: 'q-algo', t: 'QAOA / VQE 求解小型问题' },

@@ -75,6 +75,13 @@ export const RESOURCES: ResCat[] = [
     { name: 'MMDetection3D', url: 'https://mmdetection3d.readthedocs.io/', intro: '多模态 3D 感知工具箱', learn: '摄像头+LiDAR 融合感知' },
     { name: 'SUMO', url: 'https://sumo.dlr.de/docs/', intro: '轻量交通流仿真', learn: '多车调度与交通决策研究' },
   ]},
+  { name: '量化交易', links: [
+    { name: 'Qlib', url: 'https://github.com/microsoft/qlib', intro: '微软开源 AI 量化平台', learn: '数据→模型→回测全流程、因子表达式与自定义模型' },
+    { name: 'Backtrader', url: 'https://www.backtrader.com/docu/', intro: '经典 Python 回测框架', learn: '策略编写、技术指标、回测引擎原理' },
+    { name: 'vectorbt', url: 'https://vectorbt.dev/', intro: '向量化高速回测', learn: '大规模参数扫描、样本外检验避免过拟合' },
+    { name: 'FinRL', url: 'https://github.com/AI4Finance-Foundation/FinRL', intro: '深度学习用于量化金融', learn: 'RL 交易环境、组合分配、股票池管理' },
+    { name: 'AKShare', url: 'https://akshare.akfamily.xyz/', intro: '开源金融数据接口', learn: '行情/财报数据获取、清洗与对齐' },
+  ]},
   { name: '量子计算', links: [
     { name: 'Qiskit', url: 'https://docs.quantum.ibm.com/guides', intro: 'IBM 量子生态主 SDK', learn: '电路构建、模拟、云端真机实验' },
     { name: 'Cirq', url: 'https://quantumai.google/cirq', intro: 'Google 量子电路框架', learn: 'NISQ 电路与研究工具链' },
