@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BookOpenCheck, Circle, CheckCircle2, RotateCcw, Star } from 'lucide-react'
+import { BookOpenCheck, Circle, CheckCircle2, RotateCcw, Search, Star, X } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
-import { THEORY_CHAPTERS, THEORY_TOTAL, THEORY_DONE } from '@/data/theory'
+import { THEORY_CHAPTERS, THEORY_TOTAL, THEORY_DONE, type TheoryChapter } from '@/data/theory'
 
 const STORE_KEY = 'ai-study-theory-v1'
 // 展开的篇章也持久化：不再写死默认展开，切 tab / 刷新后保持用户自己的选择
@@ -44,9 +45,24 @@ function FreqStars({ freq }: { freq: number }) {
   )
 }
 
+// 搜索命中高亮：把匹配片段标为主题色
+function HL({ text, q }: { text: string; q: string }) {
+  if (!q) return <>{text}</>
+  const i = text.toLowerCase().indexOf(q)
+  if (i < 0) return <>{text}</>
+  return (
+    <>
+      {text.slice(0, i)}
+      <mark className="bg-transparent text-primary font-medium">{text.slice(i, i + q.length)}</mark>
+      {text.slice(i + q.length)}
+    </>
+  )
+}
+
 export default function TheoryMap({ focus }: { focus?: { ref: string; nonce: number } | null }) {
   const [checked, setChecked] = useState<Record<string, boolean>>(loadProgress)
   const [open, setOpen] = useState<string[]>(loadOpen)
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     localStorage.setItem(STORE_KEY, JSON.stringify(checked))
@@ -82,6 +98,33 @@ export default function TheoryMap({ focus }: { focus?: { ref: string; nonce: num
     setChecked(prev => ({ ...prev, [key]: !prev[key] }))
   }
 
+  // 搜索：按篇章 / 模块 / 学习点编号与名称过滤，命中结果强制展开所在篇章
+  const q = query.trim().toLowerCase()
+  const filtered = useMemo(() => {
+    if (!q) return null
+    return THEORY_CHAPTERS.map(ch => ({
+      ch,
+      modules: ch.modules
+        .map(mo => ({
+          mo,
+          points: mo.points.filter(p =>
+            `${ch.id} ${ch.name} ${mo.name} ${p.id} ${p.name}`.toLowerCase().includes(q)),
+        }))
+        .filter(m => m.points.length > 0),
+    })).filter(c => c.modules.length > 0)
+  }, [q])
+
+  const matchCount = filtered
+    ? filtered.reduce((n, c) => n + c.modules.reduce((m, x) => m + x.points.length, 0), 0)
+    : 0
+
+  // 统一渲染结构：搜索时只有命中项，平时全部（不改变手风琴形式）
+  const view: { ch: TheoryChapter; modules: { mo: TheoryChapter['modules'][number]; points: TheoryChapter['modules'][number]['points'] }[] }[] =
+    filtered ?? THEORY_CHAPTERS.map(ch => ({
+      ch,
+      modules: ch.modules.map(mo => ({ mo, points: mo.points })),
+    }))
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -110,8 +153,35 @@ export default function TheoryMap({ focus }: { focus?: { ref: string; nonce: num
         </div>
       </div>
 
-      <Accordion type="multiple" value={openWithFocus} onValueChange={setOpen} className="space-y-3">
-        {THEORY_CHAPTERS.map(ch => {
+      {/* 搜索框：按名称 / 编号 / 模块过滤学习点 */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="搜索学习点：名称 / 编号 / 模块，如「RoPE」「02-M1.7」"
+            className="h-8 pl-8 pr-7 text-sm"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              title="清空搜索"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+        {q && (
+          <span className="text-xs text-muted-foreground">
+            命中 {matchCount} 个学习点（{filtered?.length ?? 0} 个篇章）
+          </span>
+        )}
+      </div>
+
+      <Accordion type="multiple" value={q ? (filtered?.map(c => c.ch.id) ?? []) : openWithFocus} onValueChange={setOpen} className="space-y-3">
+        {view.map(({ ch, modules }) => {
           const total = ch.modules.reduce((n, m) => n + m.points.length, 0)
           const cn = ch.modules.reduce(
             (n, m) => n + m.points.filter(p => checked[`${ch.id}-${p.id}`]).length, 0)
@@ -144,13 +214,13 @@ export default function TheoryMap({ focus }: { focus?: { ref: string; nonce: num
                   </p>
                 )}
                 <div className="space-y-3 pb-2">
-                  {ch.modules.map(mo => (
+                  {modules.map(({ mo, points }) => (
                     <div key={mo.name}>
                       <p className="text-xs font-medium text-muted-foreground mb-1">{mo.name}
-                        <span className="ml-2 font-normal text-muted-foreground/60">{mo.points.length} 学习点</span>
+                        <span className="ml-2 font-normal text-muted-foreground/60">{points.length} 学习点</span>
                       </p>
                       <div className="grid gap-1 md:grid-cols-2">
-                        {mo.points.map(p => {
+                        {points.map(p => {
                           const key = `${ch.id}-${p.id}`
                           const on = !!checked[key]
                           return (
@@ -174,7 +244,7 @@ export default function TheoryMap({ focus }: { focus?: { ref: string; nonce: num
                               <Checkbox className="mt-0.5 pointer-events-none" checked={on} aria-hidden />
                               <span className={`text-sm leading-relaxed min-w-0 ${on ? 'text-muted-foreground line-through' : ''}`}>
                                 <span className="font-mono text-xs text-muted-foreground/70 mr-1.5">{p.id}</span>
-                                {p.name}
+                                <HL text={p.name} q={q} />
                               </span>
                               <span className="ml-auto flex items-center gap-1.5 flex-none pt-0.5">
                                 {p.done && (
@@ -196,6 +266,12 @@ export default function TheoryMap({ focus }: { focus?: { ref: string; nonce: num
           )
         })}
       </Accordion>
+
+      {q && filtered && filtered.length === 0 && (
+        <p className="text-sm text-muted-foreground py-10 text-center">
+          没有找到匹配「{query.trim()}」的学习点——换个关键词试试
+        </p>
+      )}
 
       <Separator />
       <p className="text-xs text-muted-foreground flex items-center gap-1.5">
