@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { THEORY_CHAPTERS, THEORY_TOTAL, THEORY_DONE } from '@/data/theory'
+import IndexNote from '@/components/IndexNote'
 
 const STORE_KEY = 'ai-study-theory-v1'
 const THEORY_MODULES = THEORY_CHAPTERS.reduce((n, c) => n + c.modules.length, 0)
@@ -39,6 +40,7 @@ export default function TheoryMap() {
 
   return (
     <div className="space-y-4">
+      <IndexNote />
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
           理论地图：大模型 / Agent 的知识骨架。{THEORY_CHAPTERS.length} 篇章 · {THEORY_MODULES} 模块 · {THEORY_TOTAL} 学习点，数据源自笔记目录总览。

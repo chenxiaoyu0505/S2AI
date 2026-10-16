@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { INBOX, type InboxItem, type InboxLevel } from '@/data/inbox'
 import { loadGrads, saveGrads, makeGradDraft, gradFeedText, isGradStale, type GradDraft } from '@/lib/graduated'
+import IndexNote from '@/components/IndexNote'
 
 const LEVEL_STYLE: Record<InboxLevel, string> = {
   观望: 'bg-muted text-muted-foreground',
@@ -29,6 +30,7 @@ export default function Inbox() {
 
   return (
     <div className="space-y-4">
+      <IndexNote />
       <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">
         项目收集箱：学习途中看到好项目但暂时没空学？先把链接丢给你的 Agent 收录进来——
         自动补一句解析、归到树上对应位置、给出下潜路径，之后按「观望 → 跟练 → 深入」按需投入。

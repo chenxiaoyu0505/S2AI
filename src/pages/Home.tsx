@@ -19,6 +19,7 @@ import {
   RESOURCES, MM_CAT,
 } from '@/data/resources'
 import { THEORY_TOTAL } from '@/data/theory'
+import IndexNote from '@/components/IndexNote'
 import TheoryMap from '@/sections/TheoryMap'
 import Inbox from '@/sections/Inbox'
 import Cards from '@/sections/Cards'
@@ -186,6 +187,7 @@ export default function Home() {
 
           {/* 项目清单 */}
           <TabsContent value="checklist">
+            <div className="mb-4"><IndexNote /></div>
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-muted-foreground">学完一项勾一项，进度自动保存在本机浏览器。</p>
               <Button
@@ -268,9 +270,12 @@ export default function Home() {
 
           {/* 资源导航 */}
           <TabsContent value="resources" className="space-y-6">
-            <p className="text-sm text-muted-foreground">
-              路线中提到的全部项目官网直达链接，每个附简介和「学什么」。点击名称在新标签页打开。
-            </p>
+            <div className="space-y-3">
+              <IndexNote />
+              <p className="text-sm text-muted-foreground">
+                路线中提到的全部项目官网直达链接，每个附简介和「学什么」。点击名称在新标签页打开。
+              </p>
+            </div>
             {RESOURCES.map(cat => (
               <div key={cat.name}>
                 <h3 className="text-sm font-medium mb-2 flex items-center gap-2">

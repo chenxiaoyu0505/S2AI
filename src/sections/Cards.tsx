@@ -7,6 +7,7 @@ import { THEORY_CHAPTERS } from '@/data/theory'
 import { CHECKLIST } from '@/data/content'
 import { INBOX } from '@/data/inbox'
 import { loadGrads, saveGrads, loadDemoted, saveDemoted, demoteFeedText } from '@/lib/graduated'
+import IndexNote from '@/components/IndexNote'
 
 interface NodeRef {
   label: string
@@ -61,6 +62,7 @@ export default function Cards() {
 
   return (
     <div className="space-y-4">
+      <IndexNote />
       <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">
         学习卡片是树上的叶子：挂在任意节点上的粗粒度知识索引卡——不是笔记、不是教程，
         一张卡让人 30 秒判断"这是什么、跟我什么关系、接下来去哪"。
