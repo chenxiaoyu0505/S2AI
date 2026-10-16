@@ -4,64 +4,67 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    /* 浅色：暖白纸面 + 纯白卡片，长时间阅读不累 */
+    --background: 36 30% 97%;
+    --foreground: 240 8% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 240 8% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
+    --popover-foreground: 240 8% 10%;
+    --primary: 240 6% 14%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --secondary: 36 20% 93%;
+    --secondary-foreground: 240 6% 14%;
+    --muted: 36 16% 94%;
+    --muted-foreground: 240 4% 42%;
+    --accent: 36 24% 92%;
+    --accent-foreground: 240 6% 14%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --border: 36 10% 88%;
+    --input: 36 10% 86%;
+    --ring: 240 6% 30%;
     --radius: 0.625rem;
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 36 20% 96%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent: 36 16% 94%;
     --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-border: 36 10% 88%;
+    --sidebar-ring: 240 6% 30%;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    /* 深色：压低纯黑、保留明暗层次，暗环境长时间观看舒适 */
+    --background: 240 7% 8%;
+    --foreground: 36 20% 93%;
+    --card: 240 6% 11%;
+    --card-foreground: 36 20% 93%;
+    --popover: 240 6% 11%;
+    --popover-foreground: 36 20% 93%;
+    --primary: 36 20% 93%;
+    --primary-foreground: 240 6% 12%;
+    --secondary: 240 5% 16%;
+    --secondary-foreground: 36 20% 93%;
+    --muted: 240 5% 15%;
+    --muted-foreground: 240 5% 64%;
+    --accent: 240 5% 18%;
+    --accent-foreground: 36 20% 93%;
+    --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --border: 240 5% 18%;
+    --input: 240 5% 24%;
+    --ring: 240 5% 55%;
+    --radius: 0.625rem;
+    --sidebar-background: 240 6% 10%;
+    --sidebar-foreground: 36 16% 88%;
+    --sidebar-primary: 224.3 76.3% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 240 5% 16%;
+    --sidebar-accent-foreground: 36 16% 88%;
+    --sidebar-border: 240 5% 16%;
+    --sidebar-ring: 240 5% 55%;
   }
 }
 
@@ -69,7 +72,30 @@
   * {
     @apply border-border;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  ::selection {
+    @apply bg-primary/15;
+  }
+  /* 细滚动条，贴合两套主题 */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-border;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/40;
   }
 }
