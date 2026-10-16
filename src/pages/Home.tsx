@@ -1,39 +1,34 @@
-import { useEffect, useMemo, useState, type ReactElement } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import {
-  ListChecks, Link2, Briefcase, Leaf,
-  CheckCircle2, Layers, ExternalLink, Sparkles, RotateCcw, Circle,
-  Map as MapIcon, Inbox as InboxIcon, BookOpen, Search, X,
+  ListChecks, Briefcase, Leaf,
+  CheckCircle2, RotateCcw, ExternalLink, Sparkles,
+  Map as MapIcon, Inbox as InboxIcon,
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
-import {
-  CHECKLIST, LOCAL, STARTERS,
-} from '@/data/content'
-import {
-  RESOURCES, MM_CAT,
-} from '@/data/resources'
-import { THEORY_TOTAL } from '@/data/theory'
+import { LOCAL, STARTERS } from '@/data/content'
+import { LEAVES, LEAF_TOTAL } from '@/data/leaves'
+import { THEORY_TOTAL, THEORY_CHAPTERS } from '@/data/theory'
 import { CARDS } from '@/data/cards'
-import IndexNote from '@/components/IndexNote'
-import { jumpTo, onJump, parseTheoryRefs } from '@/lib/jump'
+import { jumpTo, onJump } from '@/lib/jump'
 import ThemeToggle from '@/components/theme-toggle'
 import TheoryMap from '@/sections/TheoryMap'
+import Leaves from '@/sections/Leaves'
 import Inbox from '@/sections/Inbox'
 import Cards from '@/sections/Cards'
 
 const STORE_KEY = 'ai-study-progress-v1'
-// 展开的类目也持久化：首次访问默认展开前 3 组，之后记住用户自己的选择
+// 展开的组也持久化：首次访问默认展开树根与前两个枝干，之后记住用户自己的选择
 const OPEN_KEY = 'ai-study-checklist-open-v1'
-// 首次访问的默认展开类目（原 defaultValue 的意图），之后以 localStorage 为准
-const DEFAULT_OPEN = ['基础工具', 'Agent 开发', 'RAG / 知识库']
+// 首次访问的默认展开组（原 defaultValue 的意图），之后以 localStorage 为准
+const DEFAULT_OPEN = ['root', '01', '02']
+// 叶子清单合法分组键（过滤 localStorage 里数据更新后遗留的失效 key）
+const GROUP_KEYS = new Set(['root', 'wild', ...THEORY_CHAPTERS.map(c => c.id)])
+// 全部有效叶子 id（过滤 localStorage 里数据更新后遗留的失效 key）
+const ITEM_IDS = new Set(LEAVES.map(l => l.id))
 
 function loadProgress(): Record<string, boolean> {
   try {
@@ -48,19 +43,11 @@ function loadOpen(): string[] {
     const raw = localStorage.getItem(OPEN_KEY)
     if (raw == null) return DEFAULT_OPEN
     const v = JSON.parse(raw)
-    return Array.isArray(v) ? v.filter(name => ALL_CATS.some(c => c.name === name)) : []
+    return Array.isArray(v) ? v.filter(name => GROUP_KEYS.has(name)) : []
   } catch {
     return DEFAULT_OPEN
   }
 }
-
-// 本地个人类目（content.local.ts，不进 git）；多模态插在「模型量化」之后（索引 5）
-const BASE_CATS = [...CHECKLIST, ...(LOCAL?.EXTRA_CATS ?? [])]
-const ALL_CATS = [...BASE_CATS.slice(0, 5), MM_CAT, ...BASE_CATS.slice(5)]
-const TOTAL = ALL_CATS.reduce((n, c) => n + c.items.length, 0)
-const RES_COUNT = RESOURCES.reduce((n, c) => n + c.links.length, 0)
-// 全部有效清单项 id（过滤 localStorage 里数据更新后遗留的失效 key）
-const ITEM_IDS = new Set(ALL_CATS.flatMap(c => c.items.map(i => i.id)))
 
 // 项目拆解 tab 与相关数据：仅当本地存在个人拆解数据（content.local.ts）时显示
 const INTERVIEW_FRAMEWORK = LOCAL?.INTERVIEW_FRAMEWORK ?? []
@@ -90,24 +77,6 @@ function ProgressRing({ value, size = 88 }: { value: number; size?: number }) {
 
 type StepItem = { t: string; e?: string } | { step: string; desc: string } | string
 
-// 搜索命中高亮：标出全部匹配片段（不止第一个）
-function HL({ text, q }: { text: string; q: string }) {
-  if (!q) return <>{text}</>
-  const lower = text.toLowerCase()
-  let from = 0
-  let hit = lower.indexOf(q)
-  if (hit < 0) return <>{text}</>
-  const parts: (string | ReactElement)[] = []
-  while (hit >= 0) {
-    if (hit > from) parts.push(text.slice(from, hit))
-    parts.push(<mark key={hit} className="bg-transparent text-primary font-medium">{text.slice(hit, hit + q.length)}</mark>)
-    from = hit + q.length
-    hit = lower.indexOf(q, from)
-  }
-  parts.push(text.slice(from))
-  return <>{parts}</>
-}
-
 function StepList({ steps, numbered = true }: { steps: StepItem[]; numbered?: boolean }) {
   const items = steps.map(s =>
     typeof s === 'string' ? { t: s } : 't' in s ? s : { t: s.step, e: s.desc }
@@ -136,11 +105,11 @@ function StepList({ steps, numbered = true }: { steps: StepItem[]; numbered?: bo
 export default function Home() {
   const [checked, setChecked] = useState<Record<string, boolean>>(loadProgress)
   const [openCats, setOpenCats] = useState<string[]>(loadOpen)
-  // tab 状态同步到 URL（?tab=theory），刷新 / 分享后停留在原 tab
+  // tab 状态同步到 URL（?tab=checklist），刷新 / 分享后停留在原 tab；理论地图是默认首页
   const [searchParams, setSearchParams] = useSearchParams()
-  const tab = searchParams.get('tab') ?? 'checklist'
-  const setTab = (t: string) => setSearchParams(t === 'checklist' ? {} : { tab: t }, { replace: true })
-  // 站内跳转（清单 ref / 卡片引用点击 / 从哪开始入口）：切到理论地图并定位学习点 / 展开篇章
+  const tab = searchParams.get('tab') ?? 'theory'
+  const setTab = (t: string) => setSearchParams(t === 'theory' ? {} : { tab: t }, { replace: true })
+  // 站内跳转（枝节索引 / 卡片引用点击 / 从哪开始入口）：切到理论地图并定位学习点 / 展开篇章
   const [theoryFocus, setTheoryFocus] = useState<{ ref?: string; chapters?: string[]; nonce: number } | null>(null)
 
   useEffect(() => {
@@ -153,7 +122,7 @@ export default function Home() {
 
   // 统一跳转处理器：切 tab（同步 ?tab= URL）+ 展开清单组 + 滚动锚点 / 理论点聚焦
   useEffect(() => onJump(t => {
-    setSearchParams(t.tab === 'checklist' ? {} : { tab: t.tab }, { replace: true })
+    setSearchParams(t.tab === 'theory' ? {} : { tab: t.tab }, { replace: true })
     if (t.expand) setOpenCats(prev => (prev.includes(t.expand!) ? prev : [...prev, t.expand!]))
     if (t.tab === 'theory') {
       // anchor = 定位到具体学习点；chapters = 仅展开篇章（从哪开始入口），两者都经 theoryFocus 派生展开
@@ -166,46 +135,21 @@ export default function Home() {
     }
   }), [setSearchParams])
 
-  // 只统计仍然存在的清单项（数据更新后旧 key 不再计入）
+  // 只统计仍然存在的叶子（数据更新后旧 key 不再计入）
   const done = useMemo(
     () => Object.entries(checked).filter(([k, v]) => v && ITEM_IDS.has(k)).length,
     [checked]
   )
 
-  // 项目清单搜索：按类目名 / 标题 / 说明 / 挂靠理论点过滤
-  const [itemQuery, setItemQuery] = useState('')
-  const iq = itemQuery.trim().toLowerCase()
-  const filteredCats = useMemo(() => {
-    if (!iq) return null
-    return ALL_CATS.map(cat => ({
-      ...cat,
-      items: cat.items.filter(it =>
-        `${cat.name} ${it.t} ${it.e ?? ''} ${it.ref ?? ''}`.toLowerCase().includes(iq)),
-    })).filter(c => c.items.length > 0)
-  }, [iq])
-  const itemMatchCount = filteredCats?.reduce((n, c) => n + c.items.length, 0) ?? 0
-  const catView = filteredCats ?? ALL_CATS
-
   function toggleItem(id: string) {
     setChecked(prev => ({ ...prev, [id]: !prev[id] }))
   }
 
-  // 清单项 ← 卡片（反向）：target 指向清单项 id 的卡片
-  const cardsByItem = useMemo(() => {
-    const m = new Map<string, string[]>()
-    for (const c of CARDS) {
-      const arr = m.get(c.target) ?? []
-      arr.push(c.id)
-      m.set(c.target, arr)
-    }
-    return m
-  }, [])
-
   const stats = [
-    { icon: ListChecks, label: '项目清单项', value: TOTAL, unit: '项' },
-    { icon: BookOpen, label: '理论学习点', value: THEORY_TOTAL, unit: '个' },
-    { icon: Link2, label: '官网直达', value: RES_COUNT, unit: '+' },
-    { icon: CheckCircle2, label: '已完成', value: done, unit: '项' },
+    { icon: MapIcon, label: '理论学习点', value: THEORY_TOTAL, unit: '个' },
+    { icon: ListChecks, label: '叶子（项目+练习）', value: LEAF_TOTAL, unit: '片' },
+    { icon: Leaf, label: '学习卡片', value: CARDS.length, unit: '张' },
+    { icon: CheckCircle2, label: '已完成', value: done, unit: '片' },
   ]
 
   return (
@@ -230,7 +174,7 @@ export default function Home() {
               <h1 className="text-3xl font-medium tracking-tight">AI 学习树</h1>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-xl">
                 面向想系统学大模型 / Agent 的人——零基础转行或有基础进阶。
-                理论地图告诉你先学什么，项目清单告诉你先做什么，互相挂靠；
+                理论是树（理论地图），项目是叶子（叶子清单），互相挂靠；
                 只做索引、顺序和取舍，详细内容在官方文档里。
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -274,7 +218,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center gap-6">
-              <ProgressRing value={(done / TOTAL) * 100} />
+              <ProgressRing value={(done / LEAF_TOTAL) * 100} />
               <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                 {stats.map(s => (
                   <div key={s.label} className="flex items-center gap-2.5">
@@ -298,216 +242,38 @@ export default function Home() {
       <main className="mx-auto max-w-6xl px-6 py-6">
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="sticky top-3 z-20 mb-6 flex-wrap h-auto gap-1 border bg-card/90 p-1.5 shadow-sm backdrop-blur">
-            <TabsTrigger value="checklist" className="gap-1.5"><ListChecks className="h-3.5 w-3.5" />项目清单</TabsTrigger>
             <TabsTrigger value="theory" className="gap-1.5"><MapIcon className="h-3.5 w-3.5" />理论地图</TabsTrigger>
+            <TabsTrigger value="checklist" className="gap-1.5"><ListChecks className="h-3.5 w-3.5" />叶子清单</TabsTrigger>
             <TabsTrigger value="cards" className="gap-1.5"><Leaf className="h-3.5 w-3.5" />学习卡片</TabsTrigger>
-            <TabsTrigger value="resources" className="gap-1.5"><Link2 className="h-3.5 w-3.5" />资源导航</TabsTrigger>
             {SHOW_TEARDOWN && (
               <TabsTrigger value="teardown" className="gap-1.5"><Briefcase className="h-3.5 w-3.5" />项目拆解</TabsTrigger>
             )}
-            <TabsTrigger value="inbox" className="gap-1.5"><InboxIcon className="h-3.5 w-3.5" />项目收集箱</TabsTrigger>
+            <TabsTrigger value="inbox" className="gap-1.5"><InboxIcon className="h-3.5 w-3.5" />收集箱</TabsTrigger>
           </TabsList>
 
-          {/* 项目清单 */}
-          <TabsContent value="checklist">
-            <div className="mb-4"><IndexNote /></div>
-            <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-              <p className="text-sm text-muted-foreground">学完一项勾一项，进度自动保存在本机浏览器。</p>
-              <div className="flex items-center gap-3 flex-wrap">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={() => { if (window.confirm('确定重置全部进度？')) setChecked({}) }}
-                >
-                  <RotateCcw className="h-3.5 w-3.5" /> 重置进度
-                </Button>
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                  <Input
-                    value={itemQuery}
-                    onChange={e => setItemQuery(e.target.value)}
-                    placeholder="搜索清单项：如「LoRA」「GRPO」"
-                    className="h-8 pl-8 pr-7 text-sm"
-                  />
-                  {itemQuery && (
-                    <button
-                      onClick={() => setItemQuery('')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      title="清空搜索"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-                {iq && (
-                  <span className="text-xs text-muted-foreground">
-                    命中 {itemMatchCount} 项（{filteredCats?.length ?? 0} 个类目）
-                  </span>
-                )}
-              </div>
-            </div>
-            {/* 搜索时命中类目强制展开，收起/展开不持久化——否则搜索中收起一个组会污染 openCats，
-                清空搜索后用户原本的展开选择就丢了 */}
-            <Accordion type="multiple" value={iq ? (filteredCats?.map(c => c.name) ?? []) : openCats} onValueChange={v => { if (!iq) setOpenCats(v) }} className="space-y-3">
-              {catView.map(cat => {
-                const cn = cat.items.filter(i => checked[i.id]).length
-                const allDone = cn === cat.items.length
-                return (
-                  <AccordionItem key={cat.name} value={cat.name}
-                    className={`rounded-lg border bg-card px-4 transition-shadow hover:shadow-md ${allDone ? 'border-emerald-500/40' : ''}`}>
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex flex-1 items-center gap-3 pr-2">
-                        {allDone
-                          ? <CheckCircle2 className="h-4 w-4 flex-none text-emerald-500 dark:text-emerald-400" />
-                          : <Circle className="h-4 w-4 flex-none text-muted-foreground/50" />}
-                        <span className={`text-sm font-medium ${cat.opt ? 'text-muted-foreground' : ''}`}>
-                          {cat.name}
-                        </span>
-                        {cat.opt && <Badge variant="secondary" className="text-xs">支线</Badge>}
-                        <span className="ml-auto text-xs tabular-nums text-muted-foreground">
-                          {cn} / {cat.items.length}
-                        </span>
-                        <div className="w-24">
-                          <Progress value={(cn / cat.items.length) * 100} className="h-1.5" />
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="grid gap-1 pb-2 md:grid-cols-2">
-                        {cat.items.map(item => {
-                          const on = !!checked[item.id]
-                          const linkedCards = cardsByItem.get(item.id)
-                          return (
-                            // 同 TheoryMap：Radix Checkbox 是 button，label 包不住——整行可点
-                            <div
-                              key={item.id}
-                              id={`item-${item.id}`}
-                              role="checkbox"
-                              aria-checked={on}
-                              tabIndex={0}
-                              onClick={() => toggleItem(item.id)}
-                              onKeyDown={e => {
-                                if (e.key === ' ' || e.key === 'Enter') {
-                                  e.preventDefault()
-                                  toggleItem(item.id)
-                                }
-                              }}
-                              className="flex cursor-pointer select-none items-start gap-2.5 rounded-md px-2 py-1.5 hover:bg-accent transition-colors scroll-mt-20"
-                            >
-                              <Checkbox
-                                className="mt-0.5 pointer-events-none"
-                                checked={on}
-                                aria-hidden
-                              />
-                              <span className={`text-sm leading-relaxed ${on ? 'text-muted-foreground line-through' : ''}`}>
-                                <HL text={item.t} q={iq} />
-                                {item.e && <span className="block text-xs text-muted-foreground">{item.e}</span>}
-                              </span>
-                              {linkedCards && (
-                                <button
-                                  onClick={e => {
-                                    e.stopPropagation()
-                                    jumpTo({ tab: 'cards', anchor: `card-${linkedCards[0]}` })
-                                  }}
-                                  className="ml-auto flex-none text-[10px] px-1.5 py-0 h-4 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:underline underline-offset-2"
-                                  title={`${linkedCards.length} 张学习卡片挂在这个项目上，点击跳去学习卡片`}
-                                >
-                                  卡 {linkedCards.length}
-                                </button>
-                              )}
-                              {item.ref && (() => {
-                                const target = parseTheoryRefs(item.ref)[0]
-                                return target ? (
-                                  <button
-                                    onClick={e => {
-                                      e.stopPropagation()
-                                      jumpTo({ tab: 'theory', anchor: target })
-                                    }}
-                                    className={`flex-none rounded border px-1.5 py-0 h-4 text-[10px] font-mono text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors ${linkedCards ? '' : 'ml-auto'}`}
-                                    title={`关联理论点 ${item.ref}，点击跳去理论地图`}
-                                  >
-                                    {item.ref}
-                                  </button>
-                                ) : (
-                                  <Badge variant="outline"
-                                    className={`flex-none text-[10px] px-1.5 py-0 h-4 font-mono text-muted-foreground ${linkedCards ? '' : 'ml-auto'}`}
-                                    title={`关联理论点 ${item.ref}`}>
-                                    {item.ref}
-                                  </Badge>
-                                )
-                              })()}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )
-              })}
-            </Accordion>
-            {iq && filteredCats && filteredCats.length === 0 && (
-              <p className="text-sm text-muted-foreground py-10 text-center">
-                没有找到匹配「{itemQuery.trim()}」的清单项——换个关键词试试
-              </p>
-            )}
-          </TabsContent>
-
-          {/* 理论地图 */}
+          {/* 理论地图（树） */}
           <TabsContent value="theory">
             <TheoryMap focus={theoryFocus} />
           </TabsContent>
 
-          {/* 学习卡片（叶子） */}
-          <TabsContent value="cards">
-            <Cards />
+          {/* 叶子清单：树上长出的全部叶子 */}
+          <TabsContent value="checklist">
+            <div className="flex items-center justify-end mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => { if (window.confirm('确定重置全部进度？')) setChecked({}) }}
+              >
+                <RotateCcw className="h-3.5 w-3.5" /> 重置进度
+              </Button>
+            </div>
+            <Leaves checked={checked} open={openCats} onToggleOpen={setOpenCats} onToggle={toggleItem} />
           </TabsContent>
 
-          {/* 资源导航 */}
-          <TabsContent value="resources" className="space-y-6">
-            <p className="text-sm text-muted-foreground">
-              路线中提到的全部项目官网直达链接，每个附简介和「学什么」。点击名称在新标签页打开。
-            </p>
-            {RESOURCES.map(cat => (
-              <div key={cat.name}>
-                <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-muted-foreground" />{cat.name}
-                  <span className="text-xs font-normal text-muted-foreground">{cat.links.length} 个</span>
-                  {ALL_CATS.some(c => c.name === cat.name) && (
-                    <button
-                      onClick={() => jumpTo({ tab: 'checklist', expand: cat.name })}
-                      className="text-[10px] px-1.5 py-0.5 rounded-full border text-muted-foreground hover:text-primary hover:border-primary transition-colors"
-                      title="项目清单里有同名学习组，点击跳转"
-                    >
-                      ↩ 清单组
-                    </button>
-                  )}
-                </h3>
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                  {cat.links.map(l => (
-                    <Card key={l.name} className="group transition-shadow hover:shadow-md">
-                      <CardHeader className="pb-2">
-                        <a
-                          href={l.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-sm font-medium underline-offset-4 hover:underline group-hover:text-primary inline-flex items-center gap-1"
-                        >
-                          {l.name}
-                          <ExternalLink className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
-                        </a>
-                        <CardDescription className="text-xs leading-relaxed">{l.intro}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <p className="text-xs text-muted-foreground">
-                          <span className="font-medium text-foreground/70">学什么：</span>{l.learn}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ))}
+          {/* 学习卡片（叶子详情） */}
+          <TabsContent value="cards">
+            <Cards />
           </TabsContent>
 
           {/* 项目拆解（仅本地存在 content.local.ts 时显示） */}
@@ -618,7 +384,7 @@ export default function Home() {
           </TabsContent>
           )}
 
-          {/* 项目收集箱 */}
+          {/* 收集箱 */}
           <TabsContent value="inbox">
             <Inbox />
           </TabsContent>
@@ -627,7 +393,7 @@ export default function Home() {
 
       <footer className="border-t mt-8 bg-card/60">
         <div className="mx-auto max-w-6xl px-6 py-5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          <span>S2AI · science to AI ｜ 一棵预制的 AI 学习树：理论地图 + 项目清单 · 数据驱动、可私有化生长</span>
+          <span>S2AI · science to AI ｜ 一棵预制的 AI 学习树：理论地图 + 叶子清单 · 数据驱动、可私有化生长</span>
           <span className="ml-auto flex gap-4">
             <a href="https://github.com/chenxiaoyu0505/S2AI" target="_blank" rel="noreferrer" className="hover:underline inline-flex items-center gap-1">GitHub 仓库 <ExternalLink className="h-3 w-3" /></a>
             {SHOW_TEARDOWN && (

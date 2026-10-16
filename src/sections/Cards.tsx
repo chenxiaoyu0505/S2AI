@@ -5,15 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/
 import { Badge } from '@/components/ui/badge'
 import { CARDS } from '@/data/cards'
 import { THEORY_CHAPTERS } from '@/data/theory'
-import { CHECKLIST, LOCAL } from '@/data/content'
-import { MM_CAT } from '@/data/resources'
+import { LEAVES } from '@/data/leaves'
+import { LOCAL } from '@/data/content'
 import { INBOX } from '@/data/inbox'
 import { loadDemoted, saveDemoted, demoteFeedText } from '@/lib/demoted'
 import { jumpTo } from '@/lib/jump'
 import IndexNote from '@/components/IndexNote'
 
-// 和 Home 相同的类目全集（含多模态与本地个人类目），否则挂在这些节点上的卡片解析失败
-const ALL_CATS = [...CHECKLIST, MM_CAT, ...(LOCAL?.EXTRA_CATS ?? [])]
+// 叶子全集（含本地个人叶子），否则挂在其上的卡片解析失败
+const ALL_LEAVES = [...LEAVES, ...(LOCAL?.EXTRA_LEAVES ?? [])]
+const CHAPTER_NAMES = new Map(THEORY_CHAPTERS.map(c => [c.id, c.name]))
 
 /** 复制 Agent 指令到剪贴板，成功/失败都有反馈 */
 function copyFeed(text: string, successMsg: string) {
@@ -27,7 +28,7 @@ interface NodeRef {
   hint: string
 }
 
-// 把卡片上的节点引用解析成可读标签：理论点编号 / 清单项 id / 卡片 id / 收集箱条目
+// 把卡片上的节点引用解析成可读标签：理论点编号 / 叶子 id / 卡片 id / 收集箱条目
 function resolveNode(ref: string): NodeRef | null {
   const m = ref.match(/^(\d{2})-M(\d+\.\d+)$/)
   if (m) {
@@ -35,9 +36,10 @@ function resolveNode(ref: string): NodeRef | null {
     const pt = ch?.modules.flatMap(mo => mo.points).find(p => p.id === `M${m[2]}`)
     if (ch && pt) return { label: pt.name, hint: `理论点 ${ref}` }
   }
-  for (const cat of ALL_CATS) {
-    const it = cat.items.find(i => i.id === ref)
-    if (it) return { label: it.t, hint: `项目清单 · ${cat.name}` }
+  const leaf = ALL_LEAVES.find(l => l.id === ref)
+  if (leaf) {
+    const g = leaf.anchor === 'root' ? '树根' : leaf.anchor === 'wild' ? '野生' : `${leaf.anchor.split('-')[0]} · ${CHAPTER_NAMES.get(leaf.anchor.split('-')[0]) ?? ''}`
+    return { label: leaf.name, hint: `叶子清单 · ${g}` }
   }
   const card = CARDS.find(c => c.id === ref)
   if (card) return { label: card.name, hint: '学习卡片' }
@@ -50,9 +52,7 @@ function resolveNode(ref: string): NodeRef | null {
 function refJump(ref: string): { tab: 'checklist' | 'theory' | 'cards' | 'inbox'; anchor?: string } | null {
   if (/^\d{2}-M\d+\.\d+$/.test(ref)) return { tab: 'theory', anchor: ref }
   if (CARDS.some(c => c.id === ref)) return { tab: 'cards', anchor: `card-${ref}` }
-  if (CHECKLIST.some(cat => cat.items.some(i => i.id === ref)) || MM_CAT.items.some(i => i.id === ref)) {
-    return { tab: 'checklist', anchor: `item-${ref}` }
-  }
+  if (ALL_LEAVES.some(l => l.id === ref)) return { tab: 'checklist', anchor: ref }
   if (INBOX.some(i => i.url === ref || i.name === ref)) return { tab: 'inbox' }
   return null
 }
@@ -102,7 +102,7 @@ export default function Cards() {
         <CardContent className="space-y-2 text-sm">
           <p className="text-muted-foreground leading-relaxed">
             网页上你只能看；部署后，卡片随你的学习生长——学过一个知识点就让你的 Agent 做一张挂到树上，
-            挂在理论点 / 清单项 / 收集箱条目任意节点，叶子之间互相指路，学不动还能一键退回收集箱。
+            挂在理论点 / 叶子 / 收集箱条目任意节点，叶子之间互相指路，学不动还能一键退回收集箱。
           </p>
           <ol className="space-y-1 text-xs text-muted-foreground">
             <li className="flex gap-1.5"><span className="flex-none font-medium">1.</span>打开 GitHub 仓库，把项目克隆或 Fork 到你的电脑（支持 Kimi / Claude Code / Cursor 等 Agent）</li>

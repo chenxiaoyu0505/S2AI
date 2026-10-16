@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactElement } from 'react'
-import { BookOpenCheck, Circle, CheckCircle2, RotateCcw, Search, Star, X } from 'lucide-react'
+import { BookOpenCheck, Circle, CheckCircle2, Leaf, PenLine, RotateCcw, Search, Star, X } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -8,8 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { THEORY_CHAPTERS, THEORY_TOTAL, THEORY_DONE, type TheoryChapter } from '@/data/theory'
-import { CHECKLIST } from '@/data/content'
-import { MM_CAT } from '@/data/resources'
+import { LEAVES, leafGroupKey, type Leaf as LeafItem } from '@/data/leaves'
 import { CARDS } from '@/data/cards'
 import { jumpTo } from '@/lib/jump'
 import IndexNote from '@/components/IndexNote'
@@ -23,27 +22,6 @@ const THEORY_MODULES = THEORY_CHAPTERS.reduce((n, c) => n + c.modules.length, 0)
 const POINT_KEYS = new Set(
   THEORY_CHAPTERS.flatMap(c => c.modules.flatMap(mo => mo.points.map(p => `${c.id}-${p.id}`)))
 )
-
-// 解析清单项 ref → 理论点编号列表：支持 "03-M3.1"、"02-M5.2 + 08-M2.1"、"05-M1.3–1.4"（含跨模块与区间）
-function expandRef(ref: string): string[] {
-  const out: string[] = []
-  for (const part of ref.split('+')) {
-    const p = part.trim()
-    const range = p.match(/^(\d{2})-M(\d+)\.(\d+)[–—-](?:M(\d+)\.)?(\d+)$/)
-    if (range) {
-      const [, ch, mod, a, mod2, b] = range
-      if ((mod2 ?? mod) === mod) {
-        for (let i = Number(a); i <= Number(b) && i <= Number(a) + 10; i++) out.push(`${ch}-M${mod}.${i}`)
-      } else {
-        out.push(`${ch}-M${mod}.${a}`) // 跨模块范围只记起点，不展开
-      }
-      continue
-    }
-    const single = p.match(/^(\d{2}-M\d+\.\d+)$/)
-    if (single) out.push(single[1])
-  }
-  return out
-}
 
 function loadProgress(): Record<string, boolean> {
   try {
@@ -162,13 +140,19 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
       modules: ch.modules.map(mo => ({ mo, points: mo.points })),
     }))
 
-  // 反向引用：哪些项目清单项（ref）与哪些学习卡片（target/next）指向每个理论点
+  // 反向引用：哪些叶子（anchor 或 tags 指向本点）与哪些学习卡片（target/next）指向每个理论点
   const backRefs = useMemo(() => {
-    const items = new Map<string, number>()
-    for (const cat of [...CHECKLIST, MM_CAT]) {
-      for (const it of cat.items) {
-        if (!it.ref) continue
-        for (const pid of expandRef(it.ref)) items.set(pid, (items.get(pid) ?? 0) + 1)
+    const leavesByPoint = new Map<string, LeafItem[]>()
+    const leafCount = new Map<string, number>()
+    for (const leaf of LEAVES) {
+      const points = new Set<string>()
+      if (/^\d{2}-M\d+\.\d+$/.test(leaf.anchor)) points.add(leaf.anchor)
+      for (const t of leaf.tags) if (/^\d{2}-M\d+\.\d+$/.test(t)) points.add(t)
+      for (const pid of points) {
+        leafCount.set(pid, (leafCount.get(pid) ?? 0) + 1)
+        const arr = leavesByPoint.get(pid) ?? []
+        arr.push(leaf)
+        leavesByPoint.set(pid, arr)
       }
     }
     const cardIds = new Map<string, string[]>()
@@ -183,7 +167,7 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
         }
       }
     }
-    return { items, cardIds }
+    return { leavesByPoint, leafCount, cardIds }
   }, [])
 
   return (
@@ -191,7 +175,8 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
       <IndexNote />
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
-          理论地图：大模型 / Agent 的知识骨架。{THEORY_CHAPTERS.length} 篇章 · {THEORY_MODULES} 模块 · {THEORY_TOTAL} 学习点，数据源自笔记目录总览。
+          理论地图：这棵学习树的树干与枝节。{THEORY_CHAPTERS.length} 篇章（枝干）· {THEORY_MODULES} 模块 · {THEORY_TOTAL} 学习点（枝节），数据源自笔记目录总览。
+          枝节下挂着长出来的叶子（项目 / 练习项），点击直达项目官网。
           <span className="block text-xs mt-1">
             ★★★ 推荐深入 · ★★ 推荐学习 · ★ 了解即可 ｜ 「笔记 ✓」= 已有成文笔记（{THEORY_DONE} 篇）｜ 勾选 = 已掌握，进度存本机
           </span>
@@ -309,19 +294,48 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
                               <span className={`text-sm leading-relaxed min-w-0 ${on ? 'text-muted-foreground line-through' : ''}`}>
                                 <span className="font-mono text-xs text-muted-foreground mr-1.5">{p.id}</span>
                                 <HL text={p.name} q={q} />
+                                {(() => {
+                                  const here = backRefs.leavesByPoint.get(key) ?? []
+                                  if (here.length === 0) return null
+                                  return (
+                                    // 枝节上挂的叶子：点击叶子名直达项目官网（练习项为虚线样式）
+                                    <span className="mt-1 flex flex-wrap items-center gap-1" onClick={e => e.stopPropagation()}>
+                                      {here.map(leaf => leaf.url ? (
+                                        <a
+                                          key={leaf.id}
+                                          href={leaf.url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="inline-flex items-center gap-1 rounded-full border bg-background px-2 py-0 text-[11px] text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+                                          title={`叶子：${leaf.intro}`}
+                                        >
+                                          <Leaf className="h-2.5 w-2.5" />{leaf.name}
+                                        </a>
+                                      ) : (
+                                        <span
+                                          key={leaf.id}
+                                          className="inline-flex items-center gap-1 rounded-full border border-dashed px-2 py-0 text-[11px] text-muted-foreground/80"
+                                          title={`练习项：${leaf.intro}（去叶子清单勾选）`}
+                                        >
+                                          <PenLine className="h-2.5 w-2.5" />{leaf.name}
+                                        </span>
+                                      ))}
+                                    </span>
+                                  )
+                                })()}
                               </span>
                               <span className="ml-auto flex items-center gap-1.5 flex-none pt-0.5">
-                                {backRefs.items.get(key) ? (
+                                {backRefs.leafCount.get(key) ? (
                                   <button
                                     onClick={e => {
                                       e.preventDefault()
                                       e.stopPropagation()
-                                      jumpTo({ tab: 'checklist' })
+                                      jumpTo({ tab: 'checklist', expand: leafGroupKey(key) })
                                     }}
                                     className="text-[10px] px-1.5 py-0 h-4 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:underline underline-offset-2"
-                                    title={`${backRefs.items.get(key)} 个项目清单项挂靠本点，点击跳去项目清单`}
+                                    title={`${backRefs.leafCount.get(key)} 片叶子长在本枝节，点击跳去叶子清单`}
                                   >
-                                    单 {backRefs.items.get(key)}
+                                    叶 {backRefs.leafCount.get(key)}
                                   </button>
                                 ) : null}
                                 {backRefs.cardIds.get(key) ? (

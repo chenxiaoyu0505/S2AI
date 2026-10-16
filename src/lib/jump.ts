@@ -3,10 +3,10 @@
 // TheoryMap 另订阅 theory 目标：展开所在篇章（派生值，不写回持久化）并滚动。
 
 export interface JumpTarget {
-  tab: 'checklist' | 'theory' | 'cards' | 'resources' | 'inbox'
-  /** 目标标识：theory = 理论点 key（如 02-M1.3）；checklist/cards = 完整元素 id（item-p-sft / card-gqa） */
+  tab: 'checklist' | 'theory' | 'cards' | 'inbox'
+  /** 目标标识：theory = 理论点 key（如 02-M1.3）；checklist/cards = 完整元素 id（leaf-p-sft / card-gqa） */
   anchor?: string
-  /** 需要展开的清单组名（切到项目清单 tab 时自动展开该分组） */
+  /** 需要展开的清单组键（切到叶子清单 tab 时自动展开该分组）：'root' / 篇章 id / 'wild' */
   expand?: string
   /** theory 专用：要一并展开的篇章 id 列表（如 ['01', '02']，用于「从哪开始」这类多篇章入口） */
   chapters?: string[]

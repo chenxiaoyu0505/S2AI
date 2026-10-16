@@ -58,26 +58,25 @@ def parse_theory():
     return chapters
 
 
-# ---------- 项目清单 ----------
-def parse_checklist():
-    text = (DATA / 'content.ts').read_text(encoding='utf-8')
-    body = slice_export(text, 'CHECKLIST')
-    cats, cur = [], None
-    for line in body.splitlines():
-        m = re.search(r"\{ name: '((?:[^'\\]|\\.)*)'(, opt: true)?, items: \[", line)
-        if m:
-            cur = {'name': unquote(m.group(1)), 'opt': bool(m.group(2)), 'items': []}
-            cats.append(cur)
+# ---------- 叶子清单 ----------
+def parse_leaves():
+    text = (DATA / 'leaves.ts').read_text(encoding='utf-8')
+    body = slice_export(text, 'LEAVES')
+    leaves = []
+    for block in body.split('\n  {'):
+        m = re.search(r"id: '([^']+)'", block)
+        if not m:
             continue
-        m = re.search(r"\{ id: '([^']+)', t: '((?:[^'\\]|\\.)*)'(, e: '((?:[^'\\]|\\.)*)')?(, ref: '((?:[^'\\]|\\.)*)')? \}", line)
-        if m and cur is not None:
-            item = {'id': m.group(1), 't': unquote(m.group(2))}
-            if m.group(4):
-                item['e'] = unquote(m.group(4))
-            if m.group(6):
-                item['ref'] = unquote(m.group(6))
-            cur['items'].append(item)
-    return cats
+        def field(key):
+            fm = re.search(key + r": '((?:[^'\\]|\\.)*)'", block)
+            return unquote(fm.group(1)) if fm else None
+        def arr(key):
+            am = re.search(key + r': \[([^\]]*)\]', block, re.S)
+            return [unquote(x) for x in re.findall(r"'([^']*)'", am.group(1))] if am else []
+        leaves.append({'id': m.group(1), 'name': field('name'), 'url': field('url') or '',
+                       'anchor': field('anchor'), 'tags': arr('tags'), 'intro': field('intro') or '',
+                       'opt': 'opt: true' in block, 'practice': 'practice: true' in block})
+    return leaves
 
 
 # ---------- 收集箱 ----------
@@ -93,7 +92,8 @@ def parse_inbox():
         if not url:
             continue
         items.append({
-            'name': field('name'), 'url': url, 'added': field('added'), 'cat': field('cat'),
+            'name': field('name'), 'url': url, 'kind': field('kind') or 'leaf',
+            'added': field('added'), 'cat': field('cat'),
             'intro': field('intro'), 'why': field('why'), 'dive': field('dive'),
             'level': field('level'), 'concept': field('concept'), 'graduated': field('graduated'),
         })
@@ -121,7 +121,7 @@ def parse_cards():
     return cards
 
 
-tree = {'chapters': parse_theory(), 'checklist': parse_checklist(),
+tree = {'chapters': parse_theory(), 'leaves': parse_leaves(),
         'inbox': parse_inbox(), 'cards': parse_cards(), 'generated': str(date.today())}
 
 HTML = r"""<!DOCTYPE html>
@@ -221,7 +221,21 @@ T.chapters.forEach((ch, c) => ch.modules.forEach((mo, m) => mo.points.forEach((p
   reg(ch.id + '-' + pt.id, 'theory', c, m, p);
   reg(pt.id, 'theory', c, m, p); // 章内简写
 })));
-T.checklist.forEach((cat, c) => cat.items.forEach((it, i) => reg(it.id, 'list', c, null, i)));
+// 叶子分组：树根 → 各篇章（理论地图顺序）→ 野生
+const chaptersById = {}; T.chapters.forEach(ch => chaptersById[ch.id] = ch.name);
+const LEAF_GROUPS = [];
+(function () {
+  const byKey = {};
+  T.leaves.forEach(l => {
+    const k = l.anchor === 'root' || l.anchor === 'wild' ? l.anchor : l.anchor.split('-')[0];
+    (byKey[k] = byKey[k] || []).push(l);
+  });
+  const names = { root: '树根 · 基础工具', wild: '野生叶子' };
+  ['root', ...T.chapters.map(c => c.id), 'wild'].forEach(k => {
+    if (byKey[k]) LEAF_GROUPS.push({ key: k, name: names[k] || (k + ' · ' + (chaptersById[k] || '')), opt: k === 'wild', items: byKey[k] });
+  });
+})();
+LEAF_GROUPS.forEach((g, gi) => g.items.forEach((l, i) => reg(l.id, 'list', gi, null, i)));
 T.inbox.forEach((it, i) => reg(it.url, 'inbox', i));
 T.cards.forEach((cd, i) => reg(cd.id, 'card', i));
 
@@ -231,12 +245,12 @@ const stars = n => '★'.repeat(n) + '<span style="color:#ddd">' + '★'.repeat(
 let cur = 0, query = '';
 const TABS = [
   { key: 'theory', name: '理论地图' },
-  { key: 'list', name: '项目清单' },
+  { key: 'list', name: '叶子清单' },
   { key: 'inbox', name: '收集箱' },
   { key: 'cards', name: '学习卡片' },
 ];
 const count = { theory: T.chapters.reduce((n, c) => n + c.modules.reduce((k, m) => k + m.points.length, 0), 0),
-  list: T.checklist.reduce((n, c) => n + c.items.length, 0), inbox: T.inbox.length, cards: T.cards.length };
+  list: T.leaves.length, inbox: T.inbox.length, cards: T.cards.length };
 
 function nodeBadge(key) {
   if (!key) return '';
@@ -249,7 +263,7 @@ function renderTabs() {
   $('#tabs').innerHTML = TABS.map((t, i) =>
     `<button role="tab" aria-selected="${i === cur}" data-tab="${i}">${t.name}<span class="cnt">${count[t.key]}</span></button>`).join('');
   $('#stats').innerHTML = [
-    ['篇章', T.chapters.length], ['学习点', count.theory], ['清单项', count.list],
+    ['篇章', T.chapters.length], ['学习点', count.theory], ['叶子', count.list],
     ['收集箱', count.inbox], ['卡片', count.cards],
   ].map(([k, v]) => `<span class="stat"><b>${v}</b>${k}</span>`).join('');
   $('#meta').textContent = '生成于 ' + T.generated + ' · 只读投影（生长动作在 Agent 端）';
@@ -276,28 +290,24 @@ function panelTheory() {
 }
 
 function panelList() {
-  return T.checklist.map(cat => {
-    const items = cat.items.filter(it => match(it.t, it.e, it.id, it.ref)).map((it, i) => `
-      <div class="item" id="li-${T.checklist.indexOf(cat)}-${i}">
-        <span class="id">${esc(it.id)}</span>
-        <span><span style="font-weight:500">${esc(it.t)}</span>
-        ${it.e ? `<span class="e"> — ${esc(it.e)}</span>` : ''}</span>
-        ${it.ref ? it.ref.split('+').map(r => r.trim()).map(r => {
-          const m = r.match(/^(\d+-M\d+\.\d+)(?:[–—-](\d+))?/);
-          if (m && m[2]) { let out = '', a = +m[1].split('.')[1], b = +m[2];
-            for (let k = a; k <= b; k++) out += nodeBadge(m[1].split('.')[0] + '.' + k) + ' ';
-            return out; }
-          return nodeBadge(r);
-        }).join('') : ''}
+  return LEAF_GROUPS.map((g, gi) => {
+    const items = g.items.filter(it => match(it.name, it.intro, it.id, it.anchor, it.tags.join(' '))).map((it, i) => `
+      <div class="item" id="li-${gi}-${i}">
+        <span class="id">${esc(it.id.replace(/^leaf-/, ''))}</span>
+        <span><span style="font-weight:500">${it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.name)}</a>` : esc(it.name)}</span>
+        ${it.practice ? '<span class="badge">练习</span>' : ''}
+        <span class="e"> — ${esc(it.intro)}</span></span>
+        ${it.anchor.includes('-') ? nodeBadge(it.anchor) : ''}
       </div>`).join('');
-    return items ? `<div class="card"><h3>${esc(cat.name)}${cat.opt ? ' <span class="badge">选学</span>' : ''}</h3>${items}</div>` : '';
-  }).join('') || '<div class="empty">没有匹配的清单项</div>';
+    return items ? `<div class="card"><h3>${esc(g.name)}${g.opt ? ' <span class="badge">支线</span>' : ''}</h3>${items}</div>` : '';
+  }).join('') || '<div class="empty">没有匹配的叶子</div>';
 }
 
 function panelInbox() {
   return T.inbox.filter(it => match(it.name, it.intro, it.cat, it.concept)).map((it, i) => `
     <div class="card" id="ib-${i}">
       <h3><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.name)}</a>
+        <span class="badge">${it.kind === 'twig' ? '🌿 新枝节' : '🍃 新叶子'}</span>
         <span class="badge level-${esc(it.level)}">${esc(it.level)}</span>
         ${it.graduated ? `<span class="badge grad">已毕业 ${esc(it.graduated)}</span>` : ''}</h3>
       <div class="sub">${esc(it.cat)} · 收录于 ${esc(it.added)}</div>
@@ -355,5 +365,5 @@ out.write_text(html, encoding='utf-8')
 pts = sum(len(m['points']) for c in tree['chapters'] for m in c['modules'])
 print(f'看板已导出：{out}')
 print(f'数据：{len(tree["chapters"])} 篇章 / {pts} 学习点 / '
-      f'{sum(len(c["items"]) for c in tree["checklist"])} 清单项 / '
+      f'{len(tree["leaves"])} 叶子 / '
       f'{len(tree["inbox"])} 收集箱 / {len(tree["cards"])} 卡片')

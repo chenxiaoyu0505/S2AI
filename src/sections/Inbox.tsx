@@ -32,8 +32,9 @@ export default function Inbox() {
     <div className="space-y-4">
       <IndexNote />
       <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">
-        项目收集箱：学习途中看到好项目但暂时没空学？先收录进来——
-        自动补一句解析、归到树上对应位置、给出下潜路径，之后按「观望 → 跟练 → 深入」按需投入。
+        收集箱是这棵树的暂存区：学习途中看到新叶子（好项目）或新枝节（论文 / 理论）但暂时没空学？先收录进来——
+        自动补一句解析、给出下潜路径，之后按「观望 → 跟练 → 深入」按需投入；
+        学透的叶子毕业长成学习卡片，归类不下的枝节先野生，等树长出对应枝干再移入理论地图。
         <span className="block text-xs mt-1">
           下面展示的是公开学习树的收集箱（{INBOX.length} 个条目，由维护者的 Agent 收录）；
           网页版只做展示——想拥有自己的收集箱，见下方「部署到自己的 Agent」。
@@ -111,13 +112,30 @@ export default function Inbox() {
                       {item.name}
                       <ExternalLink className="h-3 w-3" />
                     </a>
+                    {item.kind === 'twig' ? (
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 font-medium"
+                        title="暂存类型：新枝节（论文 / 理论 / 方法），等待长出或挂回理论地图"
+                      >
+                        🌿 新枝节
+                      </span>
+                    ) : (
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium"
+                        title="暂存类型：新叶子（项目），学透后毕业长成学习卡片"
+                      >
+                        🍃 新叶子
+                      </span>
+                    )}
                     <button
                       onClick={() => {
-                        const group = item.cat.split(' · ')[0].trim()
-                        jumpTo({ tab: 'checklist', expand: group })
+                        // 归属形如 'RAG / 知识库 · 04-M4.6'：有理论编号跳对应枝干分组；
+                        // 野生枝节跳野生组；都没有跳树根组
+                        const m = item.cat.match(/(\d{2})-M/)
+                        jumpTo({ tab: 'checklist', expand: m ? m[1] : item.cat.includes('野生') ? 'wild' : 'root' })
                       }}
                       className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground hover:underline underline-offset-2"
-                      title="跳到项目清单对应分组"
+                      title="跳到叶子清单对应分组"
                     >
                       {item.cat}
                     </button>
