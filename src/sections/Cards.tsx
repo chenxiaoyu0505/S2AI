@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { Leaf, ExternalLink, CornerDownRight, GraduationCap, X } from 'lucide-react'
+import { Leaf, ExternalLink, CornerDownRight, GraduationCap, Undo2, X } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CARDS } from '@/data/cards'
 import { THEORY_CHAPTERS } from '@/data/theory'
 import { CHECKLIST } from '@/data/content'
 import { INBOX } from '@/data/inbox'
-import { loadGrads, saveGrads } from '@/lib/graduated'
+import { loadGrads, saveGrads, loadDemoted, saveDemoted, demoteFeedText } from '@/lib/graduated'
 
 interface NodeRef {
   label: string
@@ -34,11 +34,29 @@ function resolveNode(ref: string): NodeRef | null {
 
 export default function Cards() {
   const [grads, setGrads] = useState(loadGrads)
+  const [demoted, setDemoted] = useState<string[]>(loadDemoted)
 
   function removeGrad(id: string) {
     const next = grads.filter(g => g.id !== id)
     setGrads(next)
     saveGrads(next)
+  }
+
+  function demote(card: (typeof CARDS)[number]) {
+    navigator.clipboard?.writeText(demoteFeedText(card)).catch(() => {})
+    setDemoted(prev => {
+      const next = [...new Set([...prev, card.id])]
+      saveDemoted(next)
+      return next
+    })
+  }
+
+  function unmarkDemote(id: string) {
+    setDemoted(prev => {
+      const next = prev.filter(i => i !== id)
+      saveDemoted(next)
+      return next
+    })
   }
 
   return (
@@ -167,11 +185,31 @@ export default function Cards() {
                       })}
                     </span>
                   </p>
-                  {(card.madeBy || card.date) && (
-                    <p className="text-xs text-muted-foreground/60 pt-1">
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="text-xs text-muted-foreground/60">
                       {[card.madeBy, card.date].filter(Boolean).join(' · ')}
-                    </p>
-                  )}
+                    </span>
+                    {demoted.includes(card.id) ? (
+                      <span className="ml-auto inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 font-medium">
+                        已申请退回
+                        <button
+                          onClick={() => unmarkDemote(card.id)}
+                          className="hover:text-foreground transition-colors"
+                          title="撤回退回申请（只影响本机标记，公共数据需 Agent 操作后才会变）"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => demote(card)}
+                        className="ml-auto inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                        title="学不动 / 优先级下降时退回收集箱：复制 Agent 指令，Agent 执行移除卡片并清理引用"
+                      >
+                        <Undo2 className="h-3 w-3" />退回收集箱
+                      </button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             )
