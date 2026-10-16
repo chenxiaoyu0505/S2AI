@@ -39,7 +39,7 @@ function loadOpen(): string[] {
 function FreqStars({ freq }: { freq: number }) {
   if (!freq) return null
   return (
-    <span className={`text-xs whitespace-nowrap ${freq >= 3 ? 'text-amber-500' : 'text-muted-foreground/60'}`}>
+    <span className={`text-xs whitespace-nowrap ${freq >= 3 ? 'text-amber-500 dark:text-amber-400' : 'text-muted-foreground/60'}`}>
       {'★'.repeat(freq)}{'☆'.repeat(3 - freq)}
     </span>
   )
@@ -194,10 +194,10 @@ export default function TheoryMap({ focus }: { focus?: { ref: string; nonce: num
               <AccordionTrigger className="hover:no-underline">
                 <div className="flex flex-1 items-center gap-3 pr-2 text-left">
                   {allDone
-                    ? <CheckCircle2 className="h-4 w-4 flex-none text-emerald-500" />
+                    ? <CheckCircle2 className="h-4 w-4 flex-none text-emerald-500 dark:text-emerald-400" />
                     : <Circle className="h-4 w-4 flex-none text-muted-foreground/50" />}
                   <span className="text-sm font-medium whitespace-nowrap">{ch.id} · {ch.name}</span>
-                  <span className={`text-xs ${ch.weight >= 3 ? 'text-amber-500' : 'text-muted-foreground/60'}`}>{'★'.repeat(ch.weight)}</span>
+                  <span className={`text-xs ${ch.weight >= 3 ? 'text-amber-500 dark:text-amber-400' : 'text-muted-foreground/60'}`}>{'★'.repeat(ch.weight)}</span>
                   <span className="hidden md:inline text-xs text-muted-foreground truncate">{ch.summary}</span>
                   <span className="ml-auto flex items-center gap-3 flex-none">
                     {noted > 0 && (

@@ -22,6 +22,7 @@ import {
 } from '@/data/resources'
 import { THEORY_TOTAL } from '@/data/theory'
 import { jumpTo, onJump, parseTheoryRefs } from '@/lib/jump'
+import ThemeToggle from '@/components/theme-toggle'
 import TheoryMap from '@/sections/TheoryMap'
 import Inbox from '@/sections/Inbox'
 import Cards from '@/sections/Cards'
@@ -183,8 +184,16 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/[0.04] via-background to-background">
       {/* Hero */}
-      <header className="border-b bg-card/60 backdrop-blur">
-        <div className="mx-auto max-w-6xl px-6 py-8">
+      <header className="relative overflow-hidden border-b bg-card/60 backdrop-blur">
+        {/* 装饰光晕：增加首屏层次，不承载信息 */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-28 right-[8%] h-80 w-80 rounded-full bg-primary/[0.06] blur-3xl dark:bg-primary/[0.14]" />
+          <div className="absolute -bottom-36 left-[28%] h-80 w-80 rounded-full bg-emerald-500/[0.08] blur-3xl dark:bg-emerald-400/[0.10]" />
+        </div>
+        <div className="absolute right-4 top-4 z-10">
+          <ThemeToggle />
+        </div>
+        <div className="relative mx-auto max-w-6xl px-6 py-10">
           <div className="flex flex-wrap items-center gap-8">
             <div className="flex-1 min-w-64">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
@@ -206,7 +215,7 @@ export default function Home() {
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {STARTERS.map(s => (
-                  <div key={s.who} className="rounded-lg border bg-background p-3">
+                  <div key={s.who} className="rounded-lg border bg-background p-3 transition-colors hover:border-primary/30">
                     <p className="text-xs font-medium">从哪开始 · {s.who}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 mb-2">{s.desc}</p>
                     <ol className="space-y-1.5">
@@ -227,8 +236,10 @@ export default function Home() {
               <ProgressRing value={(done / TOTAL) * 100} />
               <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                 {stats.map(s => (
-                  <div key={s.label} className="flex items-center gap-2">
-                    <s.icon className="h-4 w-4 text-muted-foreground" />
+                  <div key={s.label} className="flex items-center gap-2.5">
+                    <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-muted">
+                      <s.icon className="h-4 w-4 text-muted-foreground" />
+                    </span>
                     <div>
                       <div className="text-lg font-medium tabular-nums leading-none">
                         {s.value}<span className="text-xs font-normal text-muted-foreground ml-0.5">{s.unit}</span>
@@ -245,7 +256,7 @@ export default function Home() {
 
       <main className="mx-auto max-w-6xl px-6 py-6">
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="mb-6 flex-wrap h-auto gap-1 bg-card border p-1.5">
+          <TabsList className="sticky top-3 z-20 mb-6 flex-wrap h-auto gap-1 border bg-card/90 p-1.5 shadow-sm backdrop-blur">
             <TabsTrigger value="checklist" className="gap-1.5"><ListChecks className="h-3.5 w-3.5" />项目清单</TabsTrigger>
             <TabsTrigger value="theory" className="gap-1.5"><MapIcon className="h-3.5 w-3.5" />理论地图</TabsTrigger>
             <TabsTrigger value="cards" className="gap-1.5"><Leaf className="h-3.5 w-3.5" />学习卡片</TabsTrigger>
@@ -304,7 +315,7 @@ export default function Home() {
                     <AccordionTrigger className="hover:no-underline">
                       <div className="flex flex-1 items-center gap-3 pr-2">
                         {allDone
-                          ? <CheckCircle2 className="h-4 w-4 flex-none text-emerald-500" />
+                          ? <CheckCircle2 className="h-4 w-4 flex-none text-emerald-500 dark:text-emerald-400" />
                           : <Circle className="h-4 w-4 flex-none text-muted-foreground/50" />}
                         <span className={`text-sm font-medium ${cat.opt ? 'text-muted-foreground' : ''}`}>
                           {cat.name}
