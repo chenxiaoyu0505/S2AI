@@ -242,7 +242,9 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
         )}
       </div>
 
-      <Accordion type="multiple" value={q ? (filtered?.map(c => c.ch.id) ?? []) : openWithFocus} onValueChange={setOpen} className="space-y-3">
+      {/* 搜索时命中篇章强制展开，收起/展开不持久化——否则搜索中收起一个篇章会污染 open，
+          清空搜索后用户原本的展开选择就丢了 */}
+      <Accordion type="multiple" value={q ? (filtered?.map(c => c.ch.id) ?? []) : openWithFocus} onValueChange={v => { if (!q) setOpen(v) }} className="space-y-3">
         {view.map(({ ch, modules }) => {
           const total = ch.modules.reduce((n, m) => n + m.points.length, 0)
           const cn = ch.modules.reduce(

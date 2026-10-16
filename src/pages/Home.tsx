@@ -347,7 +347,9 @@ export default function Home() {
                 )}
               </div>
             </div>
-            <Accordion type="multiple" value={iq ? (filteredCats?.map(c => c.name) ?? []) : openCats} onValueChange={setOpenCats} className="space-y-3">
+            {/* 搜索时命中类目强制展开，收起/展开不持久化——否则搜索中收起一个组会污染 openCats，
+                清空搜索后用户原本的展开选择就丢了 */}
+            <Accordion type="multiple" value={iq ? (filteredCats?.map(c => c.name) ?? []) : openCats} onValueChange={v => { if (!iq) setOpenCats(v) }} className="space-y-3">
               {catView.map(cat => {
                 const cn = cat.items.filter(i => checked[i.id]).length
                 const allDone = cn === cat.items.length
