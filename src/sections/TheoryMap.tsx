@@ -65,7 +65,7 @@ function loadOpen(): string[] {
 function FreqStars({ freq }: { freq: number }) {
   if (!freq) return null
   return (
-    <span className={`text-xs whitespace-nowrap ${freq >= 3 ? 'text-amber-500 dark:text-amber-400' : 'text-muted-foreground/60'}`}>
+    <span className={`text-xs whitespace-nowrap ${freq >= 3 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground/80'}`}>
       {'★'.repeat(freq)}{'☆'.repeat(3 - freq)}
     </span>
   )
@@ -248,7 +248,7 @@ export default function TheoryMap({ focus }: { focus?: { ref: string; nonce: num
                     ? <CheckCircle2 className="h-4 w-4 flex-none text-emerald-500 dark:text-emerald-400" />
                     : <Circle className="h-4 w-4 flex-none text-muted-foreground/50" />}
                   <span className="text-sm font-medium whitespace-nowrap">{ch.id} · {ch.name}</span>
-                  <span className={`text-xs ${ch.weight >= 3 ? 'text-amber-500 dark:text-amber-400' : 'text-muted-foreground/60'}`}>{'★'.repeat(ch.weight)}</span>
+                  <span className={`text-xs ${ch.weight >= 3 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground/80'}`}>{'★'.repeat(ch.weight)}</span>
                   <span className="hidden md:inline text-xs text-muted-foreground truncate">{ch.summary}</span>
                   <span className="ml-auto flex items-center gap-3 flex-none">
                     {noted > 0 && (
@@ -268,7 +268,7 @@ export default function TheoryMap({ focus }: { focus?: { ref: string; nonce: num
                   {modules.map(({ mo, points }) => (
                     <div key={mo.name}>
                       <p className="text-xs font-medium text-muted-foreground mb-1">{mo.name}
-                        <span className="ml-2 font-normal text-muted-foreground/60">{points.length} 学习点</span>
+                        <span className="ml-2 font-normal text-muted-foreground/80">{points.length} 学习点</span>
                       </p>
                       <div className="grid gap-1 md:grid-cols-2">
                         {points.map(p => {
@@ -294,7 +294,7 @@ export default function TheoryMap({ focus }: { focus?: { ref: string; nonce: num
                             >
                               <Checkbox className="mt-0.5 pointer-events-none" checked={on} aria-hidden />
                               <span className={`text-sm leading-relaxed min-w-0 ${on ? 'text-muted-foreground line-through' : ''}`}>
-                                <span className="font-mono text-xs text-muted-foreground/70 mr-1.5">{p.id}</span>
+                                <span className="font-mono text-xs text-muted-foreground mr-1.5">{p.id}</span>
                                 <HL text={p.name} q={q} />
                               </span>
                               <span className="ml-auto flex items-center gap-1.5 flex-none pt-0.5">

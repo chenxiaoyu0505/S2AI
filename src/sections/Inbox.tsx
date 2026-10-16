@@ -140,12 +140,12 @@ export default function Inbox() {
                     <p className="flex gap-2 leading-relaxed">
                       <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">涉及概念</span>
                       <span className="text-muted-foreground">{item.concept}
-                        <span className="text-xs text-muted-foreground/60">（理论线增补建议，待入库）</span>
+                        <span className="text-xs text-muted-foreground/80">（理论线增补建议，待入库）</span>
                       </span>
                     </p>
                   )}
                   <div className="flex items-center gap-2 pt-1 flex-wrap">
-                    <span className="text-xs text-muted-foreground/60">收录于 {item.added}</span>
+                    <span className="text-xs text-muted-foreground/80">收录于 {item.added}</span>
                     {item.graduated && (
                       <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-medium">
                         已毕业（挂回学习卡片）

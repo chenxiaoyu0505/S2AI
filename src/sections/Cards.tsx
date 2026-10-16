@@ -195,12 +195,12 @@ export default function Cards() {
                                 title={`${node?.hint ?? ref}，点击跳转`}
                               >
                                 {node ? node.label : ref}
-                                {node && <span className="text-muted-foreground/60">（{node.hint}）</span>}
+                                {node && <span className="text-muted-foreground/80">（{node.hint}）</span>}
                               </button>
                             ) : (
                               <span>
                                 {node ? node.label : ref}
-                                {node && <span className="text-muted-foreground/60">（{node.hint}）</span>}
+                                {node && <span className="text-muted-foreground/80">（{node.hint}）</span>}
                               </span>
                             )}
                           </span>
@@ -209,7 +209,7 @@ export default function Cards() {
                     </span>
                   </p>
                   <div className="flex items-center gap-2 pt-1">
-                    <span className="text-xs text-muted-foreground/60">
+                    <span className="text-xs text-muted-foreground/80">
                       {[card.madeBy, card.date].filter(Boolean).join(' · ')}
                     </span>
                     {demoted.includes(card.id) ? (
