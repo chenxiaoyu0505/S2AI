@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  ListChecks, Link2, Briefcase, Images, Leaf,
+  ListChecks, Link2, Briefcase, Leaf,
   CheckCircle2, Layers, ExternalLink, Sparkles, RotateCcw, Circle,
-  Map as MapIcon, Cpu, Inbox as InboxIcon, BookOpen, Search,
+  Map as MapIcon, Inbox as InboxIcon, BookOpen,
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,11 +16,10 @@ import {
   CHECKLIST, LOCAL, STARTERS,
 } from '@/data/content'
 import {
-  RESOURCES, MM_CAT, MM_PATH, MM_MODELS, MM_LINKS,
+  RESOURCES, MM_CAT,
 } from '@/data/resources'
 import { THEORY_TOTAL } from '@/data/theory'
 import TheoryMap from '@/sections/TheoryMap'
-import ModelCards from '@/sections/ModelCards'
 import Inbox from '@/sections/Inbox'
 import Cards from '@/sections/Cards'
 
@@ -38,7 +37,7 @@ function loadProgress(): Record<string, boolean> {
 const BASE_CATS = [...CHECKLIST, ...(LOCAL?.EXTRA_CATS ?? [])]
 const ALL_CATS = [...BASE_CATS.slice(0, 5), MM_CAT, ...BASE_CATS.slice(5)]
 const TOTAL = ALL_CATS.reduce((n, c) => n + c.items.length, 0)
-const RES_COUNT = RESOURCES.reduce((n, c) => n + c.links.length, 0) + MM_LINKS.length
+const RES_COUNT = RESOURCES.reduce((n, c) => n + c.links.length, 0)
 
 // 项目拆解 tab 与相关数据：仅当本地存在个人拆解数据（content.local.ts）时显示
 const INTERVIEW_FRAMEWORK = LOCAL?.INTERVIEW_FRAMEWORK ?? []
@@ -179,7 +178,6 @@ export default function Home() {
             <TabsTrigger value="theory" className="gap-1.5"><MapIcon className="h-3.5 w-3.5" />理论地图</TabsTrigger>
             <TabsTrigger value="cards" className="gap-1.5"><Leaf className="h-3.5 w-3.5" />学习卡片</TabsTrigger>
             <TabsTrigger value="resources" className="gap-1.5"><Link2 className="h-3.5 w-3.5" />资源导航</TabsTrigger>
-            <TabsTrigger value="reference" className="gap-1.5"><Search className="h-3.5 w-3.5" />速查</TabsTrigger>
             {SHOW_TEARDOWN && (
               <TabsTrigger value="teardown" className="gap-1.5"><Briefcase className="h-3.5 w-3.5" />项目拆解</TabsTrigger>
             )}
@@ -413,93 +411,6 @@ export default function Home() {
             </Card>
           </TabsContent>
           )}
-
-          {/* 速查（工具书：模型 + 多模态，不参与学习顺序，随时来查） */}
-          <TabsContent value="reference" className="space-y-8">
-            <section>
-              <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-                <Cpu className="h-4 w-4 text-muted-foreground" />模型速查
-              </h3>
-              <ModelCards />
-            </section>
-
-            <section className="space-y-6">
-              <h3 className="text-sm font-medium flex items-center gap-2">
-                <Images className="h-4 w-4 text-muted-foreground" />多模态速查
-              </h3>
-              <Card className="transition-shadow hover:shadow-md">
-                <CardHeader>
-                  <CardTitle className="text-base">多模态学习路径</CardTitle>
-                  <CardDescription className="text-sm leading-relaxed">
-                    图像 + 文本是起点，逐步扩展到文档 OCR、视频、音频和跨模态检索。核心架构是「视觉编码器（ViT）+ 连接器 + 语言模型」三段式，先跑通再深入。
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <StepList steps={MM_PATH} />
-                </CardContent>
-              </Card>
-
-              <Card className="transition-shadow hover:shadow-md">
-                <CardHeader>
-                  <CardTitle className="text-base">主流开源多模态模型速查</CardTitle>
-                  <CardDescription>2026 年本地可跑的常见选择，按显存从低到高</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b text-left">
-                          <th className="py-2 pr-4 font-medium">模型</th>
-                          <th className="py-2 pr-4 font-medium">规模</th>
-                          <th className="py-2 pr-4 font-medium">最低显存</th>
-                          <th className="py-2 font-medium">亮点</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {MM_MODELS.map(m => (
-                          <tr key={m.name} className="border-b last:border-0 hover:bg-muted/50">
-                            <td className="py-2 pr-4 font-medium whitespace-nowrap">{m.name}</td>
-                            <td className="py-2 pr-4 text-muted-foreground whitespace-nowrap">{m.size}</td>
-                            <td className="py-2 pr-4 text-muted-foreground whitespace-nowrap">{m.vram}</td>
-                            <td className="py-2 text-muted-foreground">{m.point}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div>
-                <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-muted-foreground" />官方资源直达
-                </h4>
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                  {MM_LINKS.map(l => (
-                    <Card key={l.name} className="group transition-shadow hover:shadow-md">
-                      <CardHeader className="pb-2">
-                        <a
-                          href={l.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-sm font-medium underline-offset-4 hover:underline group-hover:text-primary inline-flex items-center gap-1"
-                        >
-                          {l.name}
-                          <ExternalLink className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
-                        </a>
-                        <CardDescription className="text-xs leading-relaxed">{l.intro}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <p className="text-xs text-muted-foreground">
-                          <span className="font-medium text-foreground/70">学什么：</span>{l.learn}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            </section>
-          </TabsContent>
 
           {/* 项目收集箱 */}
           <TabsContent value="inbox">

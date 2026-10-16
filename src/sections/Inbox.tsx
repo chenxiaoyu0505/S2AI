@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Inbox as InboxIcon, ExternalLink } from 'lucide-react'
+import { Inbox as InboxIcon, ExternalLink, GraduationCap } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
-import { INBOX, type InboxLevel } from '@/data/inbox'
+import { INBOX, type InboxItem, type InboxLevel } from '@/data/inbox'
+import { loadGrads, saveGrads, makeGradDraft, gradFeedText, type GradDraft } from '@/lib/graduated'
 
 const LEVEL_STYLE: Record<InboxLevel, string> = {
   观望: 'bg-muted text-muted-foreground',
@@ -13,7 +14,18 @@ const LEVEL_STYLE: Record<InboxLevel, string> = {
 export default function Inbox() {
   const cats = [...new Set(INBOX.map(i => i.cat))]
   const [filter, setFilter] = useState<string>('全部')
+  const [grads, setGrads] = useState<GradDraft[]>(loadGrads)
+  const [notice, setNotice] = useState('')
   const shown = filter === '全部' ? INBOX : INBOX.filter(i => i.cat === filter)
+
+  function graduate(item: InboxItem) {
+    const draft = makeGradDraft(item)
+    const next = [...grads.filter(g => g.url !== item.url), draft]
+    setGrads(next)
+    saveGrads(next)
+    navigator.clipboard?.writeText(gradFeedText(draft)).catch(() => {})
+    setNotice(`「${item.name}」已毕业：卡片草稿已存到本机（学习卡片 tab 可见），入库指令已复制，粘贴给你的 Agent 即永久入库。`)
+  }
 
   return (
     <div className="space-y-4">
@@ -22,9 +34,13 @@ export default function Inbox() {
         自动补一句解析、归到树上对应位置、给出下潜路径，之后按「观望 → 跟练 → 深入」按需投入。
         <span className="block text-xs mt-1">
           已收录 {INBOX.length} 个 ｜ 收录方式：把项目网址发给你的 Agent（协议见仓库 AGENTS.md 收录手册；
-          收录时 Agent 会做「概念提炼」——条目上标注的"涉及概念"就是理论线的新增建议）
+          收录时 Agent 会做「概念提炼」——条目上标注的"涉及概念"就是理论线的新增建议）。
+          学完的条目点「毕业」自动生成本机学习卡片，喂给 Agent 后永久入库。
         </span>
       </p>
+      {notice && (
+        <p className="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 rounded-md px-3 py-2">{notice}</p>
+      )}
 
       {INBOX.length === 0 ? (
         <Card>
@@ -88,7 +104,22 @@ export default function Inbox() {
                       </span>
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground/60 pt-1">收录于 {item.added}</p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="text-xs text-muted-foreground/60">收录于 {item.added}</span>
+                    {item.graduated || grads.some(g => g.url === item.url) ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-medium">
+                        <GraduationCap className="h-3 w-3" />已毕业
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => graduate(item)}
+                        className="ml-auto inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                        title="生成本机学习卡片并复制入库指令"
+                      >
+                        <GraduationCap className="h-3 w-3" />毕业
+                      </button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}

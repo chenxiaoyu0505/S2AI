@@ -34,11 +34,10 @@ src/
     content.ts       项目清单、从哪开始入口 + LOCAL 加载器
     content.local.ts 本地个人内容（不进 git，公开克隆中不存在）
     theory.ts        理论地图（自动生成，勿手改）
-    models.ts        模型速查数据
-    resources.ts     资源导航 + 多模态速查数据
+    resources.ts     资源导航数据
     inbox.ts         项目收集箱数据（Agent 收录）
-    cards.ts         学习卡片数据（Agent 制作）
-  sections/        ★ 页面板块（理论地图、速查、收集箱、学习卡片在这里）
+    cards.ts         学习卡片数据（Agent 制作，含模型种子卡）
+  sections/        ★ 页面板块（理论地图、收集箱、学习卡片在这里）
   pages/Home.tsx   tab 容器与首页布局（注册新 tab 要改这里）
   components/ui/   shadcn 组件（直接用，不要新造轮子）
 scripts/generate-theory.py   理论地图数据生成脚本
@@ -66,10 +65,10 @@ AGENTS.md          本文件
 - 主人没有笔记源：直接按现有结构编辑 `THEORY_CHAPTERS`，保持接口（id/name/freq/done/p0/modules）不变。
 - 注意：星级含义是「推荐学习 / 深入的程度」，新增条目时按此定级；`p0` 字段展示为「优先学习配方」。
 
-### 3. 加模型卡片
+### 3. 加模型卡片（学习卡片形式）
 
-编辑 `src/data/models.ts` 的 `MODEL_CARDS`，每个模型一张卡：name / org / released / params / arch / context / license / quant / highlight / fit。
-**必须带准确的发布时间**，模型时效性强；信息拿不准就标注「待核实」，不要编参数。
+原「速查」板块已并入学习卡片：模型就是 `cards.ts` 里的一种种子卡，遵守任务手册 6 的 5 字段格式（id 用 `card-` 前缀，如 `card-qwen3`）。
+**必须带准确的发布/更新年月**（`date` 字段），模型时效性强；信息拿不准就标注「待核实」，不要编参数。
 
 ### 4. 加一个新 tab
 
@@ -92,6 +91,11 @@ AGENTS.md          本文件
 7. 回复主人：一句话解析 + 你归的类 + 建议的入门第一步 + 概念提炼结论（若有）。
 
 注意：公共树的理论线只有站长能写。Agent 产出的「理论线增补建议」在回复里说明即可，**不要直接改 theory.ts**（它是自动生成的，且公共树干由站长策展）。
+
+**毕业流转**：条目学完后，主人在网页上点「毕业」会生成本机卡片草稿并复制一段入库指令。主人把这段指令发给你时：
+1. 按任务手册 6 把卡片写入 `cards.ts`——草稿的 `tags` 往往只有收集箱提炼的概念，**按协议补全到 3–5 个并补 `next`**（毕业草稿的 `next` 是空的）。
+2. 把 `src/data/inbox.ts` 对应条目标记 `graduated: 'YYYY-MM'`（条目毕业，退化为卡片的跳转目标）。
+3. 一起 commit（信息如 `inbox: xxx 毕业（卡片入库）`）。
 
 ### 6. 制作一张学习卡片（叶子）
 

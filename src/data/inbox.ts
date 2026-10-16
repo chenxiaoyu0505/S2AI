@@ -23,6 +23,8 @@ export interface InboxItem {
   level: InboxLevel
   /** 概念提炼（可选）：本项目涉及、理论地图中还没有的新概念——理论线增补建议 */
   concept?: string
+  /** 毕业年月 YYYY-MM（可选）：已学完结转为学习卡片，本条目退化为卡片的跳转目标 */
+  graduated?: string
 }
 
 export const INBOX: InboxItem[] = [

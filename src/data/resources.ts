@@ -59,6 +59,14 @@ export const RESOURCES: ResCat[] = [
     { name: 'RLlib', url: 'https://docs.ray.io/en/latest/rllib/', intro: 'Ray 生态分布式 RL', learn: '大规模并行采样、多智能体训练' },
     { name: 'PettingZoo', url: 'https://pettingzoo.farama.org/', intro: '多智能体环境标准', learn: '多 Agent 环境的接口与对局' },
   ]},
+  { name: '多模态', links: [
+    { name: 'Qwen3-VL（Hugging Face）', url: 'https://huggingface.co/Qwen', intro: '阿里 Qwen 系列官方模型页', learn: '模型卡、视觉 Agent 用法、视频理解示例' },
+    { name: 'LLaVA（GitHub）', url: 'https://github.com/haotian-liu/LLaVA', intro: '最流行的开源 VLM 项目', learn: '架构图、训练代码、微调教程' },
+    { name: 'InternVL（GitHub）', url: 'https://github.com/OpenGVLab/InternVL', intro: 'OpenGVLab 通用多模态模型', learn: '文档/UI 任务基准、部署脚本' },
+    { name: 'Ollama 视觉模型', url: 'https://ollama.com/search?c=vision', intro: '本地跑 VLM 最简单方式', learn: '一条 pull 命令 + REST API 传图' },
+    { name: 'OpenCLIP', url: 'https://github.com/mlfoundations/open_clip', intro: 'CLIP 的开源实现', learn: '图文对比学习、跨模态 embedding 抽取' },
+    { name: 'Whisper（GitHub）', url: 'https://github.com/openai/whisper', intro: 'OpenAI 语音识别模型', learn: '多语言转写、词级时间戳' },
+  ]},
   { name: '具身智能（仿真）', links: [
     { name: 'MuJoCo', url: 'https://mujoco.readthedocs.io/', intro: '高性能物理仿真器', learn: 'XML 建模、控制器编写、机器人学习入门' },
     { name: 'ManiSkill', url: 'https://maniskill.readthedocs.io/', intro: 'GPU 并行机器人操作学习平台', learn: '抓取/放置任务训练，PPO 与模仿学习对比' },
@@ -90,7 +98,7 @@ export const RESOURCES: ResCat[] = [
   ]},
 ]
 
-// ---- 多模态专题（速查 tab） ----
+// ---- 多模态专题：项目清单分组（速查 tab 已并入学习卡片与资源导航，MM_PATH/MM_MODELS/MM_LINKS 随之下线） ----
 
 export const MM_CAT: ChecklistCat = {
   name: '多模态',
@@ -105,29 +113,3 @@ export const MM_CAT: ChecklistCat = {
   ],
 }
 
-export const MM_PATH = [
-  { t: '跑通本地 VLM 图文问答', e: 'Ollama 一条命令拉 Qwen3-VL 或 LLaVA，理解「视觉编码器（ViT）+ 连接器（MLP）+ 语言模型」三段式架构' },
-  { t: '文档、图表与截图理解', e: 'OCR / 表格抽取 / UI 截图分析；对比 Qwen3-VL（多语言 OCR 最强）、MiniCPM-V（密集文档）、InternVL（代码截图）' },
-  { t: '视频理解', e: '抽帧策略 + Qwen3-VL 原生视频输入；进一步衔接世界模型的表征预测路线' },
-  { t: '音频理解', e: 'Whisper / FunASR 转写，接大模型做摘要与问答' },
-  { t: '多模态 RAG', e: 'CLIP / SigLIP 把图片变成向量，与文本统一检索（图文互搜、以图搜图）' },
-  { t: '服务化与微调', e: 'vLLM 部署多模态 API；用 LLaVA 官方脚本做小数据集 LoRA 微调' },
-]
-
-export const MM_MODELS = [
-  { name: 'Qwen3-VL', size: '2B–235B(MoE)', vram: '约 1.5 GB 起（INT4）', point: '多语言 OCR 最强、原生视频理解、Visual Agent 操作界面' },
-  { name: 'InternVL 系列', size: '2B–78B', vram: '约 6 GB 起', point: '视觉塔大、细粒度强，代码截图与 UI 分析突出' },
-  { name: 'LLaVA / LLaVA-OneVision', size: '7B–13B', vram: '约 6 GB 起', point: '社区最大、教程最多，微调文档完善，入门最安全' },
-  { name: 'MiniCPM-V', size: '1.3B–8B', vram: '约 1 GB 起', point: '端侧 OCR 之王，密集文档与高 DPI 扫描件' },
-  { name: 'Gemma 3 / 4', size: '4B–27B', vram: '约 3 GB 起', point: '140+ 语言、轻量多模态，本地部署友好' },
-  { name: 'Whisper / FunASR', size: 'tiny–large-v3', vram: '约 1 GB 起', point: '语音识别事实标准 / 中文语音首选' },
-]
-
-export const MM_LINKS: ResLink[] = [
-  { name: 'Qwen3-VL（Hugging Face）', url: 'https://huggingface.co/Qwen', intro: '阿里 Qwen 系列官方模型页', learn: '模型卡、视觉 Agent 用法、视频理解示例' },
-  { name: 'LLaVA（GitHub）', url: 'https://github.com/haotian-liu/LLaVA', intro: '最流行的开源 VLM 项目', learn: '架构图、训练代码、微调教程' },
-  { name: 'InternVL（GitHub）', url: 'https://github.com/OpenGVLab/InternVL', intro: 'OpenGVLab 通用多模态模型', learn: '文档/UI 任务基准、部署脚本' },
-  { name: 'Ollama 视觉模型', url: 'https://ollama.com/search?c=vision', intro: '本地跑 VLM 最简单方式', learn: '一条 pull 命令 + REST API 传图' },
-  { name: 'OpenCLIP', url: 'https://github.com/mlfoundations/open_clip', intro: 'CLIP 的开源实现', learn: '图文对比学习、跨模态 embedding 抽取' },
-  { name: 'Whisper（GitHub）', url: 'https://github.com/openai/whisper', intro: 'OpenAI 语音识别模型', learn: '多语言转写、词级时间戳' },
-]
