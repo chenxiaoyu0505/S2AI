@@ -21,10 +21,22 @@ function copyFeed(text: string, successMsg: string) {
 
 export default function Inbox() {
   const cats = [...new Set(INBOX.map(i => i.cat))]
-  const [filter, setFilter] = useState<string>('全部')
+  // 分类筛选也持久化：切 tab / 刷新后保持上次的筛选（无效值回退到「全部」）
+  const [filter, setFilter] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('s2ai-inbox-filter')
+      return saved && (saved === '全部' || cats.includes(saved)) ? saved : '全部'
+    } catch {
+      return '全部'
+    }
+  })
   const [grads, setGrads] = useState<GradDraft[]>(loadGrads)
   const [notice, setNotice] = useState('')
   const shown = filter === '全部' ? INBOX : INBOX.filter(i => i.cat === filter)
+
+  useEffect(() => {
+    localStorage.setItem('s2ai-inbox-filter', filter)
+  }, [filter])
 
   // 提示条 8 秒后自动消失，避免长期挂着旧消息
   useEffect(() => {

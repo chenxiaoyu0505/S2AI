@@ -26,12 +26,27 @@ import Inbox from '@/sections/Inbox'
 import Cards from '@/sections/Cards'
 
 const STORE_KEY = 'ai-study-progress-v1'
+// 展开的类目也持久化：首次访问默认展开前 3 组，之后记住用户自己的选择
+const OPEN_KEY = 'ai-study-checklist-open-v1'
+// 首次访问的默认展开类目（原 defaultValue 的意图），之后以 localStorage 为准
+const DEFAULT_OPEN = ['基础工具', 'Agent 开发', 'RAG / 知识库']
 
 function loadProgress(): Record<string, boolean> {
   try {
     return JSON.parse(localStorage.getItem(STORE_KEY) || '{}')
   } catch {
     return {}
+  }
+}
+
+function loadOpen(): string[] {
+  try {
+    const raw = localStorage.getItem(OPEN_KEY)
+    if (raw == null) return DEFAULT_OPEN
+    const v = JSON.parse(raw)
+    return Array.isArray(v) ? v.filter(name => ALL_CATS.some(c => c.name === name)) : []
+  } catch {
+    return DEFAULT_OPEN
   }
 }
 
@@ -98,6 +113,7 @@ function StepList({ steps, numbered = true }: { steps: StepItem[]; numbered?: bo
 
 export default function Home() {
   const [checked, setChecked] = useState<Record<string, boolean>>(loadProgress)
+  const [openCats, setOpenCats] = useState<string[]>(loadOpen)
   // tab 状态同步到 URL（?tab=theory），刷新 / 分享后停留在原 tab
   const [searchParams, setSearchParams] = useSearchParams()
   const tab = searchParams.get('tab') ?? 'checklist'
@@ -108,6 +124,10 @@ export default function Home() {
   useEffect(() => {
     localStorage.setItem(STORE_KEY, JSON.stringify(checked))
   }, [checked])
+
+  useEffect(() => {
+    localStorage.setItem(OPEN_KEY, JSON.stringify(openCats))
+  }, [openCats])
 
   useEffect(() => onJump(({ ref }) => {
     setSearchParams({ tab: 'theory' }, { replace: true })
@@ -220,7 +240,7 @@ export default function Home() {
                 <RotateCcw className="h-3.5 w-3.5" /> 重置进度
               </Button>
             </div>
-            <Accordion type="multiple" defaultValue={ALL_CATS.slice(0, 3).map(c => c.name)} className="space-y-3">
+            <Accordion type="multiple" value={openCats} onValueChange={setOpenCats} className="space-y-3">
               {ALL_CATS.map(cat => {
                 const cn = cat.items.filter(i => checked[i.id]).length
                 const allDone = cn === cat.items.length
