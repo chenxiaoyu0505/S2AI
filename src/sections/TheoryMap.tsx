@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactElement } from 'react'
 import { BookOpenCheck, Circle, CheckCircle2, RotateCcw, Search, Star, X } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
@@ -71,21 +71,25 @@ function FreqStars({ freq }: { freq: number }) {
   )
 }
 
-// 搜索命中高亮：把匹配片段标为主题色
+// 搜索命中高亮：标出全部匹配片段（不止第一个）
 function HL({ text, q }: { text: string; q: string }) {
   if (!q) return <>{text}</>
-  const i = text.toLowerCase().indexOf(q)
-  if (i < 0) return <>{text}</>
-  return (
-    <>
-      {text.slice(0, i)}
-      <mark className="bg-transparent text-primary font-medium">{text.slice(i, i + q.length)}</mark>
-      {text.slice(i + q.length)}
-    </>
-  )
+  const lower = text.toLowerCase()
+  let from = 0
+  let hit = lower.indexOf(q)
+  if (hit < 0) return <>{text}</>
+  const parts: (string | ReactElement)[] = []
+  while (hit >= 0) {
+    if (hit > from) parts.push(text.slice(from, hit))
+    parts.push(<mark key={hit} className="bg-transparent text-primary font-medium">{text.slice(hit, hit + q.length)}</mark>)
+    from = hit + q.length
+    hit = lower.indexOf(q, from)
+  }
+  parts.push(text.slice(from))
+  return <>{parts}</>
 }
 
-export default function TheoryMap({ focus }: { focus?: { ref: string; nonce: number } | null }) {
+export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?: string[]; nonce: number } | null }) {
   const [checked, setChecked] = useState<Record<string, boolean>>(loadProgress)
   const [open, setOpen] = useState<string[]>(loadOpen)
   const [query, setQuery] = useState('')
@@ -98,21 +102,28 @@ export default function TheoryMap({ focus }: { focus?: { ref: string; nonce: num
     localStorage.setItem(OPEN_KEY, JSON.stringify(open))
   }, [open])
 
-  // 外部跳转（清单 ref / 卡片引用点击）：展开所在篇章并滚动定位到学习点。
-  // 展开采用「派生值」而非 setState：focus 所在篇章临时并入受控 open，不写回 localStorage。
-  const focusChapter = focus && POINT_KEYS.has(focus.ref) ? focus.ref.split('-')[0] : null
-  const openWithFocus = focusChapter
-    ? (open.includes(focusChapter) ? open : [...open, focusChapter])
+  // 外部跳转（清单 ref / 卡片引用点击 / 从哪开始入口）：展开涉及篇章（派生值，不写回持久化）并滚动定位学习点
+  const focusChapters = useMemo(() => {
+    if (!focus) return []
+    const ids = new Set<string>()
+    for (const c of focus.chapters ?? []) {
+      if (THEORY_CHAPTERS.some(x => x.id === c)) ids.add(c)
+    }
+    if (focus.ref && POINT_KEYS.has(focus.ref)) ids.add(focus.ref.split('-')[0])
+    return [...ids]
+  }, [focus])
+  const openWithFocus = focusChapters.length > 0
+    ? [...new Set([...open, ...focusChapters])]
     : open
 
   useEffect(() => {
-    if (!focusChapter) return
+    if (!focus?.ref) return
     const timer = setTimeout(() => {
-      document.getElementById(`tp-${focus?.ref}`)
+      document.getElementById(`tp-${focus.ref}`)
         ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 350) // 等手风琴展开动画结束
     return () => clearTimeout(timer)
-  }, [focus, focusChapter])
+  }, [focus])
 
   // 只统计仍然存在的学习点（数据更新后旧 key 不再计入）
   const done = useMemo(

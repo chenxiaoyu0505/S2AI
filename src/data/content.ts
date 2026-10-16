@@ -1,6 +1,8 @@
 // AI 学习站 · 全部内容数据（公开版）
 // 个人化内容（如项目拆解、个人学习规划）只放在 src/data/content.local.ts，不进 git
 
+import type { JumpTarget } from '../lib/jump'
+
 export interface ChecklistItem {
   id: string
   t: string
@@ -74,9 +76,9 @@ export const CHECKLIST: ChecklistCat[] = [
     { id: 'p-dpo', t: '构造偏好数据完成 DPO', e: 'TRL', ref: '05-M3.3' },
     { id: 'p-grpo', t: '小规模 GRPO', e: '需可验证奖励', ref: '05-M4.1' },
     { id: 'p-deploy', t: 'vLLM / llama.cpp 部署与压测', ref: '03-M2.1' },
-    { id: 'p-hybrid', t: '理解 Gated DeltaNet / 混合注意力架构', e: '线性注意力与 delta rule 概念 + 跑通 Qwen3-Next，理解 3:1 混合与 KV cache 差异', ref: '02-M2.6' },
+    { id: 'p-hybrid', t: '理解 Gated DeltaNet / 混合注意力架构', e: '线性注意力与 delta rule 概念 + 跑通 Qwen3-Next，理解 3:1 混合与 KV cache 差异', ref: '02-M1.3 + 02-M2.6' },
   ]},
-  { name: '模型量化（新增）', items: [
+  { name: '模型量化', items: [
     { id: 'q-gguf', t: 'GGUF 量化跑通与对比', e: 'llama.cpp / Ollama 加载 Qwen3-8B，对比 Q4_K_M / Q8 的质量、速度与文件体积', ref: '03-M3.1' },
     { id: 'q-awq', t: 'AWQ / GPTQ 部署压测', e: 'vLLM 加载 4bit 量化模型，对比 bf16 的吞吐与显存', ref: '03-M3.2' },
     { id: 'q-vram', t: '手算推理显存', e: '权重 + KV Cache 逐项估算，复现「7B 塞进 24G」', ref: '08-M5.2' },
@@ -113,23 +115,28 @@ export const CHECKLIST: ChecklistCat[] = [
 ]
 
 // 首页「从哪开始」：两类读者的入口路径
-export const STARTERS = [
+// steps 的 to 字段可点：复用 jump.ts 总线，切 tab + 展开清单组 / 篇章（见 JumpTarget）
+export const STARTERS: {
+  who: string
+  desc: string
+  steps: ({ t: string; to?: JumpTarget } | string)[]
+}[] = [
   {
     who: '零基础转行',
     desc: '从工具和基础理论开始，按顺序推进，不跳跃',
     steps: [
-      '项目清单 · 基础工具组：Python / PyTorch / uv / Docker',
-      '理论地图 · 01 篇章 DL 基础 + 02 篇章大模型基础',
-      '回到项目清单：Agent 开发组动手起步',
+      { t: '项目清单 · 基础工具组：Python / PyTorch / uv / Docker', to: { tab: 'checklist', expand: '基础工具' } },
+      { t: '理论地图 · 01 篇章 DL 基础 + 02 篇章大模型基础', to: { tab: 'theory', chapters: ['01', '02'] } },
+      { t: '回到项目清单：Agent 开发组动手起步', to: { tab: 'checklist', expand: 'Agent 开发' } },
     ],
   },
   {
     who: '有基础进阶',
     desc: '直接进主线，边学边把真实项目收进收集箱',
     steps: [
-      '理论地图 · 04 篇章 Agent + 02 篇章大模型基础',
-      '项目清单 · Agent 开发 / RAG 组',
-      '收集箱收一个真实项目开练（观望 → 跟练）',
+      { t: '理论地图 · 04 篇章 Agent + 02 篇章大模型基础', to: { tab: 'theory', chapters: ['04', '02'] } },
+      { t: '项目清单 · Agent 开发 / RAG 组', to: { tab: 'checklist', expand: 'Agent 开发' } },
+      { t: '收集箱收一个真实项目开练（观望 → 跟练）', to: { tab: 'inbox' } },
     ],
   },
 ]

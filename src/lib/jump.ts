@@ -8,6 +8,8 @@ export interface JumpTarget {
   anchor?: string
   /** 需要展开的清单组名（切到项目清单 tab 时自动展开该分组） */
   expand?: string
+  /** theory 专用：要一并展开的篇章 id 列表（如 ['01', '02']，用于「从哪开始」这类多篇章入口） */
+  chapters?: string[]
 }
 
 type Listener = (t: JumpTarget) => void

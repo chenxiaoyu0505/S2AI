@@ -179,6 +179,7 @@ export default function Cards() {
                       ))}
                     </span>
                   </p>
+                  {card.next.length > 0 && (
                   <p className="flex gap-2">
                     <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">接下来</span>
                     <span className="space-y-0.5 min-w-0">
@@ -208,6 +209,7 @@ export default function Cards() {
                       })}
                     </span>
                   </p>
+                  )}
                   <div className="flex items-center gap-2 pt-1">
                     <span className="text-xs text-muted-foreground/80">
                       {[card.madeBy, card.date].filter(Boolean).join(' · ')}

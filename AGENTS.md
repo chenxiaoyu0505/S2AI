@@ -22,7 +22,7 @@ S2AI（science to AI）—— 面向大模型 / Agent 算法岗的公开学习�
 npm install            # 首次
 npm run dev            # 本地开发预览
 npm run build          # 类型检查 + 生产构建（提交前必须跑通）
-python scripts/generate-theory.py   # 从八股目录总览重新生成考点数据（见下）
+python scripts/generate-theory.py   # 从笔记目录总览重新生成理论地图数据（见下）
 python scripts/export-dashboard.py  # 导出可视化看板 dashboard/tree.html（见任务手册 10）
 git add -A && git commit -m "说明" && git push   # push 后 Actions 自动部署上线
 ```

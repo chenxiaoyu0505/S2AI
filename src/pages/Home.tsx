@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactElement } from 'react'
 import { useSearchParams } from 'react-router'
 import {
   ListChecks, Link2, Briefcase, Leaf,
@@ -90,18 +90,22 @@ function ProgressRing({ value, size = 88 }: { value: number; size?: number }) {
 
 type StepItem = { t: string; e?: string } | { step: string; desc: string } | string
 
-// 搜索命中高亮（同 TheoryMap）
+// 搜索命中高亮：标出全部匹配片段（不止第一个）
 function HL({ text, q }: { text: string; q: string }) {
   if (!q) return <>{text}</>
-  const i = text.toLowerCase().indexOf(q)
-  if (i < 0) return <>{text}</>
-  return (
-    <>
-      {text.slice(0, i)}
-      <mark className="bg-transparent text-primary font-medium">{text.slice(i, i + q.length)}</mark>
-      {text.slice(i + q.length)}
-    </>
-  )
+  const lower = text.toLowerCase()
+  let from = 0
+  let hit = lower.indexOf(q)
+  if (hit < 0) return <>{text}</>
+  const parts: (string | ReactElement)[] = []
+  while (hit >= 0) {
+    if (hit > from) parts.push(text.slice(from, hit))
+    parts.push(<mark key={hit} className="bg-transparent text-primary font-medium">{text.slice(hit, hit + q.length)}</mark>)
+    from = hit + q.length
+    hit = lower.indexOf(q, from)
+  }
+  parts.push(text.slice(from))
+  return <>{parts}</>
 }
 
 function StepList({ steps, numbered = true }: { steps: StepItem[]; numbered?: boolean }) {
@@ -136,8 +140,8 @@ export default function Home() {
   const [searchParams, setSearchParams] = useSearchParams()
   const tab = searchParams.get('tab') ?? 'checklist'
   const setTab = (t: string) => setSearchParams(t === 'checklist' ? {} : { tab: t }, { replace: true })
-  // 站内跳转（清单 ref / 卡片引用点击）：切到理论地图并定位学习点
-  const [theoryFocus, setTheoryFocus] = useState<{ ref: string; nonce: number } | null>(null)
+  // 站内跳转（清单 ref / 卡片引用点击 / 从哪开始入口）：切到理论地图并定位学习点 / 展开篇章
+  const [theoryFocus, setTheoryFocus] = useState<{ ref?: string; chapters?: string[]; nonce: number } | null>(null)
 
   useEffect(() => {
     localStorage.setItem(STORE_KEY, JSON.stringify(checked))
@@ -151,8 +155,9 @@ export default function Home() {
   useEffect(() => onJump(t => {
     setSearchParams(t.tab === 'checklist' ? {} : { tab: t.tab }, { replace: true })
     if (t.expand) setOpenCats(prev => (prev.includes(t.expand!) ? prev : [...prev, t.expand!]))
-    if (t.tab === 'theory' && t.anchor) {
-      setTheoryFocus({ ref: t.anchor, nonce: Date.now() })
+    if (t.tab === 'theory') {
+      // anchor = 定位到具体学习点；chapters = 仅展开篇章（从哪开始入口），两者都经 theoryFocus 派生展开
+      setTheoryFocus({ ref: t.anchor, chapters: t.chapters, nonce: Date.now() })
     } else if (t.anchor) {
       // 等目标 tab 渲染完成后再滚动
       setTimeout(() => {
@@ -229,7 +234,7 @@ export default function Home() {
                 只做索引、顺序和取舍，详细内容在官方文档里。
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {['Agent 开发', 'RAG / 知识库', 'LLM 后训练', '强化学习', '模型量化', '理论地图', '项目清单', '多模态'].map(t => (
+                {['Agent 开发', 'RAG / 知识库', 'LLM 后训练', '强化学习', '模型量化', '多模态', '具身智能', '量化交易'].map(t => (
                   <span key={t} className="rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground">
                     {t}
                   </span>
@@ -241,14 +246,28 @@ export default function Home() {
                     <p className="text-xs font-medium">从哪开始 · {s.who}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 mb-2">{s.desc}</p>
                     <ol className="space-y-1.5">
-                      {s.steps.map((st, i) => (
-                        <li key={st} className="flex gap-1.5 text-xs text-muted-foreground">
-                          <span className="flex h-4 w-4 flex-none items-center justify-center rounded-full bg-muted text-[10px] font-medium">
-                            {i + 1}
-                          </span>
-                          <span className="leading-relaxed">{st}</span>
-                        </li>
-                      ))}
+                      {s.steps.map((st, i) => {
+                        const step = typeof st === 'string' ? { t: st } : st
+                        return (
+                          <li key={step.t} className="flex gap-1.5 text-xs text-muted-foreground">
+                            <span className="flex h-4 w-4 flex-none items-center justify-center rounded-full bg-muted text-[10px] font-medium">
+                              {i + 1}
+                            </span>
+                            {step.to ? (
+                              // 入口路径可点击：复用 jump.ts 总线切 tab + 展开对应组 / 篇章
+                              <button
+                                onClick={() => jumpTo(step.to!)}
+                                className="text-left leading-relaxed hover:text-primary hover:underline underline-offset-2 transition-colors"
+                                title="点击跳转到对应板块"
+                              >
+                                {step.t}
+                              </button>
+                            ) : (
+                              <span className="leading-relaxed">{step.t}</span>
+                            )}
+                          </li>
+                        )
+                      })}
                     </ol>
                   </div>
                 ))}
