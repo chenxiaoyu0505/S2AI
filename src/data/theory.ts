@@ -154,7 +154,7 @@ export const THEORY_CHAPTERS: TheoryChapter[] = [
       ]},
     ]},
   { id: '04', name: 'Agent 基础与框架', weight: 3,
-    summary: '', p0: '1.3 ReAct ｜ 2.1 Function Calling ｜ 2.3 MCP ｜ 3.2 长期记忆 ｜ 3.3 记忆框架 ｜ 4.1 RAG 基础 ｜ 4.3 向量检索 ｜ 4.4 混合检索 ｜ 4.5 Rerank ｜ 7.2 上下文工程 ｜ 7.3 Lost in the Middle ｜ 8.1 Skill 与 Harness ｜ 8.5 权限管控',
+    summary: '', p0: '1.3 ReAct ｜ 2.1 Function Calling ｜ 2.3 MCP ｜ 3.2 长期记忆  ｜ 3.3 记忆框架  ｜ 4.1 RAG 基础 ｜ 4.3 向量检索 ｜ 4.4 混合检索 ｜ 4.5 Rerank ｜ 7.2 上下文工程  ｜ 7.3 Lost in the Middle  ｜ 8.1 Skill 与 Harness  ｜ 8.5 权限管控',
     modules: [
       { name: 'M1 Agent 基础与推理范式', points: [
         { id: 'M1.1', name: 'Agent 定义与四要素', freq: 3, done: false },
@@ -333,7 +333,7 @@ export const THEORY_CHAPTERS: TheoryChapter[] = [
       ]},
     ]},
   { id: '08', name: '手撕代码', weight: 3,
-    summary: '不能只"看懂"，要能无提示 15 分钟默写', p0: '1.1 Self-Attention ｜ 1.2 MHA ｜ 1.3 KV Cache Attention ｜ 1.4 RoPE ｜ 2.1 LoRA ｜ 3.1 BPE ｜ 5.2 KV Cache 显存公式',
+    summary: '**不能只"看懂"，要能无提示 15 分钟默写**', p0: '1.1 Self-Attention ｜ 1.2 MHA ｜ 1.3 KV Cache Attention ｜ 1.4 RoPE ｜ 2.1 LoRA ｜ 3.1 BPE ｜ 5.2 KV Cache 显存公式',
     modules: [
       { name: 'M1 核心组件手写', points: [
         { id: 'M1.1', name: 'Self-Attention', freq: 3, done: false },
@@ -364,7 +364,7 @@ export const THEORY_CHAPTERS: TheoryChapter[] = [
       ]},
     ]},
   { id: '09', name: '系统设计', weight: 3,
-    summary: '把 03/04 的知识组织成架构图并做取舍', p0: '1.1 推理服务整体设计 ｜ 3.1 企业级 RAG 系统 ｜ 4.1 可靠的 Agent 系统 ｜ 4.3 记忆系统设计',
+    summary: '**把 03/04 的知识组织成架构图并做取舍**', p0: '1.1 推理服务整体设计 ｜ 3.1 企业级 RAG 系统 ｜ 4.1 可靠的 Agent 系统 ｜ 4.3 记忆系统设计',
     modules: [
       { name: 'M1 推理服务架构', points: [
         { id: 'M1.1', name: '推理服务整体设计', freq: 3, done: false },
@@ -429,7 +429,7 @@ export const THEORY_CHAPTERS: TheoryChapter[] = [
       ]},
     ]},
   { id: '11', name: '评测与可观测性', weight: 3,
-    summary: '', p0: '1.1 三类评测 ｜ 1.2 LLM-as-Judge ｜ 1.3 指标口径 ｜ 1.4 评测集构建 ｜ 3.1 Agent 基准 ｜ 3.2 轨迹评测 ｜ 3.4 RAG 评测 ｜ 3.5 记忆评测 ｜ 4.1 Tracing ｜ 4.2 Token 治理 ｜ 4.4 失败归因 ｜ 5.2 提示注入评测 ｜ 5.3 Guardrails',
+    summary: '', p0: '1.1 三类评测 ｜ 1.2 LLM-as-Judge ｜ 1.3 指标口径 ｜ 1.4 评测集构建 ｜ 3.1 Agent 基准 ｜ 3.2 轨迹评测 ｜ 3.4 RAG 评测  ｜ 3.5 记忆评测  ｜ 4.1 Tracing ｜ 4.2 Token 治理 ｜ 4.4 失败归因 ｜ 5.2 提示注入评测 ｜ 5.3 Guardrails',
     modules: [
       { name: 'M1 评测方法论', points: [
         { id: 'M1.1', name: '三类评测（离线 / Guardrail / 在线）', freq: 3, done: false },
@@ -462,6 +462,37 @@ export const THEORY_CHAPTERS: TheoryChapter[] = [
         { id: 'M5.1', name: '红队流程与自动化红队', freq: 2, done: false },
         { id: 'M5.2', name: '提示注入 / 越狱评测', freq: 3, done: false },
         { id: 'M5.3', name: 'Guardrails 与输出校验', freq: 3, done: false },
+      ]},
+    ]},
+  { id: '12', name: '量化交易', weight: 2,
+    summary: '', p0: '1.1 量化策略全流程 ｜ 1.3 回测陷阱 ｜ 2.1 经典因子族 ｜ 2.2 因子检验',
+    modules: [
+      { name: 'M1 量化基础与回测', points: [
+        { id: 'M1.1', name: '量化策略全流程（数据 → 因子 → 模型 → 回测 → 执行）', freq: 2, done: false },
+        { id: 'M1.2', name: '金融数据类型与预处理（OHLCV / 财报 / 另类数据）', freq: 1, done: false },
+        { id: 'M1.3', name: '回测陷阱（前视偏差 / 未来函数 / 交易成本 / 滑点）', freq: 2, done: false },
+        { id: 'M1.4', name: '过拟合与稳健性（样本外验证 / 滚动窗口）', freq: 1, done: false },
+      ]},
+      { name: 'M2 因子与特征工程', points: [
+        { id: 'M2.1', name: '经典因子族（动量 / 反转 / 波动率 / 流动性 / 质量）', freq: 2, done: false },
+        { id: 'M2.2', name: '因子检验（IC / RankIC / 分层回测 / 中性化）', freq: 2, done: false },
+        { id: 'M2.3', name: '自动因子挖掘（遗传规划 / AlphaGen / 表达式搜索）', freq: 1, done: false },
+        { id: 'M2.4', name: '深度学习自动特征（TCN / GNN 跨资产 / Transformer）', freq: 1, done: false },
+      ]},
+      { name: 'M3 预测模型', points: [
+        { id: 'M3.1', name: 'GBDT 主力地位（LightGBM / XGBoost）', freq: 2, done: false },
+        { id: 'M3.2', name: '时序深度模型适用边界（LSTM / TCN / Transformer）', freq: 1, done: false },
+        { id: 'M3.3', name: '非平稳性与滚动训练（DDG-DA / 滚动重训）', freq: 1, done: false },
+      ]},
+      { name: 'M4 组合构建与执行', points: [
+        { id: 'M4.1', name: '组合构建（TopK 选股 / 均值方差 / 风险平价）', freq: 1, done: false },
+        { id: 'M4.2', name: '交易成本与执行（滑点 / 市场冲击 / TWAP/VWAP）', freq: 1, done: false },
+        { id: 'M4.3', name: '风控与资金管理（回撤 / 仓位 / 止损）', freq: 1, done: false },
+      ]},
+      { name: 'M5 LLM 与前沿方法', points: [
+        { id: 'M5.1', name: 'LLM 金融应用（情感分析 / 研报解析 / FinGPT）', freq: 2, done: false },
+        { id: 'M5.2', name: 'LLM 自动量化研发（RD-Agent / 因子与策略自动化）', freq: 1, done: false },
+        { id: 'M5.3', name: 'RL 交易（组合管理 / 交易执行）', freq: 1, done: false },
       ]},
     ]},
 ]
