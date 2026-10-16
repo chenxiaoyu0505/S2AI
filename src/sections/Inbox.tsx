@@ -3,7 +3,7 @@ import { Inbox as InboxIcon, ExternalLink, GraduationCap } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { INBOX, type InboxItem, type InboxLevel } from '@/data/inbox'
-import { loadGrads, saveGrads, makeGradDraft, gradFeedText, type GradDraft } from '@/lib/graduated'
+import { loadGrads, saveGrads, makeGradDraft, gradFeedText, isGradStale, type GradDraft } from '@/lib/graduated'
 
 const LEVEL_STYLE: Record<InboxLevel, string> = {
   观望: 'bg-muted text-muted-foreground',
@@ -104,21 +104,45 @@ export default function Inbox() {
                       </span>
                     </p>
                   )}
-                  <div className="flex items-center gap-2 pt-1">
+                  <div className="flex items-center gap-2 pt-1 flex-wrap">
                     <span className="text-xs text-muted-foreground/60">收录于 {item.added}</span>
-                    {item.graduated || grads.some(g => g.url === item.url) ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-medium">
-                        <GraduationCap className="h-3 w-3" />已毕业
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => graduate(item)}
-                        className="ml-auto inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-                        title="生成本机学习卡片并复制入库指令"
-                      >
-                        <GraduationCap className="h-3 w-3" />毕业
-                      </button>
-                    )}
+                    {(() => {
+                      const draft = grads.find(g => g.url === item.url)
+                      const graduated = Boolean(item.graduated || draft)
+                      const stale = draft ? isGradStale(draft, item.graduated) : false
+                      if (!graduated) {
+                        return (
+                          <button
+                            onClick={() => graduate(item)}
+                            className="ml-auto inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                            title="生成本机学习卡片并复制入库指令"
+                          >
+                            <GraduationCap className="h-3 w-3" />毕业
+                          </button>
+                        )
+                      }
+                      return (
+                        <>
+                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-medium">
+                            <GraduationCap className="h-3 w-3" />已毕业
+                          </span>
+                          {stale && draft && (
+                            <span className="inline-flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400">
+                              本机草稿已超 7 天未入库
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard?.writeText(gradFeedText(draft)).catch(() => {})
+                                  setNotice(`已重新复制「${item.name}」的入库指令，粘贴给你的 Agent 即可永久入库。`)
+                                }}
+                                className="underline underline-offset-2 hover:text-foreground transition-colors"
+                              >
+                                重新复制指令
+                              </button>
+                            </span>
+                          )}
+                        </>
+                      )
+                    })()}
                   </div>
                 </CardContent>
               </Card>

@@ -3,6 +3,9 @@
 // 入库指令喂给 Agent 后由 Agent 写入 src/data/cards.ts（见 AGENTS.md 任务手册 5/6）。
 const GRAD_KEY = 's2ai-graduated-cards'
 
+/** 草稿超过 7 天未入库（未喂给 Agent）则温和提醒 */
+export const GRAD_STALE_MS = 7 * 24 * 3600 * 1000
+
 export interface GradDraft {
   id: string
   name: string
@@ -12,6 +15,8 @@ export interface GradDraft {
   next: string[]
   madeBy: string
   date: string
+  /** 毕业时刻（ms 时间戳），用于 7 天未入库提醒 */
+  graduatedAt: number
 }
 
 export function loadGrads(): GradDraft[] {
@@ -43,10 +48,17 @@ export function makeGradDraft(item: { name: string; url: string; cat: string; co
     next: [],
     madeBy: '毕业自收集箱',
     date: new Date().toISOString().slice(0, 7),
+    graduatedAt: Date.now(),
   }
 }
 
 // 喂给 Agent 的入库指令文本
 export function gradFeedText(draft: GradDraft): string {
   return `请按 AGENTS.md 任务手册 6（制作学习卡片）把下面这张学习卡片写入 src/data/cards.ts，并把收集箱条目「${draft.name}」标记为已毕业：\n\n${JSON.stringify(draft, null, 2)}`
+}
+
+/** 草稿是否超 7 天未入库（已入公共数据的条目不算） */
+export function isGradStale(draft: GradDraft, graduated?: string): boolean {
+  if (graduated || !draft.graduatedAt) return false
+  return Date.now() - draft.graduatedAt > GRAD_STALE_MS
 }

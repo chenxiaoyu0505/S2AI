@@ -1,11 +1,12 @@
-import { Leaf, ExternalLink, CornerDownRight, GraduationCap } from 'lucide-react'
+import { useState } from 'react'
+import { Leaf, ExternalLink, CornerDownRight, GraduationCap, X } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CARDS } from '@/data/cards'
 import { THEORY_CHAPTERS } from '@/data/theory'
 import { CHECKLIST } from '@/data/content'
 import { INBOX } from '@/data/inbox'
-import { loadGrads } from '@/lib/graduated'
+import { loadGrads, saveGrads } from '@/lib/graduated'
 
 interface NodeRef {
   label: string
@@ -32,7 +33,13 @@ function resolveNode(ref: string): NodeRef | null {
 }
 
 export default function Cards() {
-  const grads = loadGrads()
+  const [grads, setGrads] = useState(loadGrads)
+
+  function removeGrad(id: string) {
+    const next = grads.filter(g => g.id !== id)
+    setGrads(next)
+    saveGrads(next)
+  }
 
   return (
     <div className="space-y-4">
@@ -67,6 +74,13 @@ export default function Cards() {
                       <ExternalLink className="h-3 w-3" />
                     </a>
                     <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">本机暂存</Badge>
+                    <button
+                      onClick={() => removeGrad(card.id)}
+                      className="ml-auto inline-flex items-center gap-0.5 rounded-full border px-2 py-0.5 text-[10px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                      title="剔除这张本机草稿（只影响本机，公共数据不受影响）"
+                    >
+                      <X className="h-3 w-3" />剔除
+                    </button>
                   </div>
                   <CardDescription className="flex gap-2 text-xs leading-relaxed">
                     <span className="flex-none w-14 font-medium text-foreground/70">分类</span>
