@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Leaf, ExternalLink, CornerDownRight, Undo2, X } from 'lucide-react'
+import { Leaf, ExternalLink, CornerDownRight, Undo2, X, Bot, ArrowRight } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CARDS } from '@/data/cards'
@@ -84,10 +84,43 @@ export default function Cards() {
         学习卡片是树上的叶子：挂在任意节点上的粗粒度知识索引卡——不是笔记、不是教程，
         一张卡让人 30 秒判断"这是什么、跟我什么关系、接下来去哪"。
         <span className="block text-xs mt-1">
-          已制作 {CARDS.length} 张 ｜ 制作方式：让 Agent 帮你做（协议见仓库 AGENTS.md 制卡手册；
-          支持"学过后补卡"和"学前做卡带着走"两种触发）
+          已制作 {CARDS.length} 张 ｜ 下面是公开学习树的卡片（由维护者的 Agent 制作）；
+          网页版只做展示——想拥有自己的卡片，见下方「让 Agent 帮你做卡」。
         </span>
       </p>
+
+      {/* 引流卡：网页版展示，制卡需部署到自己的 Agent（同收集箱引流模式） */}
+      <Card className="border-primary/30 bg-gradient-to-r from-primary/[0.06] to-transparent">
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Bot className="h-4 w-4 text-primary" />
+            <CardDescription className="text-sm font-medium text-foreground">
+              想要自己的学习卡片？让 Agent 帮你做一张
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <p className="text-muted-foreground leading-relaxed">
+            网页上你只能看；部署后，卡片随你的学习生长——学过一个知识点就让你的 Agent 做一张挂到树上，
+            挂在理论点 / 清单项 / 收集箱条目任意节点，叶子之间互相指路，学不动还能一键退回收集箱。
+          </p>
+          <ol className="space-y-1 text-xs text-muted-foreground">
+            <li className="flex gap-1.5"><span className="flex-none font-medium">1.</span>打开 GitHub 仓库，把项目克隆或 Fork 到你的电脑（支持 Kimi / Claude Code / Cursor 等 Agent）</li>
+            <li className="flex gap-1.5"><span className="flex-none font-medium">2.</span>让你的 Agent 读仓库里的 AGENTS.md——制卡 / 收录 / 毕业等 9 个任务手册即开即用</li>
+            <li className="flex gap-1.5"><span className="flex-none font-medium">3.</span>学过后对它说"帮我给 xxx 做张学习卡片"即可，支持学前做卡带着走</li>
+          </ol>
+          <div className="pt-1">
+            <a
+              href="https://github.com/chenxiaoyu0505/S2AI"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              前往 GitHub 仓库部署 <ArrowRight className="h-3.5 w-3.5" />
+            </a>
+          </div>
+        </CardContent>
+      </Card>
 
       {CARDS.length === 0 ? (
         <Card>
