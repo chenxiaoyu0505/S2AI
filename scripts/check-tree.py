@@ -46,6 +46,20 @@ checklist_slice = slice_export(content_text, 'CHECKLIST')
 checklist_ids = set(re.findall(r"\{ id: '([^']+)', t: ", checklist_slice))
 checklist_refs = re.findall(r"ref: '([^']+)'", checklist_slice)
 
+# 多模态专题类目（resources.ts 的 MM_CAT）同样是合法的挂载点：
+# 多模态卡片（card-qwen3vl 等）的 target/next 指向 m-* 清单项
+resources_text = (DATA / 'resources.ts').read_text(encoding='utf-8')
+mm_slice = slice_export(resources_text, 'MM_CAT')
+checklist_ids |= set(re.findall(r"\{ id: '([^']+)', t: ", mm_slice))
+
+# 私有树（content.local.ts 存在时）的 EXTRA_CATS 也是合法挂载点——
+# 公开克隆里没有该文件，跳过即可；私有化后卡片会挂到自己的类目上
+local_file = DATA / 'content.local.ts'
+if local_file.exists():
+    local_text = local_file.read_text(encoding='utf-8')
+    local_slice = slice_export(local_text, 'EXTRA_CATS')
+    checklist_ids |= set(re.findall(r"\{ id: '([^']+)', t: ", local_slice))
+
 
 def expand_ref(token: str):
     """把 ref 令牌展开成理论点编号列表。支持 '04-M4.3'、区间 '04-M4.3–4.5'（– 或 -）。"""
