@@ -1,15 +1,22 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { Inbox as InboxIcon, ExternalLink, GraduationCap } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { INBOX, type InboxItem, type InboxLevel } from '@/data/inbox'
 import { loadGrads, saveGrads, makeGradDraft, gradFeedText, isGradStale, type GradDraft } from '@/lib/graduated'
-import IndexNote from '@/components/IndexNote'
 
 const LEVEL_STYLE: Record<InboxLevel, string> = {
   观望: 'bg-muted text-muted-foreground',
   跟练: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
   深入: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+}
+
+/** 复制 Agent 指令到剪贴板，成功/失败都有反馈 */
+function copyFeed(text: string, successMsg: string) {
+  navigator.clipboard?.writeText(text)
+    .then(() => toast.success(successMsg, { description: '粘贴给你的 Agent 即可永久入库' }))
+    .catch(() => toast.error('复制失败', { description: '请检查浏览器剪贴板权限后重试' }))
 }
 
 export default function Inbox() {
@@ -19,18 +26,24 @@ export default function Inbox() {
   const [notice, setNotice] = useState('')
   const shown = filter === '全部' ? INBOX : INBOX.filter(i => i.cat === filter)
 
+  // 提示条 8 秒后自动消失，避免长期挂着旧消息
+  useEffect(() => {
+    if (!notice) return
+    const timer = setTimeout(() => setNotice(''), 8000)
+    return () => clearTimeout(timer)
+  }, [notice])
+
   function graduate(item: InboxItem) {
     const draft = makeGradDraft(item)
     const next = [...grads.filter(g => g.url !== item.url), draft]
     setGrads(next)
     saveGrads(next)
-    navigator.clipboard?.writeText(gradFeedText(draft)).catch(() => {})
+    copyFeed(gradFeedText(draft), `「${item.name}」的入库指令已复制`)
     setNotice(`「${item.name}」已毕业：卡片草稿已存到本机（学习卡片 tab 可见），入库指令已复制，粘贴给你的 Agent 即永久入库。`)
   }
 
   return (
     <div className="space-y-4">
-      <IndexNote />
       <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">
         项目收集箱：学习途中看到好项目但暂时没空学？先把链接丢给你的 Agent 收录进来——
         自动补一句解析、归到树上对应位置、给出下潜路径，之后按「观望 → 跟练 → 深入」按需投入。
@@ -133,7 +146,7 @@ export default function Inbox() {
                               本机草稿已超 7 天未入库
                               <button
                                 onClick={() => {
-                                  navigator.clipboard?.writeText(gradFeedText(draft)).catch(() => {})
+                                  copyFeed(gradFeedText(draft), `已重新复制「${item.name}」的入库指令`)
                                   setNotice(`已重新复制「${item.name}」的入库指令，粘贴给你的 Agent 即可永久入库。`)
                                 }}
                                 className="underline underline-offset-2 hover:text-foreground transition-colors"

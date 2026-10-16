@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import {
   ListChecks, Link2, Briefcase, Leaf,
   CheckCircle2, Layers, ExternalLink, Sparkles, RotateCcw, Circle,
@@ -19,7 +20,7 @@ import {
   RESOURCES, MM_CAT,
 } from '@/data/resources'
 import { THEORY_TOTAL } from '@/data/theory'
-import IndexNote from '@/components/IndexNote'
+import { jumpTo, onJump, parseTheoryRefs } from '@/lib/jump'
 import TheoryMap from '@/sections/TheoryMap'
 import Inbox from '@/sections/Inbox'
 import Cards from '@/sections/Cards'
@@ -39,6 +40,8 @@ const BASE_CATS = [...CHECKLIST, ...(LOCAL?.EXTRA_CATS ?? [])]
 const ALL_CATS = [...BASE_CATS.slice(0, 5), MM_CAT, ...BASE_CATS.slice(5)]
 const TOTAL = ALL_CATS.reduce((n, c) => n + c.items.length, 0)
 const RES_COUNT = RESOURCES.reduce((n, c) => n + c.links.length, 0)
+// 全部有效清单项 id（过滤 localStorage 里数据更新后遗留的失效 key）
+const ITEM_IDS = new Set(ALL_CATS.flatMap(c => c.items.map(i => i.id)))
 
 // 项目拆解 tab 与相关数据：仅当本地存在个人拆解数据（content.local.ts）时显示
 const INTERVIEW_FRAMEWORK = LOCAL?.INTERVIEW_FRAMEWORK ?? []
@@ -95,12 +98,31 @@ function StepList({ steps, numbered = true }: { steps: StepItem[]; numbered?: bo
 
 export default function Home() {
   const [checked, setChecked] = useState<Record<string, boolean>>(loadProgress)
+  // tab 状态同步到 URL（?tab=theory），刷新 / 分享后停留在原 tab
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab = searchParams.get('tab') ?? 'checklist'
+  const setTab = (t: string) => setSearchParams(t === 'checklist' ? {} : { tab: t }, { replace: true })
+  // 站内跳转（清单 ref / 卡片引用点击）：切到理论地图并定位学习点
+  const [theoryFocus, setTheoryFocus] = useState<{ ref: string; nonce: number } | null>(null)
 
   useEffect(() => {
     localStorage.setItem(STORE_KEY, JSON.stringify(checked))
   }, [checked])
 
-  const done = useMemo(() => Object.values(checked).filter(Boolean).length, [checked])
+  useEffect(() => onJump(({ ref }) => {
+    setSearchParams({ tab: 'theory' }, { replace: true })
+    setTheoryFocus({ ref, nonce: Date.now() })
+  }), [setSearchParams])
+
+  // 只统计仍然存在的清单项（数据更新后旧 key 不再计入）
+  const done = useMemo(
+    () => Object.entries(checked).filter(([k, v]) => v && ITEM_IDS.has(k)).length,
+    [checked]
+  )
+
+  function toggleItem(id: string) {
+    setChecked(prev => ({ ...prev, [id]: !prev[id] }))
+  }
 
   const stats = [
     { icon: ListChecks, label: '项目清单项', value: TOTAL, unit: '项' },
@@ -173,7 +195,7 @@ export default function Home() {
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-6">
-        <Tabs defaultValue="checklist">
+        <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-6 flex-wrap h-auto gap-1 bg-card border p-1.5">
             <TabsTrigger value="checklist" className="gap-1.5"><ListChecks className="h-3.5 w-3.5" />项目清单</TabsTrigger>
             <TabsTrigger value="theory" className="gap-1.5"><MapIcon className="h-3.5 w-3.5" />理论地图</TabsTrigger>
@@ -187,7 +209,6 @@ export default function Home() {
 
           {/* 项目清单 */}
           <TabsContent value="checklist">
-            <div className="mb-4"><IndexNote /></div>
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-muted-foreground">学完一项勾一项，进度自动保存在本机浏览器。</p>
               <Button
@@ -225,31 +246,54 @@ export default function Home() {
                     </AccordionTrigger>
                     <AccordionContent>
                       <div className="grid gap-1 pb-2 md:grid-cols-2">
-                        {cat.items.map(item => (
-                          <label
-                            key={item.id}
-                            className="flex cursor-pointer items-start gap-2.5 rounded-md px-2 py-1.5 hover:bg-accent transition-colors"
-                          >
-                            <Checkbox
-                              className="mt-0.5"
-                              checked={!!checked[item.id]}
-                              onCheckedChange={v =>
-                                setChecked(prev => ({ ...prev, [item.id]: v === true }))
-                              }
-                            />
-                            <span className={`text-sm leading-relaxed ${checked[item.id] ? 'text-muted-foreground line-through' : ''}`}>
-                              {item.t}
-                              {item.e && <span className="block text-xs text-muted-foreground">{item.e}</span>}
-                            </span>
-                            {item.ref && (
-                              <Badge variant="outline"
-                                className="ml-auto flex-none text-[10px] px-1.5 py-0 h-4 font-mono text-muted-foreground"
-                                title={`关联理论点 ${item.ref}`}>
-                                {item.ref}
-                              </Badge>
-                            )}
-                          </label>
-                        ))}
+                        {cat.items.map(item => {
+                          const on = !!checked[item.id]
+                          return (
+                            // 同 TheoryMap：Radix Checkbox 是 button，label 包不住——整行可点
+                            <div
+                              key={item.id}
+                              role="checkbox"
+                              aria-checked={on}
+                              tabIndex={0}
+                              onClick={() => toggleItem(item.id)}
+                              onKeyDown={e => {
+                                if (e.key === ' ' || e.key === 'Enter') {
+                                  e.preventDefault()
+                                  toggleItem(item.id)
+                                }
+                              }}
+                              className="flex cursor-pointer select-none items-start gap-2.5 rounded-md px-2 py-1.5 hover:bg-accent transition-colors"
+                            >
+                              <Checkbox
+                                className="mt-0.5 pointer-events-none"
+                                checked={on}
+                                aria-hidden
+                              />
+                              <span className={`text-sm leading-relaxed ${on ? 'text-muted-foreground line-through' : ''}`}>
+                                {item.t}
+                                {item.e && <span className="block text-xs text-muted-foreground">{item.e}</span>}
+                              </span>
+                              {item.ref && (() => {
+                                const target = parseTheoryRefs(item.ref)[0]
+                                return target ? (
+                                  <button
+                                    onClick={e => { e.stopPropagation(); jumpTo(target) }}
+                                    className="ml-auto flex-none rounded border px-1.5 py-0 h-4 text-[10px] font-mono text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+                                    title={`关联理论点 ${item.ref}，点击跳转到理论地图`}
+                                  >
+                                    {item.ref}
+                                  </button>
+                                ) : (
+                                  <Badge variant="outline"
+                                    className="ml-auto flex-none text-[10px] px-1.5 py-0 h-4 font-mono text-muted-foreground"
+                                    title={`关联理论点 ${item.ref}`}>
+                                    {item.ref}
+                                  </Badge>
+                                )
+                              })()}
+                            </div>
+                          )
+                        })}
                       </div>
                     </AccordionContent>
                   </AccordionItem>
@@ -260,7 +304,7 @@ export default function Home() {
 
           {/* 理论地图 */}
           <TabsContent value="theory">
-            <TheoryMap />
+            <TheoryMap focus={theoryFocus} />
           </TabsContent>
 
           {/* 学习卡片（叶子） */}
@@ -270,12 +314,9 @@ export default function Home() {
 
           {/* 资源导航 */}
           <TabsContent value="resources" className="space-y-6">
-            <div className="space-y-3">
-              <IndexNote />
-              <p className="text-sm text-muted-foreground">
-                路线中提到的全部项目官网直达链接，每个附简介和「学什么」。点击名称在新标签页打开。
-              </p>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              路线中提到的全部项目官网直达链接，每个附简介和「学什么」。点击名称在新标签页打开。
+            </p>
             {RESOURCES.map(cat => (
               <div key={cat.name}>
                 <h3 className="text-sm font-medium mb-2 flex items-center gap-2">

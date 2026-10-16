@@ -1,13 +1,25 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Leaf, ExternalLink, CornerDownRight, GraduationCap, Undo2, X } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CARDS } from '@/data/cards'
 import { THEORY_CHAPTERS } from '@/data/theory'
-import { CHECKLIST } from '@/data/content'
+import { CHECKLIST, LOCAL } from '@/data/content'
+import { MM_CAT } from '@/data/resources'
 import { INBOX } from '@/data/inbox'
 import { loadGrads, saveGrads, loadDemoted, saveDemoted, demoteFeedText } from '@/lib/graduated'
-import IndexNote from '@/components/IndexNote'
+import { jumpTo, parseTheoryRefs } from '@/lib/jump'
+
+// 和 Home 相同的类目全集（含多模态与本地个人类目），否则挂在这些节点上的卡片解析失败
+const ALL_CATS = [...CHECKLIST, MM_CAT, ...(LOCAL?.EXTRA_CATS ?? [])]
+
+/** 复制 Agent 指令到剪贴板，成功/失败都有反馈 */
+function copyFeed(text: string, successMsg: string) {
+  navigator.clipboard?.writeText(text)
+    .then(() => toast.success(successMsg, { description: '粘贴给你的 Agent 即可执行' }))
+    .catch(() => toast.error('复制失败', { description: '请检查浏览器剪贴板权限后重试' }))
+}
 
 interface NodeRef {
   label: string
@@ -22,7 +34,7 @@ function resolveNode(ref: string): NodeRef | null {
     const pt = ch?.modules.flatMap(mo => mo.points).find(p => p.id === `M${m[2]}`)
     if (ch && pt) return { label: pt.name, hint: `理论点 ${ref}` }
   }
-  for (const cat of CHECKLIST) {
+  for (const cat of ALL_CATS) {
     const it = cat.items.find(i => i.id === ref)
     if (it) return { label: it.t, hint: `项目清单 · ${cat.name}` }
   }
@@ -44,7 +56,7 @@ export default function Cards() {
   }
 
   function demote(card: (typeof CARDS)[number]) {
-    navigator.clipboard?.writeText(demoteFeedText(card)).catch(() => {})
+    copyFeed(demoteFeedText(card), `「${card.name}」的退回指令已复制`)
     setDemoted(prev => {
       const next = [...new Set([...prev, card.id])]
       saveDemoted(next)
@@ -62,7 +74,6 @@ export default function Cards() {
 
   return (
     <div className="space-y-4">
-      <IndexNote />
       <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">
         学习卡片是树上的叶子：挂在任意节点上的粗粒度知识索引卡——不是笔记、不是教程，
         一张卡让人 30 秒判断"这是什么、跟我什么关系、接下来去哪"。
@@ -136,6 +147,7 @@ export default function Cards() {
         <div className="grid gap-3 md:grid-cols-2">
           {CARDS.map(card => {
             const target = resolveNode(card.target)
+            const targetTheory = parseTheoryRefs(card.target)[0]
             return (
               <Card key={card.id} className="transition-shadow hover:shadow-md">
                 <CardHeader className="pb-2">
@@ -149,12 +161,20 @@ export default function Cards() {
                       {card.name}
                       <ExternalLink className="h-3 w-3" />
                     </a>
-                    {target && (
+                    {target && (targetTheory ? (
+                      <button
+                        onClick={() => jumpTo(targetTheory)}
+                        className="rounded-full border px-1.5 py-0 h-4 text-[10px] font-mono text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+                        title={`挂在树上：${target.hint}，点击跳转到理论地图`}
+                      >
+                        {target.hint}
+                      </button>
+                    ) : (
                       <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4"
                         title={`挂在树上：${target.hint}`}>
                         {target.hint}
                       </Badge>
-                    )}
+                    ))}
                   </div>
                   <CardDescription className="flex gap-2 text-xs leading-relaxed">
                     <span className="flex-none w-14 font-medium text-foreground/70">分类</span>
@@ -175,13 +195,27 @@ export default function Cards() {
                     <span className="space-y-0.5 min-w-0">
                       {card.next.map(ref => {
                         const node = resolveNode(ref)
+                        const theoryRef = parseTheoryRefs(ref)[0]
+                        const text = (
+                          <>
+                            {node ? node.label : ref}
+                            {node && <span className="text-muted-foreground/60">（{node.hint}）</span>}
+                          </>
+                        )
                         return (
                           <span key={ref} className="flex items-start gap-1 text-xs text-muted-foreground leading-relaxed">
                             <CornerDownRight className="h-3 w-3 mt-0.5 flex-none" />
-                            <span>
-                              {node ? node.label : ref}
-                              {node && <span className="text-muted-foreground/60">（{node.hint}）</span>}
-                            </span>
+                            {theoryRef ? (
+                              <button
+                                onClick={() => jumpTo(theoryRef)}
+                                className="text-left hover:text-primary hover:underline underline-offset-2 transition-colors"
+                                title={`跳转到理论点 ${theoryRef}`}
+                              >
+                                {text}
+                              </button>
+                            ) : (
+                              <span>{text}</span>
+                            )}
                           </span>
                         )
                       })}

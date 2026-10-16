@@ -7,16 +7,31 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { THEORY_CHAPTERS, THEORY_TOTAL, THEORY_DONE } from '@/data/theory'
-import IndexNote from '@/components/IndexNote'
 
 const STORE_KEY = 'ai-study-theory-v1'
+// 展开的篇章也持久化：不再写死默认展开，切 tab / 刷新后保持用户自己的选择
+const OPEN_KEY = 'ai-study-theory-open-v1'
 const THEORY_MODULES = THEORY_CHAPTERS.reduce((n, c) => n + c.modules.length, 0)
+
+// 全部有效学习点 key（过滤 localStorage 里数据更新后遗留的失效 key）
+const POINT_KEYS = new Set(
+  THEORY_CHAPTERS.flatMap(c => c.modules.flatMap(mo => mo.points.map(p => `${c.id}-${p.id}`)))
+)
 
 function loadProgress(): Record<string, boolean> {
   try {
     return JSON.parse(localStorage.getItem(STORE_KEY) || '{}')
   } catch {
     return {}
+  }
+}
+
+function loadOpen(): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(OPEN_KEY) || '[]')
+    return Array.isArray(v) ? v.filter(id => THEORY_CHAPTERS.some(c => c.id === id)) : []
+  } catch {
+    return []
   }
 }
 
@@ -29,18 +44,46 @@ function FreqStars({ freq }: { freq: number }) {
   )
 }
 
-export default function TheoryMap() {
+export default function TheoryMap({ focus }: { focus?: { ref: string; nonce: number } | null }) {
   const [checked, setChecked] = useState<Record<string, boolean>>(loadProgress)
+  const [open, setOpen] = useState<string[]>(loadOpen)
 
   useEffect(() => {
     localStorage.setItem(STORE_KEY, JSON.stringify(checked))
   }, [checked])
 
-  const done = useMemo(() => Object.values(checked).filter(Boolean).length, [checked])
+  useEffect(() => {
+    localStorage.setItem(OPEN_KEY, JSON.stringify(open))
+  }, [open])
+
+  // 外部跳转（清单 ref / 卡片引用点击）：展开所在篇章并滚动定位到学习点。
+  // 展开采用「派生值」而非 setState：focus 所在篇章临时并入受控 open，不写回 localStorage。
+  const focusChapter = focus && POINT_KEYS.has(focus.ref) ? focus.ref.split('-')[0] : null
+  const openWithFocus = focusChapter
+    ? (open.includes(focusChapter) ? open : [...open, focusChapter])
+    : open
+
+  useEffect(() => {
+    if (!focusChapter) return
+    const timer = setTimeout(() => {
+      document.getElementById(`tp-${focus?.ref}`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 350) // 等手风琴展开动画结束
+    return () => clearTimeout(timer)
+  }, [focus, focusChapter])
+
+  // 只统计仍然存在的学习点（数据更新后旧 key 不再计入）
+  const done = useMemo(
+    () => Object.entries(checked).filter(([k, v]) => v && POINT_KEYS.has(k)).length,
+    [checked]
+  )
+
+  function togglePoint(key: string) {
+    setChecked(prev => ({ ...prev, [key]: !prev[key] }))
+  }
 
   return (
     <div className="space-y-4">
-      <IndexNote />
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
           理论地图：大模型 / Agent 的知识骨架。{THEORY_CHAPTERS.length} 篇章 · {THEORY_MODULES} 模块 · {THEORY_TOTAL} 学习点，数据源自笔记目录总览。
@@ -67,7 +110,7 @@ export default function TheoryMap() {
         </div>
       </div>
 
-      <Accordion type="multiple" defaultValue={['02', '04', '03']} className="space-y-3">
+      <Accordion type="multiple" value={openWithFocus} onValueChange={setOpen} className="space-y-3">
         {THEORY_CHAPTERS.map(ch => {
           const total = ch.modules.reduce((n, m) => n + m.points.length, 0)
           const cn = ch.modules.reduce(
@@ -111,10 +154,24 @@ export default function TheoryMap() {
                           const key = `${ch.id}-${p.id}`
                           const on = !!checked[key]
                           return (
-                            <label key={key}
-                              className="flex cursor-pointer items-start gap-2.5 rounded-md px-2 py-1.5 hover:bg-accent transition-colors">
-                              <Checkbox className="mt-0.5" checked={on}
-                                onCheckedChange={v => setChecked(prev => ({ ...prev, [key]: v === true }))} />
+                            // Radix Checkbox 渲染为 button，包在 label 里点文字不会触发勾选——
+                            // 改用整行可点的 div，Checkbox 仅作视觉呈现
+                            <div
+                              key={key}
+                              id={`tp-${key}`}
+                              role="checkbox"
+                              aria-checked={on}
+                              tabIndex={0}
+                              onClick={() => togglePoint(key)}
+                              onKeyDown={e => {
+                                if (e.key === ' ' || e.key === 'Enter') {
+                                  e.preventDefault()
+                                  togglePoint(key)
+                                }
+                              }}
+                              className="flex cursor-pointer select-none items-start gap-2.5 rounded-md px-2 py-1.5 hover:bg-accent transition-colors"
+                            >
+                              <Checkbox className="mt-0.5 pointer-events-none" checked={on} aria-hidden />
                               <span className={`text-sm leading-relaxed min-w-0 ${on ? 'text-muted-foreground line-through' : ''}`}>
                                 <span className="font-mono text-xs text-muted-foreground/70 mr-1.5">{p.id}</span>
                                 {p.name}
@@ -127,7 +184,7 @@ export default function TheoryMap() {
                                 )}
                                 <FreqStars freq={p.freq} />
                               </span>
-                            </label>
+                            </div>
                           )
                         })}
                       </div>
