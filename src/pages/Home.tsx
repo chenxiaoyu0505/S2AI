@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  ListChecks, Link2, Briefcase, Images,
+  ListChecks, Link2, Briefcase, Images, Leaf,
   CheckCircle2, Layers, ExternalLink, Sparkles, RotateCcw, Circle,
   Map as MapIcon, Cpu, Inbox as InboxIcon, BookOpen, Search,
 } from 'lucide-react'
@@ -22,6 +22,7 @@ import { THEORY_TOTAL } from '@/data/theory'
 import TheoryMap from '@/sections/TheoryMap'
 import ModelCards from '@/sections/ModelCards'
 import Inbox from '@/sections/Inbox'
+import Cards from '@/sections/Cards'
 
 const STORE_KEY = 'ai-study-progress-v1'
 
@@ -176,6 +177,7 @@ export default function Home() {
           <TabsList className="mb-6 flex-wrap h-auto gap-1 bg-card border p-1.5">
             <TabsTrigger value="checklist" className="gap-1.5"><ListChecks className="h-3.5 w-3.5" />项目清单</TabsTrigger>
             <TabsTrigger value="theory" className="gap-1.5"><MapIcon className="h-3.5 w-3.5" />理论地图</TabsTrigger>
+            <TabsTrigger value="cards" className="gap-1.5"><Leaf className="h-3.5 w-3.5" />学习卡片</TabsTrigger>
             <TabsTrigger value="resources" className="gap-1.5"><Link2 className="h-3.5 w-3.5" />资源导航</TabsTrigger>
             <TabsTrigger value="reference" className="gap-1.5"><Search className="h-3.5 w-3.5" />速查</TabsTrigger>
             {SHOW_TEARDOWN && (
@@ -259,6 +261,11 @@ export default function Home() {
           {/* 理论地图 */}
           <TabsContent value="theory">
             <TheoryMap />
+          </TabsContent>
+
+          {/* 学习卡片（叶子） */}
+          <TabsContent value="cards">
+            <Cards />
           </TabsContent>
 
           {/* 资源导航 */}
