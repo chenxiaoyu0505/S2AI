@@ -34,7 +34,7 @@ function loadProgress(): Record<string, boolean> {
   }
 }
 
-// 本地个人类目（content.local.ts，不进 git）；多模态插在「具身智能」之后（索引 5）
+// 本地个人类目（content.local.ts，不进 git）；多模态插入位置：学习清单在「模型量化」后（索引 5）、方向总览在「具身智能」后（索引 5）
 const BASE_CATS = [...CHECKLIST, ...(LOCAL?.EXTRA_CATS ?? [])]
 const ALL_CATS = [...BASE_CATS.slice(0, 5), MM_CAT, ...BASE_CATS.slice(5)]
 const ALL_DIRECTIONS = [...DIRECTIONS.slice(0, 5), MM_DIRECTION, ...DIRECTIONS.slice(5)]

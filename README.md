@@ -8,8 +8,8 @@
 
 | 板块 | 说明 |
 | --- | --- |
-| 学习清单 | 实操主线：基础工具 / Agent 开发 / RAG / 后训练 / 模型量化 / 强化学习等 11 组可勾选项，右侧徽标标注关联的理论考点编号 |
-| 考点地图 | 理论主线：11 篇章 · 64 模块 · 285 个面试考点（大模型 / Agent 算法岗），含频率星级、P0 必学清单、验收勾选与笔记状态 |
+| 学习清单 | 实操主线：基础工具 / Agent 开发 / RAG / 后训练 / 模型量化 / 强化学习等 12 组可勾选项，右侧徽标标注关联的理论考点编号 |
+| 考点地图 | 理论主线：11 篇章 · 71 模块 · 285 个面试考点（大模型 / Agent 算法岗），含频率星级、P0 必学清单、验收勾选与笔记状态 |
 | 模型卡片 | 主流开放权重模型速查（Qwen3 / DeepSeek / Kimi K2 / Llama 4 / GLM / Mixtral），含 Dense vs MoE 选型速查与量化速记 |
 | 方向总览 / 资源导航 | 学习方向与技术栈、项目官网直达链接 |
 | JEPA · REA / 多模态 | 科研支线与世界模型、多模态动手路径 |
@@ -40,7 +40,7 @@ git clone https://github.com/chenxiaoyu0505/S2AI.git my-station
 
 ## 技术栈
 
-React 18 · TypeScript · Vite · Tailwind CSS · shadcn/ui
+React 19 · TypeScript · Vite · Tailwind CSS · shadcn/ui
 
 ## 本地运行
 

@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator'
 import { THEORY_CHAPTERS, THEORY_TOTAL, THEORY_DONE } from '@/data/theory'
 
 const STORE_KEY = 'ai-study-theory-v1'
+const THEORY_MODULES = THEORY_CHAPTERS.reduce((n, c) => n + c.modules.length, 0)
 
 function loadProgress(): Record<string, boolean> {
   try {
@@ -40,7 +41,7 @@ export default function TheoryMap() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
-          大模型 / Agent 算法岗面试考点地图：11 篇章 · 64 模块 · {THEORY_TOTAL} 考点，数据源自八股笔记目录总览。
+          大模型 / Agent 算法岗面试考点地图：{THEORY_CHAPTERS.length} 篇章 · {THEORY_MODULES} 模块 · {THEORY_TOTAL} 考点，数据源自八股笔记目录总览。
           <span className="block text-xs mt-1">
             ★★★ 必问 · ★★ 高频 · ★ 中频 ｜ 「笔记 ✓」= 本地已有成文笔记（{THEORY_DONE} 篇）｜ 勾选 = 我已通过验收，进度存本机
           </span>

@@ -76,7 +76,7 @@ export const RESOURCES: ResCat[] = [
     { name: 'SUMO', url: 'https://sumo.dlr.de/docs/', intro: '轻量交通流仿真', learn: '多车调度与交通决策研究' },
   ]},
   { name: '量子计算', links: [
-    { name: 'Qiskit', url: 'https://qiskit.qotlabs.org/docs/guides', intro: 'IBM 量子生态主 SDK', learn: '电路构建、模拟、云端真机实验' },
+    { name: 'Qiskit', url: 'https://docs.quantum.ibm.com/guides', intro: 'IBM 量子生态主 SDK', learn: '电路构建、模拟、云端真机实验' },
     { name: 'Cirq', url: 'https://quantumai.google/cirq', intro: 'Google 量子电路框架', learn: 'NISQ 电路与研究工具链' },
     { name: 'PennyLane', url: 'https://docs.pennylane.ai/', intro: '量子机器学习框架', learn: '连接 PyTorch/JAX 的混合优化，VQE/QAOA' },
     { name: 'Amazon Braket', url: 'https://docs.aws.amazon.com/braket/latest/developerguide/', intro: 'AWS 托管量子平台', learn: '模拟器与多家 QPU 按任务计费访问' },

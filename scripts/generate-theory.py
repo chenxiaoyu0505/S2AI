@@ -11,6 +11,10 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT.parent / '八股笔记' / '八股' / '00-目录总览.md'
 OUT = ROOT / 'src' / 'data' / 'theory.ts'
 
+if not SRC.exists():
+    raise SystemExit(f'找不到笔记源文件：{SRC}\n'
+                     '该脚本只供维护者在本地同步八股笔记使用，源文件不进本仓库。')
+
 text = SRC.read_text(encoding='utf-8')
 
 # 只解析「三、各篇章目录」内的章节
@@ -22,6 +26,7 @@ def clean_cell(s: str) -> str:
     s = re.sub(r'\[([^\]]+)\]\([^)]*\)', r'\1', s)   # 去链接
     s = re.sub(r'\s*→\s*详见.*$', '', s)              # 去 "→ 详见 ..."
     s = s.replace('🆕', '').replace('🔗', '').strip()
+    s = s.replace('**', '').strip()                   # 去加粗标记（页面按纯文本渲染）
     return s
 
 chapters = []
@@ -39,7 +44,7 @@ for i, m in enumerate(chapter_iter):
             sm = re.search(r'定位：(.+?)(?:\s*｜|$)', line)
             summary = sm.group(1).strip() if sm else ''
         if '**P0 必学**' in line:
-            p0 = line.split('**P0 必学**：', 1)[-1].strip()
+            p0 = clean_cell(line.split('**P0 必学**：', 1)[-1])
 
     modules, cur = [], None
     for line in seg.splitlines():
@@ -66,7 +71,8 @@ for i, m in enumerate(chapter_iter):
     })
 
 def esc(s: str) -> str:
-    return s.replace('\\', '\\\\').replace('"', '\\"').replace("'", "\\'")
+    # 输出用单引号字符串：只需转义反斜杠和单引号
+    return s.replace('\\', '\\\\').replace("'", "\\'")
 
 lines = []
 lines.append('// 自动生成自 八股笔记/八股/00-目录总览.md —— 请勿手改，跑 scripts/generate-theory.py 重新生成')
