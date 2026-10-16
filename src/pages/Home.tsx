@@ -3,13 +3,14 @@ import { useSearchParams } from 'react-router'
 import {
   ListChecks, Link2, Briefcase, Leaf,
   CheckCircle2, Layers, ExternalLink, Sparkles, RotateCcw, Circle,
-  Map as MapIcon, Inbox as InboxIcon, BookOpen,
+  Map as MapIcon, Inbox as InboxIcon, BookOpen, Search, X,
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
@@ -86,6 +87,20 @@ function ProgressRing({ value, size = 88 }: { value: number; size?: number }) {
 
 type StepItem = { t: string; e?: string } | { step: string; desc: string } | string
 
+// 搜索命中高亮（同 TheoryMap）
+function HL({ text, q }: { text: string; q: string }) {
+  if (!q) return <>{text}</>
+  const i = text.toLowerCase().indexOf(q)
+  if (i < 0) return <>{text}</>
+  return (
+    <>
+      {text.slice(0, i)}
+      <mark className="bg-transparent text-primary font-medium">{text.slice(i, i + q.length)}</mark>
+      {text.slice(i + q.length)}
+    </>
+  )
+}
+
 function StepList({ steps, numbered = true }: { steps: StepItem[]; numbered?: boolean }) {
   const items = steps.map(s =>
     typeof s === 'string' ? { t: s } : 't' in s ? s : { t: s.step, e: s.desc }
@@ -139,6 +154,20 @@ export default function Home() {
     () => Object.entries(checked).filter(([k, v]) => v && ITEM_IDS.has(k)).length,
     [checked]
   )
+
+  // 项目清单搜索：按类目名 / 标题 / 说明 / 挂靠理论点过滤
+  const [itemQuery, setItemQuery] = useState('')
+  const iq = itemQuery.trim().toLowerCase()
+  const filteredCats = useMemo(() => {
+    if (!iq) return null
+    return ALL_CATS.map(cat => ({
+      ...cat,
+      items: cat.items.filter(it =>
+        `${cat.name} ${it.t} ${it.e ?? ''} ${it.ref ?? ''}`.toLowerCase().includes(iq)),
+    })).filter(c => c.items.length > 0)
+  }, [iq])
+  const itemMatchCount = filteredCats?.reduce((n, c) => n + c.items.length, 0) ?? 0
+  const catView = filteredCats ?? ALL_CATS
 
   function toggleItem(id: string) {
     setChecked(prev => ({ ...prev, [id]: !prev[id] }))
@@ -229,19 +258,44 @@ export default function Home() {
 
           {/* 项目清单 */}
           <TabsContent value="checklist">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
               <p className="text-sm text-muted-foreground">学完一项勾一项，进度自动保存在本机浏览器。</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5"
-                onClick={() => { if (window.confirm('确定重置全部进度？')) setChecked({}) }}
-              >
-                <RotateCcw className="h-3.5 w-3.5" /> 重置进度
-              </Button>
+              <div className="flex items-center gap-3 flex-wrap">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => { if (window.confirm('确定重置全部进度？')) setChecked({}) }}
+                >
+                  <RotateCcw className="h-3.5 w-3.5" /> 重置进度
+                </Button>
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <Input
+                    value={itemQuery}
+                    onChange={e => setItemQuery(e.target.value)}
+                    placeholder="搜索清单项：如「LoRA」「GRPO」"
+                    className="h-8 pl-8 pr-7 text-sm"
+                  />
+                  {itemQuery && (
+                    <button
+                      onClick={() => setItemQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      title="清空搜索"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+                {iq && (
+                  <span className="text-xs text-muted-foreground">
+                    命中 {itemMatchCount} 项（{filteredCats?.length ?? 0} 个类目）
+                  </span>
+                )}
+              </div>
             </div>
-            <Accordion type="multiple" value={openCats} onValueChange={setOpenCats} className="space-y-3">
-              {ALL_CATS.map(cat => {
+            <Accordion type="multiple" value={iq ? (filteredCats?.map(c => c.name) ?? []) : openCats} onValueChange={setOpenCats} className="space-y-3">
+              {catView.map(cat => {
                 const cn = cat.items.filter(i => checked[i.id]).length
                 const allDone = cn === cat.items.length
                 return (
@@ -290,7 +344,7 @@ export default function Home() {
                                 aria-hidden
                               />
                               <span className={`text-sm leading-relaxed ${on ? 'text-muted-foreground line-through' : ''}`}>
-                                {item.t}
+                                <HL text={item.t} q={iq} />
                                 {item.e && <span className="block text-xs text-muted-foreground">{item.e}</span>}
                               </span>
                               {item.ref && (() => {
@@ -320,6 +374,11 @@ export default function Home() {
                 )
               })}
             </Accordion>
+            {iq && filteredCats && filteredCats.length === 0 && (
+              <p className="text-sm text-muted-foreground py-10 text-center">
+                没有找到匹配「{itemQuery.trim()}」的清单项——换个关键词试试
+              </p>
+            )}
           </TabsContent>
 
           {/* 理论地图 */}
@@ -489,6 +548,7 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-6 py-5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span>S2AI · science to AI ｜ 一棵预制的 AI 学习树：理论地图 + 项目清单 · 数据驱动、可私有化生长</span>
           <span className="ml-auto flex gap-4">
+            <a href="https://github.com/chenxiaoyu0505/S2AI" target="_blank" rel="noreferrer" className="hover:underline inline-flex items-center gap-1">GitHub 仓库 <ExternalLink className="h-3 w-3" /></a>
             {SHOW_TEARDOWN && (
               <>
                 <a href="https://github.com/Tencent/WeKnora" target="_blank" rel="noreferrer" className="hover:underline inline-flex items-center gap-1">WeKnora <ExternalLink className="h-3 w-3" /></a>
