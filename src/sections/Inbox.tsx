@@ -18,9 +18,12 @@ export default function Inbox() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">
-        项目收集箱：看到好项目但小白直接学太费时间？先把链接丢给学习站的 Agent 收录进来——
-        自动补一句解析、归到对应模块、给出下潜路径。之后按「观望 → 跟练 → 深入」按需投入，不焦虑。
-        <span className="block text-xs mt-1">已收录 {INBOX.length} 个 ｜ 更新方式：把项目网址发给 Agent 即可</span>
+        项目收集箱：学习途中看到好项目但暂时没空学？先把链接丢给你的 Agent 收录进来——
+        自动补一句解析、归到树上对应位置、给出下潜路径，之后按「观望 → 跟练 → 深入」按需投入。
+        <span className="block text-xs mt-1">
+          已收录 {INBOX.length} 个 ｜ 收录方式：把项目网址发给你的 Agent（协议见仓库 AGENTS.md 收录手册；
+          收录时 Agent 会做「概念提炼」——条目上标注的"涉及概念"就是理论线的新增建议）
+        </span>
       </p>
 
       {INBOX.length === 0 ? (
@@ -77,6 +80,14 @@ export default function Inbox() {
                     <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">怎么下潜</span>
                     <span className="text-muted-foreground">{item.dive}</span>
                   </p>
+                  {item.concept && (
+                    <p className="flex gap-2 leading-relaxed">
+                      <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">涉及概念</span>
+                      <span className="text-muted-foreground">{item.concept}
+                        <span className="text-xs text-muted-foreground/60">（理论线增补建议，待入库）</span>
+                      </span>
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground/60 pt-1">收录于 {item.added}</p>
                 </CardContent>
               </Card>

@@ -7,7 +7,7 @@ export default function ModelCards() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">
-        主流开放权重模型速查（对应八股考点 02-M2.2 主流模型横向对比）。模型迭代极快，
+        主流开放权重模型速查（对应理论点 02-M2.2 主流模型横向对比）。模型迭代极快，
         每张卡的信息截止 <span className="font-medium text-foreground/80">{MODEL_CARDS_UPDATED}</span>，看的时候留意日期戳。
       </p>
 
@@ -47,7 +47,7 @@ export default function ModelCards() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2"><Scale className="h-4 w-4 text-muted-foreground" />Dense vs MoE 选型速查</CardTitle>
-          <CardDescription>面试高频对比题，也是本地部署前第一件事</CardDescription>
+          <CardDescription>选型时的高频对比，也是本地部署前第一件事</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -75,7 +75,7 @@ export default function ModelCards() {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2"><Cpu className="h-4 w-4 text-muted-foreground" />量化速记（对应考点 03-M3）</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2"><Cpu className="h-4 w-4 text-muted-foreground" />量化速记（对应理论点 03-M3）</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="grid gap-2 md:grid-cols-2 text-sm text-muted-foreground">

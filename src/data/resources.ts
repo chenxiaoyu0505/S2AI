@@ -1,5 +1,5 @@
 // 资源导航 + 多模态专题 · 内容数据
-import type { Direction, ChecklistCat } from './content'
+import type { ChecklistCat } from './content'
 
 export interface ResLink {
   name: string
@@ -81,25 +81,9 @@ export const RESOURCES: ResCat[] = [
     { name: 'PennyLane', url: 'https://docs.pennylane.ai/', intro: '量子机器学习框架', learn: '连接 PyTorch/JAX 的混合优化，VQE/QAOA' },
     { name: 'Amazon Braket', url: 'https://docs.aws.amazon.com/braket/latest/developerguide/', intro: 'AWS 托管量子平台', learn: '模拟器与多家 QPU 按任务计费访问' },
   ]},
-  { name: 'JEPA / 世界模型与 REA', links: [
-    { name: 'awesome-jepa', url: 'https://github.com/AbdelStark/awesome-jepa', intro: 'JEPA 世界模型资源精选列表', learn: '按图索骥读 JEPA 家族论文与代码' },
-    { name: 'V-JEPA 2', url: 'https://github.com/facebookresearch/vjepa2', intro: 'Meta 视频世界模型官方代码', learn: '跑通特征提取评测，理解零样本规划思路' },
-    { name: 'rea.run 中文文档', url: 'https://rea.run/zh/docs/install-demo/', intro: 'REA 工具社区文档站', learn: '跟练恐龙 demo：MCP 接入 → 读运行中脚本 → 复刻规则' },
-    { name: 'REA 上游仓库', url: 'https://github.com/morluto/rea', intro: 'rea-agents 官方仓库', learn: '安装参数、浏览器观察能力与合规边界' },
-  ]},
 ]
 
-// ---- 多模态专题 ----
-
-export const MM_DIRECTION: Direction = {
-  rank: '6',
-  name: '多模态',
-  tag: '补充主线',
-  tagKind: 'core',
-  top: false,
-  tools: 'VLM 图文问答 → 文档/OCR → 视频 → 音频 → 多模态 RAG → 部署微调',
-  work: '文档理解、视觉 Agent、跨模态检索等岗位高频场景',
-}
+// ---- 多模态专题（速查 tab） ----
 
 export const MM_CAT: ChecklistCat = {
   name: '多模态',
@@ -107,7 +91,7 @@ export const MM_CAT: ChecklistCat = {
   items: [
     { id: 'm-vlm', t: '跑通本地 VLM 图文问答', e: 'Ollama + Qwen3-VL 或 LLaVA，理解视觉编码器 + 连接器架构' },
     { id: 'm-doc', t: '文档 / 图表 / 截图理解测试', e: 'OCR、表格抽取、UI 截图分析，对比 Qwen3-VL / MiniCPM-V / InternVL' },
-    { id: 'm-video', t: '视频理解', e: '抽帧 + Qwen3-VL 视频理解，衔接 V-JEPA 世界模型' },
+    { id: 'm-video', t: '视频理解', e: '抽帧 + Qwen3-VL 视频理解，衔接世界模型' },
     { id: 'm-audio', t: '语音识别与理解', e: 'Whisper / FunASR 转写 + 大模型总结' },
     { id: 'm-rag', t: '多模态 RAG', e: 'CLIP / SigLIP 跨模态向量检索，图片入库' },
     { id: 'm-deploy', t: '多模态服务化与微调入门', e: 'vLLM 多模态 API、LLaVA 系模型 LoRA 微调' },
@@ -117,7 +101,7 @@ export const MM_CAT: ChecklistCat = {
 export const MM_PATH = [
   { t: '跑通本地 VLM 图文问答', e: 'Ollama 一条命令拉 Qwen3-VL 或 LLaVA，理解「视觉编码器（ViT）+ 连接器（MLP）+ 语言模型」三段式架构' },
   { t: '文档、图表与截图理解', e: 'OCR / 表格抽取 / UI 截图分析；对比 Qwen3-VL（多语言 OCR 最强）、MiniCPM-V（密集文档）、InternVL（代码截图）' },
-  { t: '视频理解', e: '抽帧策略 + Qwen3-VL 原生视频输入；进一步衔接 V-JEPA 的表征预测路线' },
+  { t: '视频理解', e: '抽帧策略 + Qwen3-VL 原生视频输入；进一步衔接世界模型的表征预测路线' },
   { t: '音频理解', e: 'Whisper / FunASR 转写，接大模型做摘要与问答' },
   { t: '多模态 RAG', e: 'CLIP / SigLIP 把图片变成向量，与文本统一检索（图文互搜、以图搜图）' },
   { t: '服务化与微调', e: 'vLLM 部署多模态 API；用 LLaVA 官方脚本做小数据集 LoRA 微调' },

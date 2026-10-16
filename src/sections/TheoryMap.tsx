@@ -41,15 +41,15 @@ export default function TheoryMap() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
-          大模型 / Agent 算法岗面试考点地图：{THEORY_CHAPTERS.length} 篇章 · {THEORY_MODULES} 模块 · {THEORY_TOTAL} 考点，数据源自八股笔记目录总览。
+          理论地图：大模型 / Agent 的知识骨架。{THEORY_CHAPTERS.length} 篇章 · {THEORY_MODULES} 模块 · {THEORY_TOTAL} 学习点，数据源自笔记目录总览。
           <span className="block text-xs mt-1">
-            ★★★ 必问 · ★★ 高频 · ★ 中频 ｜ 「笔记 ✓」= 本地已有成文笔记（{THEORY_DONE} 篇）｜ 勾选 = 我已通过验收，进度存本机
+            ★★★ 推荐深入 · ★★ 推荐学习 · ★ 了解即可 ｜ 「笔记 ✓」= 已有成文笔记（{THEORY_DONE} 篇）｜ 勾选 = 已掌握，进度存本机
           </span>
         </p>
         <div className="flex items-center gap-3">
           <div className="text-right">
             <div className="text-lg font-medium tabular-nums leading-none">{done}<span className="text-xs font-normal text-muted-foreground"> / {THEORY_TOTAL}</span></div>
-            <div className="text-xs text-muted-foreground mt-0.5">已通过验收</div>
+            <div className="text-xs text-muted-foreground mt-0.5">已掌握</div>
           </div>
           <div className="w-32">
             <Progress value={(done / THEORY_TOTAL) * 100} className="h-1.5" />
@@ -95,14 +95,14 @@ export default function TheoryMap() {
               <AccordionContent>
                 {ch.p0 && (
                   <p className="text-xs text-foreground/80 bg-muted rounded-md px-3 py-2 mb-3 leading-relaxed">
-                    <span className="font-medium">P0 必学：</span>{ch.p0}
+                    <span className="font-medium">优先学习配方：</span>{ch.p0}
                   </p>
                 )}
                 <div className="space-y-3 pb-2">
                   {ch.modules.map(mo => (
                     <div key={mo.name}>
                       <p className="text-xs font-medium text-muted-foreground mb-1">{mo.name}
-                        <span className="ml-2 font-normal text-muted-foreground/60">{mo.points.length} 考点</span>
+                        <span className="ml-2 font-normal text-muted-foreground/60">{mo.points.length} 学习点</span>
                       </p>
                       <div className="grid gap-1 md:grid-cols-2">
                         {mo.points.map(p => {
@@ -141,7 +141,7 @@ export default function TheoryMap() {
       <Separator />
       <p className="text-xs text-muted-foreground flex items-center gap-1.5">
         <Star className="h-3 w-3" />
-        数据由 scripts/generate-theory.py 从八股笔记目录总览自动生成；笔记每过一篇验收，重跑脚本即同步。
+        数据由 scripts/generate-theory.py 从笔记目录总览自动生成；笔记每完成一篇，重跑脚本即同步。
       </p>
     </div>
   )

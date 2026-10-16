@@ -38,7 +38,7 @@ export const MODEL_CARDS: ModelCard[] = [
     license: 'MIT（V3-0324 起权重转 MIT）',
     quant: '原生 FP8 权重训练与发布；GGUF / FP8 部署生态成熟',
     highlight: 'MLA 压缩 KV Cache + FP8 训练 = 训练效率标杆；R1 纯 RL 激发推理',
-    fit: '推理能力（数学/代码）对标 o1 的开源方案，论文与面试必讲架构',
+    fit: '推理能力（数学/代码）对标 o1 的开源方案，论文与架构讲解的常客',
   },
   {
     name: 'Kimi K2',

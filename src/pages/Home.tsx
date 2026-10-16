@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  ListChecks, Compass, Link2, Briefcase, Network, Images, Target,
+  ListChecks, Link2, Briefcase, Images,
   CheckCircle2, Layers, ExternalLink, Sparkles, RotateCcw, Circle,
-  Map as MapIcon, Cpu, Inbox as InboxIcon,
+  Map as MapIcon, Cpu, Inbox as InboxIcon, BookOpen, Search,
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,13 +13,12 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import {
-  DIRECTIONS, CHECKLIST, LOCAL,
-  JEPA_NODES, JEPA_STEPS, REA_STEPS, JEPA_NOTE,
-  WORKS, WORK_REQUIREMENTS,
+  CHECKLIST, LOCAL, STARTERS,
 } from '@/data/content'
 import {
-  RESOURCES, MM_DIRECTION, MM_CAT, MM_PATH, MM_MODELS, MM_LINKS,
+  RESOURCES, MM_CAT, MM_PATH, MM_MODELS, MM_LINKS,
 } from '@/data/resources'
+import { THEORY_TOTAL } from '@/data/theory'
 import TheoryMap from '@/sections/TheoryMap'
 import ModelCards from '@/sections/ModelCards'
 import Inbox from '@/sections/Inbox'
@@ -34,26 +33,18 @@ function loadProgress(): Record<string, boolean> {
   }
 }
 
-// 本地个人类目（content.local.ts，不进 git）；多模态插入位置：学习清单在「模型量化」后（索引 5）、方向总览在「具身智能」后（索引 5）
+// 本地个人类目（content.local.ts，不进 git）；多模态插在「模型量化」之后（索引 5）
 const BASE_CATS = [...CHECKLIST, ...(LOCAL?.EXTRA_CATS ?? [])]
 const ALL_CATS = [...BASE_CATS.slice(0, 5), MM_CAT, ...BASE_CATS.slice(5)]
-const ALL_DIRECTIONS = [...DIRECTIONS.slice(0, 5), MM_DIRECTION, ...DIRECTIONS.slice(5)]
 const TOTAL = ALL_CATS.reduce((n, c) => n + c.items.length, 0)
 const RES_COUNT = RESOURCES.reduce((n, c) => n + c.links.length, 0) + MM_LINKS.length
 
-// 面试拆解 tab 与相关数据：仅当本地存在个人拆解数据（content.local.ts）时显示
+// 项目拆解 tab 与相关数据：仅当本地存在个人拆解数据（content.local.ts）时显示
 const INTERVIEW_FRAMEWORK = LOCAL?.INTERVIEW_FRAMEWORK ?? []
 const TEARDOWN_PROJECTS = [LOCAL?.WEKNORA, LOCAL?.ONYX].filter(p => p != null)
 const COMPARE_ROWS = LOCAL?.COMPARE_ROWS ?? []
 const TEARDOWN_METHOD = LOCAL?.TEARDOWN_METHOD ?? []
 const SHOW_TEARDOWN = TEARDOWN_PROJECTS.length > 0
-
-const TAG_STYLE: Record<string, string> = {
-  main: 'bg-primary text-primary-foreground',
-  core: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-  base: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
-  side: 'bg-muted text-muted-foreground',
-}
 
 function ProgressRing({ value, size = 88 }: { value: number; size?: number }) {
   const r = (size - 10) / 2
@@ -111,8 +102,8 @@ export default function Home() {
   const done = useMemo(() => Object.values(checked).filter(Boolean).length, [checked])
 
   const stats = [
-    { icon: ListChecks, label: '学习条目', value: TOTAL, unit: '项' },
-    { icon: Compass, label: '学习方向', value: ALL_DIRECTIONS.length, unit: '个' },
+    { icon: ListChecks, label: '项目清单项', value: TOTAL, unit: '项' },
+    { icon: BookOpen, label: '理论学习点', value: THEORY_TOTAL, unit: '个' },
     { icon: Link2, label: '官网直达', value: RES_COUNT, unit: '+' },
     { icon: CheckCircle2, label: '已完成', value: done, unit: '项' },
   ]
@@ -126,18 +117,37 @@ export default function Home() {
             <div className="flex-1 min-w-64">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                 <Sparkles className="h-3.5 w-3.5" />
-                s2ai · science to AI · 公开学习站
+                s2ai · science to AI · 公开学习树
               </div>
-              <h1 className="text-3xl font-medium tracking-tight">AI 学习站</h1>
+              <h1 className="text-3xl font-medium tracking-tight">AI 学习树</h1>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-xl">
-                面向大模型 / Agent 算法岗，理论考点地图 + 实操学习清单双轨并行，
-                逐项学习、逐项勾选，进度自动保存在本机。
+                面向想系统学大模型 / Agent 的人——零基础转行或有基础进阶。
+                理论地图告诉你先学什么，项目清单告诉你先做什么，互相挂靠；
+                只做索引、顺序和取舍，详细内容在官方文档里。
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {['Agent 开发', 'RAG / 知识库', 'LLM 后训练', '强化学习', '模型量化', '理论考点地图', '主流模型卡片', 'JEPA · 世界模型', '多模态'].map(t => (
+                {['Agent 开发', 'RAG / 知识库', 'LLM 后训练', '强化学习', '模型量化', '理论地图', '项目清单', '多模态'].map(t => (
                   <span key={t} className="rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground">
                     {t}
                   </span>
+                ))}
+              </div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {STARTERS.map(s => (
+                  <div key={s.who} className="rounded-lg border bg-background p-3">
+                    <p className="text-xs font-medium">从哪开始 · {s.who}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 mb-2">{s.desc}</p>
+                    <ol className="space-y-1.5">
+                      {s.steps.map((st, i) => (
+                        <li key={st} className="flex gap-1.5 text-xs text-muted-foreground">
+                          <span className="flex h-4 w-4 flex-none items-center justify-center rounded-full bg-muted text-[10px] font-medium">
+                            {i + 1}
+                          </span>
+                          <span className="leading-relaxed">{st}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
                 ))}
               </div>
             </div>
@@ -164,21 +174,17 @@ export default function Home() {
       <main className="mx-auto max-w-6xl px-6 py-6">
         <Tabs defaultValue="checklist">
           <TabsList className="mb-6 flex-wrap h-auto gap-1 bg-card border p-1.5">
-            <TabsTrigger value="checklist" className="gap-1.5"><ListChecks className="h-3.5 w-3.5" />学习清单</TabsTrigger>
-            <TabsTrigger value="theory" className="gap-1.5"><MapIcon className="h-3.5 w-3.5" />考点地图</TabsTrigger>
-            <TabsTrigger value="overview" className="gap-1.5"><Compass className="h-3.5 w-3.5" />方向总览</TabsTrigger>
+            <TabsTrigger value="checklist" className="gap-1.5"><ListChecks className="h-3.5 w-3.5" />项目清单</TabsTrigger>
+            <TabsTrigger value="theory" className="gap-1.5"><MapIcon className="h-3.5 w-3.5" />理论地图</TabsTrigger>
             <TabsTrigger value="resources" className="gap-1.5"><Link2 className="h-3.5 w-3.5" />资源导航</TabsTrigger>
+            <TabsTrigger value="reference" className="gap-1.5"><Search className="h-3.5 w-3.5" />速查</TabsTrigger>
             {SHOW_TEARDOWN && (
-              <TabsTrigger value="teardown" className="gap-1.5"><Briefcase className="h-3.5 w-3.5" />面试拆解</TabsTrigger>
+              <TabsTrigger value="teardown" className="gap-1.5"><Briefcase className="h-3.5 w-3.5" />项目拆解</TabsTrigger>
             )}
-            <TabsTrigger value="jepa" className="gap-1.5"><Network className="h-3.5 w-3.5" />JEPA · REA</TabsTrigger>
-            <TabsTrigger value="multimodal" className="gap-1.5"><Images className="h-3.5 w-3.5" />多模态</TabsTrigger>
-            <TabsTrigger value="models" className="gap-1.5"><Cpu className="h-3.5 w-3.5" />模型卡片</TabsTrigger>
             <TabsTrigger value="inbox" className="gap-1.5"><InboxIcon className="h-3.5 w-3.5" />项目收集箱</TabsTrigger>
-            <TabsTrigger value="works" className="gap-1.5"><Target className="h-3.5 w-3.5" />作品目标</TabsTrigger>
           </TabsList>
 
-          {/* 学习清单 */}
+          {/* 项目清单 */}
           <TabsContent value="checklist">
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-muted-foreground">学完一项勾一项，进度自动保存在本机浏览器。</p>
@@ -236,7 +242,7 @@ export default function Home() {
                             {item.ref && (
                               <Badge variant="outline"
                                 className="ml-auto flex-none text-[10px] px-1.5 py-0 h-4 font-mono text-muted-foreground"
-                                title={`关联八股考点 ${item.ref}`}>
+                                title={`关联理论点 ${item.ref}`}>
                                 {item.ref}
                               </Badge>
                             )}
@@ -250,36 +256,9 @@ export default function Home() {
             </Accordion>
           </TabsContent>
 
-          {/* 考点地图 */}
+          {/* 理论地图 */}
           <TabsContent value="theory">
             <TheoryMap />
-          </TabsContent>
-
-          {/* 方向总览 */}
-          <TabsContent value="overview">
-            <div className="grid gap-3 md:grid-cols-2">
-              {ALL_DIRECTIONS.map(d => (
-                <Card key={d.rank + d.name}
-                  className={`relative overflow-hidden transition-shadow hover:shadow-md ${d.top ? 'border-primary/40' : ''}`}>
-                  <span className={`absolute inset-y-0 left-0 w-1 ${d.top ? 'bg-primary' : 'bg-muted'}`} />
-                  <CardHeader className="pb-2 pl-5">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium">
-                        {d.rank}
-                      </span>
-                      <CardTitle className="text-base">{d.name}</CardTitle>
-                      <Badge className={`ml-auto text-xs border-0 ${TAG_STYLE[d.tagKind]}`}>
-                        {d.tag}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="text-sm text-muted-foreground space-y-1 pl-5">
-                    <p className="leading-relaxed">{d.tools}</p>
-                    <p className="text-xs">目标：{d.work}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
           </TabsContent>
 
           {/* 资源导航 */}
@@ -320,12 +299,12 @@ export default function Home() {
             ))}
           </TabsContent>
 
-          {/* 面试拆解（仅本地存在 content.local.ts 时显示） */}
+          {/* 项目拆解（仅本地存在 content.local.ts 时显示） */}
           {SHOW_TEARDOWN && (
           <TabsContent value="teardown" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">面试讲述框架（适用于两个项目）</CardTitle>
+                <CardTitle className="text-base">项目讲述框架（适用于两个项目）</CardTitle>
                 <CardDescription>按六步讲，控制在 3–5 分钟</CardDescription>
               </CardHeader>
               <CardContent>
@@ -390,7 +369,7 @@ export default function Home() {
               <CardHeader>
                 <CardTitle className="text-base">两个项目对比</CardTitle>
                 <CardDescription className="text-sm leading-relaxed">
-                  面试时主动对比显深度：WeKnora 教我「知识如何被组织和维护」，Onyx 教我「检索如何安全地覆盖全公司数据源」，手搓 RAG 教我每一环为什么难。
+                  主动对比显深度：WeKnora 教我「知识如何被组织和维护」，Onyx 教我「检索如何安全地覆盖全公司数据源」，手搓 RAG 教我每一环为什么难。
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -428,167 +407,103 @@ export default function Home() {
           </TabsContent>
           )}
 
-          {/* JEPA · REA */}
-          <TabsContent value="jepa" className="space-y-6">
-            <Card className="transition-shadow hover:shadow-md">
-              <CardHeader>
-                <CardTitle className="text-base">JEPA 与世界模型</CardTitle>
-                <CardDescription className="text-sm leading-relaxed">
-                  核心理念：在抽象表征空间做预测，而不是逐像素重建 —— 只学习对理解、推理和规划真正重要的结构。LeCun「自主机器智能」路线的主干。
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ol className="relative space-y-4 border-l-2 pl-5">
-                  {JEPA_NODES.map(n => (
-                    <li key={n.name} className="relative">
-                      <span className={`absolute -left-[27px] top-1 h-3 w-3 rounded-full border-2 ${n.key ? 'border-primary bg-primary' : 'border-muted-foreground/40 bg-background'}`} />
-                      <p className="text-sm font-medium">
-                        {n.name}
-                        <span className="ml-2 text-xs font-normal text-muted-foreground tabular-nums">{n.year}</span>
-                      </p>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{n.desc}</p>
-                    </li>
-                  ))}
-                </ol>
-                <Separator className="my-5" />
-                <h4 className="text-sm font-medium mb-2">动手实践路径</h4>
-                <StepList steps={JEPA_STEPS} />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">REA 工具支线</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <StepList steps={REA_STEPS} />
-                <Separator className="my-4" />
-                <p className="text-sm text-muted-foreground leading-relaxed">{JEPA_NOTE}</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* 多模态 */}
-          <TabsContent value="multimodal" className="space-y-6">
-            <Card className="transition-shadow hover:shadow-md">
-              <CardHeader>
-                <CardTitle className="text-base">多模态学习路径</CardTitle>
-                <CardDescription className="text-sm leading-relaxed">
-                  图像 + 文本是起点，逐步扩展到文档 OCR、视频、音频和跨模态检索。核心架构是「视觉编码器（ViT）+ 连接器 + 语言模型」三段式，先跑通再深入。
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <StepList steps={MM_PATH} />
-              </CardContent>
-            </Card>
-
-            <Card className="transition-shadow hover:shadow-md">
-              <CardHeader>
-                <CardTitle className="text-base">主流开源多模态模型速查</CardTitle>
-                <CardDescription>2026 年本地可跑的常见选择，按显存从低到高</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-left">
-                        <th className="py-2 pr-4 font-medium">模型</th>
-                        <th className="py-2 pr-4 font-medium">规模</th>
-                        <th className="py-2 pr-4 font-medium">最低显存</th>
-                        <th className="py-2 font-medium">亮点</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {MM_MODELS.map(m => (
-                        <tr key={m.name} className="border-b last:border-0 hover:bg-muted/50">
-                          <td className="py-2 pr-4 font-medium whitespace-nowrap">{m.name}</td>
-                          <td className="py-2 pr-4 text-muted-foreground whitespace-nowrap">{m.size}</td>
-                          <td className="py-2 pr-4 text-muted-foreground whitespace-nowrap">{m.vram}</td>
-                          <td className="py-2 text-muted-foreground">{m.point}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div>
-              <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
-                <Layers className="h-4 w-4 text-muted-foreground" />官方资源直达
+          {/* 速查（工具书：模型 + 多模态，不参与学习顺序，随时来查） */}
+          <TabsContent value="reference" className="space-y-8">
+            <section>
+              <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                <Cpu className="h-4 w-4 text-muted-foreground" />模型速查
               </h3>
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {MM_LINKS.map(l => (
-                  <Card key={l.name} className="group transition-shadow hover:shadow-md">
-                    <CardHeader className="pb-2">
-                      <a
-                        href={l.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-sm font-medium underline-offset-4 hover:underline group-hover:text-primary inline-flex items-center gap-1"
-                      >
-                        {l.name}
-                        <ExternalLink className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
-                      </a>
-                      <CardDescription className="text-xs leading-relaxed">{l.intro}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <p className="text-xs text-muted-foreground">
-                        <span className="font-medium text-foreground/70">学什么：</span>{l.learn}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
+              <ModelCards />
+            </section>
 
-          {/* 模型卡片 */}
-          <TabsContent value="models">
-            <ModelCards />
+            <section className="space-y-6">
+              <h3 className="text-sm font-medium flex items-center gap-2">
+                <Images className="h-4 w-4 text-muted-foreground" />多模态速查
+              </h3>
+              <Card className="transition-shadow hover:shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-base">多模态学习路径</CardTitle>
+                  <CardDescription className="text-sm leading-relaxed">
+                    图像 + 文本是起点，逐步扩展到文档 OCR、视频、音频和跨模态检索。核心架构是「视觉编码器（ViT）+ 连接器 + 语言模型」三段式，先跑通再深入。
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <StepList steps={MM_PATH} />
+                </CardContent>
+              </Card>
+
+              <Card className="transition-shadow hover:shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-base">主流开源多模态模型速查</CardTitle>
+                  <CardDescription>2026 年本地可跑的常见选择，按显存从低到高</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b text-left">
+                          <th className="py-2 pr-4 font-medium">模型</th>
+                          <th className="py-2 pr-4 font-medium">规模</th>
+                          <th className="py-2 pr-4 font-medium">最低显存</th>
+                          <th className="py-2 font-medium">亮点</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {MM_MODELS.map(m => (
+                          <tr key={m.name} className="border-b last:border-0 hover:bg-muted/50">
+                            <td className="py-2 pr-4 font-medium whitespace-nowrap">{m.name}</td>
+                            <td className="py-2 pr-4 text-muted-foreground whitespace-nowrap">{m.size}</td>
+                            <td className="py-2 pr-4 text-muted-foreground whitespace-nowrap">{m.vram}</td>
+                            <td className="py-2 text-muted-foreground">{m.point}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div>
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-muted-foreground" />官方资源直达
+                </h4>
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {MM_LINKS.map(l => (
+                    <Card key={l.name} className="group transition-shadow hover:shadow-md">
+                      <CardHeader className="pb-2">
+                        <a
+                          href={l.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-sm font-medium underline-offset-4 hover:underline group-hover:text-primary inline-flex items-center gap-1"
+                        >
+                          {l.name}
+                          <ExternalLink className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
+                        </a>
+                        <CardDescription className="text-xs leading-relaxed">{l.intro}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <p className="text-xs text-muted-foreground">
+                          <span className="font-medium text-foreground/70">学什么：</span>{l.learn}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </section>
           </TabsContent>
 
           {/* 项目收集箱 */}
           <TabsContent value="inbox">
             <Inbox />
           </TabsContent>
-
-          {/* 作品目标 */}
-          <TabsContent value="works" className="space-y-6">
-            <div className="grid gap-3 md:grid-cols-2">
-              {WORKS.map((w, i) => (
-                <Card key={w.kind} className="relative overflow-hidden transition-shadow hover:shadow-md">
-                  <span className={`absolute inset-y-0 left-0 w-1 ${i === 0 ? 'bg-primary' : 'bg-violet-500'}`} />
-                  <CardHeader className="pb-2 pl-5">
-                    <CardDescription className="text-xs">{w.kind}</CardDescription>
-                    <CardTitle className="text-base">{w.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-sm text-muted-foreground pl-5">{w.desc}</CardContent>
-                </Card>
-              ))}
-            </div>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">每个作品必须包含</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="grid gap-2 md:grid-cols-2">
-                  {WORK_REQUIREMENTS.map(r => (
-                    <li key={r} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span className="h-3.5 w-3.5 flex-none rounded border border-muted-foreground/40" />
-                      {r}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       </main>
 
       <footer className="border-t mt-8 bg-card/60">
         <div className="mx-auto max-w-6xl px-6 py-5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          <span>S2AI · science to AI ｜ 理论考点地图 + 实操学习清单 · 数据驱动、可自学习扩展</span>
+          <span>S2AI · science to AI ｜ 一棵预制的 AI 学习树：理论地图 + 项目清单 · 数据驱动、可私有化生长</span>
           <span className="ml-auto flex gap-4">
             {SHOW_TEARDOWN && (
               <>
@@ -596,7 +511,6 @@ export default function Home() {
                 <a href="https://www.onyx.app/" target="_blank" rel="noreferrer" className="hover:underline inline-flex items-center gap-1">Onyx <ExternalLink className="h-3 w-3" /></a>
               </>
             )}
-            <a href="https://rea.run/zh/docs/install-demo/" target="_blank" rel="noreferrer" className="hover:underline inline-flex items-center gap-1">REA 文档 <ExternalLink className="h-3 w-3" /></a>
           </span>
         </div>
       </footer>
