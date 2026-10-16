@@ -9,7 +9,8 @@ import { CHECKLIST, LOCAL } from '@/data/content'
 import { MM_CAT } from '@/data/resources'
 import { INBOX } from '@/data/inbox'
 import { loadGrads, saveGrads, loadDemoted, saveDemoted, demoteFeedText } from '@/lib/graduated'
-import { jumpTo, parseTheoryRefs } from '@/lib/jump'
+import { jumpTo } from '@/lib/jump'
+import IndexNote from '@/components/IndexNote'
 
 // 和 Home 相同的类目全集（含多模态与本地个人类目），否则挂在这些节点上的卡片解析失败
 const ALL_CATS = [...CHECKLIST, MM_CAT, ...(LOCAL?.EXTRA_CATS ?? [])]
@@ -45,6 +46,17 @@ function resolveNode(ref: string): NodeRef | null {
   return null
 }
 
+// 节点引用 → 跨板块跳转目标（反向链接可点击）
+function refJump(ref: string): { tab: 'checklist' | 'theory' | 'cards' | 'inbox'; anchor?: string } | null {
+  if (/^\d{2}-M\d+\.\d+$/.test(ref)) return { tab: 'theory', anchor: ref }
+  if (CARDS.some(c => c.id === ref)) return { tab: 'cards', anchor: `card-${ref}` }
+  if (CHECKLIST.some(cat => cat.items.some(i => i.id === ref)) || MM_CAT.items.some(i => i.id === ref)) {
+    return { tab: 'checklist', anchor: `item-${ref}` }
+  }
+  if (INBOX.some(i => i.url === ref || i.name === ref)) return { tab: 'inbox' }
+  return null
+}
+
 export default function Cards() {
   const [grads, setGrads] = useState(loadGrads)
   const [demoted, setDemoted] = useState<string[]>(loadDemoted)
@@ -74,6 +86,7 @@ export default function Cards() {
 
   return (
     <div className="space-y-4">
+      <IndexNote />
       <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">
         学习卡片是树上的叶子：挂在任意节点上的粗粒度知识索引卡——不是笔记、不是教程，
         一张卡让人 30 秒判断"这是什么、跟我什么关系、接下来去哪"。
@@ -147,9 +160,8 @@ export default function Cards() {
         <div className="grid gap-3 md:grid-cols-2">
           {CARDS.map(card => {
             const target = resolveNode(card.target)
-            const targetTheory = parseTheoryRefs(card.target)[0]
             return (
-              <Card key={card.id} className="transition-shadow hover:shadow-md">
+              <Card key={card.id} id={`card-${card.id}`} className="transition-shadow hover:shadow-md scroll-mt-20">
                 <CardHeader className="pb-2">
                   <div className="flex items-center gap-2 flex-wrap">
                     <a
@@ -161,20 +173,25 @@ export default function Cards() {
                       {card.name}
                       <ExternalLink className="h-3 w-3" />
                     </a>
-                    {target && (targetTheory ? (
-                      <button
-                        onClick={() => jumpTo(targetTheory)}
-                        className="rounded-full border px-1.5 py-0 h-4 text-[10px] font-mono text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
-                        title={`挂在树上：${target.hint}，点击跳转到理论地图`}
-                      >
-                        {target.hint}
-                      </button>
-                    ) : (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4"
-                        title={`挂在树上：${target.hint}`}>
-                        {target.hint}
-                      </Badge>
-                    ))}
+                    {target ? (
+                      refJump(card.target) ? (
+                        <button
+                          onClick={() => {
+                            const j = refJump(card.target)
+                            if (j) jumpTo(j)
+                          }}
+                          className="rounded-full border px-1.5 py-0 h-4 text-[10px] text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+                          title={`挂在树上：${target.hint}，点击跳转`}
+                        >
+                          {target.hint}
+                        </button>
+                      ) : (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4"
+                          title={`挂在树上：${target.hint}`}>
+                          {target.hint}
+                        </Badge>
+                      )
+                    ) : null}
                   </div>
                   <CardDescription className="flex gap-2 text-xs leading-relaxed">
                     <span className="flex-none w-14 font-medium text-foreground/70">分类</span>
@@ -195,26 +212,24 @@ export default function Cards() {
                     <span className="space-y-0.5 min-w-0">
                       {card.next.map(ref => {
                         const node = resolveNode(ref)
-                        const theoryRef = parseTheoryRefs(ref)[0]
-                        const text = (
-                          <>
-                            {node ? node.label : ref}
-                            {node && <span className="text-muted-foreground/60">（{node.hint}）</span>}
-                          </>
-                        )
+                        const jump = refJump(ref)
                         return (
                           <span key={ref} className="flex items-start gap-1 text-xs text-muted-foreground leading-relaxed">
                             <CornerDownRight className="h-3 w-3 mt-0.5 flex-none" />
-                            {theoryRef ? (
+                            {jump ? (
                               <button
-                                onClick={() => jumpTo(theoryRef)}
+                                onClick={() => jumpTo(jump)}
                                 className="text-left hover:text-primary hover:underline underline-offset-2 transition-colors"
-                                title={`跳转到理论点 ${theoryRef}`}
+                                title={`${node?.hint ?? ref}，点击跳转`}
                               >
-                                {text}
+                                {node ? node.label : ref}
+                                {node && <span className="text-muted-foreground/60">（{node.hint}）</span>}
                               </button>
                             ) : (
-                              <span>{text}</span>
+                              <span>
+                                {node ? node.label : ref}
+                                {node && <span className="text-muted-foreground/60">（{node.hint}）</span>}
+                              </span>
                             )}
                           </span>
                         )

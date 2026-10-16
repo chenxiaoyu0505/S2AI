@@ -21,6 +21,8 @@ import {
   RESOURCES, MM_CAT,
 } from '@/data/resources'
 import { THEORY_TOTAL } from '@/data/theory'
+import { CARDS } from '@/data/cards'
+import IndexNote from '@/components/IndexNote'
 import { jumpTo, onJump, parseTheoryRefs } from '@/lib/jump'
 import ThemeToggle from '@/components/theme-toggle'
 import TheoryMap from '@/sections/TheoryMap'
@@ -145,9 +147,18 @@ export default function Home() {
     localStorage.setItem(OPEN_KEY, JSON.stringify(openCats))
   }, [openCats])
 
-  useEffect(() => onJump(({ ref }) => {
-    setSearchParams({ tab: 'theory' }, { replace: true })
-    setTheoryFocus({ ref, nonce: Date.now() })
+  // 统一跳转处理器：切 tab（同步 ?tab= URL）+ 展开清单组 + 滚动锚点 / 理论点聚焦
+  useEffect(() => onJump(t => {
+    setSearchParams(t.tab === 'checklist' ? {} : { tab: t.tab }, { replace: true })
+    if (t.expand) setOpenCats(prev => (prev.includes(t.expand!) ? prev : [...prev, t.expand!]))
+    if (t.tab === 'theory' && t.anchor) {
+      setTheoryFocus({ ref: t.anchor, nonce: Date.now() })
+    } else if (t.anchor) {
+      // 等目标 tab 渲染完成后再滚动
+      setTimeout(() => {
+        document.getElementById(t.anchor!)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 300)
+    }
   }), [setSearchParams])
 
   // 只统计仍然存在的清单项（数据更新后旧 key 不再计入）
@@ -173,6 +184,17 @@ export default function Home() {
   function toggleItem(id: string) {
     setChecked(prev => ({ ...prev, [id]: !prev[id] }))
   }
+
+  // 清单项 ← 卡片（反向）：target 指向清单项 id 的卡片
+  const cardsByItem = useMemo(() => {
+    const m = new Map<string, string[]>()
+    for (const c of CARDS) {
+      const arr = m.get(c.target) ?? []
+      arr.push(c.id)
+      m.set(c.target, arr)
+    }
+    return m
+  }, [])
 
   const stats = [
     { icon: ListChecks, label: '项目清单项', value: TOTAL, unit: '项' },
@@ -269,6 +291,7 @@ export default function Home() {
 
           {/* 项目清单 */}
           <TabsContent value="checklist">
+            <div className="mb-4"><IndexNote /></div>
             <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
               <p className="text-sm text-muted-foreground">学完一项勾一项，进度自动保存在本机浏览器。</p>
               <div className="flex items-center gap-3 flex-wrap">
@@ -333,10 +356,12 @@ export default function Home() {
                       <div className="grid gap-1 pb-2 md:grid-cols-2">
                         {cat.items.map(item => {
                           const on = !!checked[item.id]
+                          const linkedCards = cardsByItem.get(item.id)
                           return (
                             // 同 TheoryMap：Radix Checkbox 是 button，label 包不住——整行可点
                             <div
                               key={item.id}
+                              id={`item-${item.id}`}
                               role="checkbox"
                               aria-checked={on}
                               tabIndex={0}
@@ -347,7 +372,7 @@ export default function Home() {
                                   toggleItem(item.id)
                                 }
                               }}
-                              className="flex cursor-pointer select-none items-start gap-2.5 rounded-md px-2 py-1.5 hover:bg-accent transition-colors"
+                              className="flex cursor-pointer select-none items-start gap-2.5 rounded-md px-2 py-1.5 hover:bg-accent transition-colors scroll-mt-20"
                             >
                               <Checkbox
                                 className="mt-0.5 pointer-events-none"
@@ -358,19 +383,34 @@ export default function Home() {
                                 <HL text={item.t} q={iq} />
                                 {item.e && <span className="block text-xs text-muted-foreground">{item.e}</span>}
                               </span>
+                              {linkedCards && (
+                                <button
+                                  onClick={e => {
+                                    e.stopPropagation()
+                                    jumpTo({ tab: 'cards', anchor: `card-${linkedCards[0]}` })
+                                  }}
+                                  className="ml-auto flex-none text-[10px] px-1.5 py-0 h-4 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:underline underline-offset-2"
+                                  title={`${linkedCards.length} 张学习卡片挂在这个项目上，点击跳去学习卡片`}
+                                >
+                                  卡 {linkedCards.length}
+                                </button>
+                              )}
                               {item.ref && (() => {
                                 const target = parseTheoryRefs(item.ref)[0]
                                 return target ? (
                                   <button
-                                    onClick={e => { e.stopPropagation(); jumpTo(target) }}
-                                    className="ml-auto flex-none rounded border px-1.5 py-0 h-4 text-[10px] font-mono text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
-                                    title={`关联理论点 ${item.ref}，点击跳转到理论地图`}
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      jumpTo({ tab: 'theory', anchor: target })
+                                    }}
+                                    className={`flex-none rounded border px-1.5 py-0 h-4 text-[10px] font-mono text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors ${linkedCards ? '' : 'ml-auto'}`}
+                                    title={`关联理论点 ${item.ref}，点击跳去理论地图`}
                                   >
                                     {item.ref}
                                   </button>
                                 ) : (
                                   <Badge variant="outline"
-                                    className="ml-auto flex-none text-[10px] px-1.5 py-0 h-4 font-mono text-muted-foreground"
+                                    className={`flex-none text-[10px] px-1.5 py-0 h-4 font-mono text-muted-foreground ${linkedCards ? '' : 'ml-auto'}`}
                                     title={`关联理论点 ${item.ref}`}>
                                     {item.ref}
                                   </Badge>
@@ -412,6 +452,15 @@ export default function Home() {
                 <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
                   <Layers className="h-4 w-4 text-muted-foreground" />{cat.name}
                   <span className="text-xs font-normal text-muted-foreground">{cat.links.length} 个</span>
+                  {ALL_CATS.some(c => c.name === cat.name) && (
+                    <button
+                      onClick={() => jumpTo({ tab: 'checklist', expand: cat.name })}
+                      className="text-[10px] px-1.5 py-0.5 rounded-full border text-muted-foreground hover:text-primary hover:border-primary transition-colors"
+                      title="项目清单里有同名学习组，点击跳转"
+                    >
+                      ↩ 清单组
+                    </button>
+                  )}
                 </h3>
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                   {cat.links.map(l => (

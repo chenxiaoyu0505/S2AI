@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Inbox as InboxIcon, ExternalLink, GraduationCap } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { INBOX, type InboxItem, type InboxLevel } from '@/data/inbox'
 import { loadGrads, saveGrads, makeGradDraft, gradFeedText, isGradStale, type GradDraft } from '@/lib/graduated'
+import { jumpTo } from '@/lib/jump'
+import IndexNote from '@/components/IndexNote'
 
 const LEVEL_STYLE: Record<InboxLevel, string> = {
   观望: 'bg-muted text-muted-foreground',
@@ -56,6 +57,7 @@ export default function Inbox() {
 
   return (
     <div className="space-y-4">
+      <IndexNote />
       <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">
         项目收集箱：学习途中看到好项目但暂时没空学？先把链接丢给你的 Agent 收录进来——
         自动补一句解析、归到树上对应位置、给出下潜路径，之后按「观望 → 跟练 → 深入」按需投入。
@@ -107,7 +109,16 @@ export default function Inbox() {
                       {item.name}
                       <ExternalLink className="h-3 w-3" />
                     </a>
-                    <Badge variant="secondary" className="text-xs">{item.cat}</Badge>
+                    <button
+                      onClick={() => {
+                        const group = item.cat.split(' · ')[0].trim()
+                        jumpTo({ tab: 'checklist', expand: group })
+                      }}
+                      className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground hover:underline underline-offset-2"
+                      title="跳到项目清单对应分组"
+                    >
+                      {item.cat}
+                    </button>
                     <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-medium ${LEVEL_STYLE[item.level]}`}>
                       {item.level}
                     </span>

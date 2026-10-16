@@ -8,6 +8,11 @@ import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { THEORY_CHAPTERS, THEORY_TOTAL, THEORY_DONE, type TheoryChapter } from '@/data/theory'
+import { CHECKLIST } from '@/data/content'
+import { MM_CAT } from '@/data/resources'
+import { CARDS } from '@/data/cards'
+import { jumpTo } from '@/lib/jump'
+import IndexNote from '@/components/IndexNote'
 
 const STORE_KEY = 'ai-study-theory-v1'
 // 展开的篇章也持久化：不再写死默认展开，切 tab / 刷新后保持用户自己的选择
@@ -18,6 +23,27 @@ const THEORY_MODULES = THEORY_CHAPTERS.reduce((n, c) => n + c.modules.length, 0)
 const POINT_KEYS = new Set(
   THEORY_CHAPTERS.flatMap(c => c.modules.flatMap(mo => mo.points.map(p => `${c.id}-${p.id}`)))
 )
+
+// 解析清单项 ref → 理论点编号列表：支持 "03-M3.1"、"02-M5.2 + 08-M2.1"、"05-M1.3–1.4"（含跨模块与区间）
+function expandRef(ref: string): string[] {
+  const out: string[] = []
+  for (const part of ref.split('+')) {
+    const p = part.trim()
+    const range = p.match(/^(\d{2})-M(\d+)\.(\d+)[–—-](?:M(\d+)\.)?(\d+)$/)
+    if (range) {
+      const [, ch, mod, a, mod2, b] = range
+      if ((mod2 ?? mod) === mod) {
+        for (let i = Number(a); i <= Number(b) && i <= Number(a) + 10; i++) out.push(`${ch}-M${mod}.${i}`)
+      } else {
+        out.push(`${ch}-M${mod}.${a}`) // 跨模块范围只记起点，不展开
+      }
+      continue
+    }
+    const single = p.match(/^(\d{2}-M\d+\.\d+)$/)
+    if (single) out.push(single[1])
+  }
+  return out
+}
 
 function loadProgress(): Record<string, boolean> {
   try {
@@ -125,8 +151,33 @@ export default function TheoryMap({ focus }: { focus?: { ref: string; nonce: num
       modules: ch.modules.map(mo => ({ mo, points: mo.points })),
     }))
 
+  // 反向引用：哪些项目清单项（ref）与哪些学习卡片（target/next）指向每个理论点
+  const backRefs = useMemo(() => {
+    const items = new Map<string, number>()
+    for (const cat of [...CHECKLIST, MM_CAT]) {
+      for (const it of cat.items) {
+        if (!it.ref) continue
+        for (const pid of expandRef(it.ref)) items.set(pid, (items.get(pid) ?? 0) + 1)
+      }
+    }
+    const cardIds = new Map<string, string[]>()
+    for (const c of CARDS) {
+      const seen = new Set<string>()
+      for (const r of [c.target, ...c.next]) {
+        if (/^\d{2}-M\d+\.\d+$/.test(r) && !seen.has(r)) {
+          seen.add(r)
+          const arr = cardIds.get(r) ?? []
+          arr.push(c.id)
+          cardIds.set(r, arr)
+        }
+      }
+    }
+    return { items, cardIds }
+  }, [])
+
   return (
     <div className="space-y-4">
+      <IndexNote />
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
           理论地图：大模型 / Agent 的知识骨架。{THEORY_CHAPTERS.length} 篇章 · {THEORY_MODULES} 模块 · {THEORY_TOTAL} 学习点，数据源自笔记目录总览。
@@ -247,6 +298,33 @@ export default function TheoryMap({ focus }: { focus?: { ref: string; nonce: num
                                 <HL text={p.name} q={q} />
                               </span>
                               <span className="ml-auto flex items-center gap-1.5 flex-none pt-0.5">
+                                {backRefs.items.get(key) ? (
+                                  <button
+                                    onClick={e => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                      jumpTo({ tab: 'checklist' })
+                                    }}
+                                    className="text-[10px] px-1.5 py-0 h-4 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:underline underline-offset-2"
+                                    title={`${backRefs.items.get(key)} 个项目清单项挂靠本点，点击跳去项目清单`}
+                                  >
+                                    单 {backRefs.items.get(key)}
+                                  </button>
+                                ) : null}
+                                {backRefs.cardIds.get(key) ? (
+                                  <button
+                                    onClick={e => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                      const ids = backRefs.cardIds.get(key)
+                                      if (ids) jumpTo({ tab: 'cards', anchor: `card-${ids[0]}` })
+                                    }}
+                                    className="text-[10px] px-1.5 py-0 h-4 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:underline underline-offset-2"
+                                    title={`${backRefs.cardIds.get(key)?.length} 张学习卡片指向本点，点击跳去学习卡片`}
+                                  >
+                                    卡 {backRefs.cardIds.get(key)?.length}
+                                  </button>
+                                ) : null}
                                 {p.done && (
                                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 gap-0.5">
                                     <BookOpenCheck className="h-2.5 w-2.5" />笔记

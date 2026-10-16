@@ -12,7 +12,7 @@ S2AI（science to AI）—— 面向大模型 / Agent 算法岗的公开学习�
 ## 黄金法则
 
 1. **只改数据文件和页面组件，不动构建配置**（除非主人明确要求）。
-2. **改完必须跑 `npm run build` 验证零报错**，再提交。
+2. **改完必须跑 `npm run build` 验证零报错**；只要动了数据文件（`theory.ts` / `inbox.ts` / `cards.ts` / `content.ts`），再跑 `python scripts/check-tree.py` 校验树上无断链——两个都过才提交。
 3. 个人化内容**只允许**写进 `src/data/content.local.ts`（已被 .gitignore 排除，永不进 git）。任何个人笔记、面经、复盘都放那里。
 4. 提交信息用中文、一句话说清楚改了什么。
 
@@ -23,6 +23,7 @@ npm install            # 首次
 npm run dev            # 本地开发预览
 npm run build          # 类型检查 + 生产构建（提交前必须跑通）
 python scripts/generate-theory.py   # 从八股目录总览重新生成考点数据（见下）
+python scripts/export-dashboard.py  # 导出可视化看板 dashboard/tree.html（见任务手册 10）
 git add -A && git commit -m "说明" && git push   # push 后 Actions 自动部署上线
 ```
 
@@ -41,6 +42,7 @@ src/
   pages/Home.tsx   tab 容器与首页布局（注册新 tab 要改这里）
   components/ui/   shadcn 组件（直接用，不要新造轮子）
 scripts/generate-theory.py   理论地图数据生成脚本
+scripts/check-tree.py        树完整性校验（卡片 id 唯一、next/target/ref 断链、毕业一致性）
 .github/workflows/deploy.yml 自动部署（push 到 main → 构建 → 发布 Pages）
 DESIGN.md          产品设计对齐文档（结构/命名/边界）
 AGENTS.md          本文件
@@ -81,14 +83,20 @@ AGENTS.md          本文件
 主人发来一个项目网址（比如「这个项目看起来不错，收录一下」）时：
 
 1. **访问项目官网**，弄清楚：它是什么、解决什么问题、技术栈、小白上手路径（docs/quickstart 在哪）。
-2. **概念提炼（固定步骤）**：这项目背后的核心概念是什么？到 `theory.ts` 里查理论地图：
+2. **查重（固定步骤）**：在 `src/data/inbox.ts`、`src/data/content.ts` 的 `CHECKLIST`、`src/data/cards.ts` 里搜同名或同 url——已收录就直接告诉主人它在哪里，不要重复收录。
+3. **概念提炼（固定步骤）**：这项目背后的核心概念是什么？到 `theory.ts` 里查理论地图：
    - 概念已存在 → 把条目的归类往对应模块靠。
    - 概念不存在 → 准备一句「理论线增补建议」（概念名 + 一句话解释 + 建议挂在哪个篇章模块）。
-3. **归类**：`cat` 字段格式 = 「项目清单分类 · 理论模块」，如 `Agent 开发 · 04-M2`。拿不准就选最接近的，并在回复里说明理由。
-4. **定投入级别**：`观望`（只看解析）/ `跟练`（跑 demo）/ `深入`（读源码），默认「观望」。
-5. **追加到 `src/data/inbox.ts` 的 `INBOX` 数组**（按格式，added 写当前年月；有新概念时填 `concept` 字段）。
-6. 跑 `npm run build` 验证，commit（信息如 `inbox: 收录 xxx（分类 · 级别）`），push 自动上线。
-7. 回复主人：一句话解析 + 你归的类 + 建议的入门第一步 + 概念提炼结论（若有）。
+4. **归类**：`cat` 字段格式 = 「项目清单分类 · 理论模块」，如 `Agent 开发 · 04-M2`。拿不准就选最接近的，并在回复里说明理由。
+5. **定投入级别**：`观望`（只看解析）/ `跟练`（跑 demo）/ `深入`（读源码），默认「观望」。
+6. **追加到 `src/data/inbox.ts` 的 `INBOX` 数组**，`InboxItem` 字段一个不能少：
+   - `name` / `url` / `added`（当前年月 YYYY-MM）/ `cat`（见上）/ `level`（见上）
+   - `intro`：一句话，它是什么
+   - `why`：为什么收录——解决什么痛点、与现有内容什么关系
+   - `dive`：小白下潜路径——从哪开始、到什么程度为止
+   - `concept?`：有新概念时填（理论线增补建议，概念名 + 一句话解释）
+7. 跑 `npm run build` 和 `python scripts/check-tree.py` 验证，commit（信息如 `inbox: 收录 xxx（分类 · 级别）`），push 自动上线。
+8. 回复主人：一句话解析 + 你归的类 + 建议的入门第一步 + 概念提炼结论（若有）。
 
 注意：公共树的理论线只有站长能写。Agent 产出的「理论线增补建议」在回复里说明即可，**不要直接改 theory.ts**（它是自动生成的，且公共树干由站长策展）。
 
@@ -104,9 +112,13 @@ AGENTS.md          本文件
 1. **定挂载点**（`target`）：必须能对应到树上真实存在的节点——理论点编号（查 `theory.ts`）、清单项 id（查 `CHECKLIST`）、收集箱条目（用其 url）或另一张卡片的 id。挂不上的，先提醒主人补树。
 2. **定链接**（`url`）：官方文档 / 论文 / 仓库，优先一手来源。
 3. **提炼**（`tags`）：3–5 个关键技术栈/知识点关键词，粗粒度，禁止写成长句。
-4. **连线**（`next`）：2–4 个推荐的相关学习，**只能指向树上的节点**（理论点编号 / 清单项 id / 卡片 id / 收集箱条目），不允许站外链接。
+4. **连线**（`next`）：2–4 个推荐的相关学习，**只能指向树上的节点**，不允许站外链接。树上节点的标识约定（`target` 和 `next` 都遵守）：
+   - 理论点 = 完整编号，如 `02-M1.3`（查 `theory.ts`）
+   - 清单项 = 条目 id，如 `a-mcp`（查 `CHECKLIST`）
+   - 卡片 = `card-` 前缀 id，如 `card-gqa`
+   - 收集箱条目 = 它的 `url`
 5. **追加到 `src/data/cards.ts` 的 `CARDS` 数组**（id 用 `card-` 前缀短横线格式；`madeBy` 注明"自己写的"或"让模型帮忙"）。
-6. 跑 `npm run build` 验证，commit（信息如 `cards: 新增 XX 卡片（挂在 02-M1.3）`），push 自动上线。
+6. 跑 `npm run build` 和 `python scripts/check-tree.py` 验证，commit（信息如 `cards: 新增 XX 卡片（挂在 02-M1.3）`），push 自动上线。
 7. 回复主人：卡片的一句话 + 挂在哪里 + 连出去的推荐学习。
 
 红线：卡片是粗粒度索引卡——一张一屏看完，**禁止长成笔记/教程**。
@@ -122,6 +134,7 @@ AGENTS.md          本文件
 ### 8. 个人化内容（复盘、自己的拆解笔记）
 
 全部写进 `src/data/content.local.ts`，可导出 `EXTRA_CATS`（追加学习清单分类）等字段，形状见 `content.ts` 里的 `LocalContent` 接口。
+**文件不存在就新建**（照着 `LocalContent` 接口导出需要的字段即可）；它已被 .gitignore 排除，`git add -A` 不会带进提交，不用刻意避开。
 站点对缺失文件静默降级（公开克隆不会有这些 tab）。
 
 ### 9. 把学习卡片退回项目收集箱（毕业的逆操作）
@@ -129,12 +142,21 @@ AGENTS.md          本文件
 主人发来退回指令（网页上点「退回收集箱」会生成标准指令文本）或说"把 XX 卡片退回收集箱"时：
 
 1. 从 `src/data/cards.ts` 的 `CARDS` 中移除该卡。
-2. 回收集箱：若 `src/data/inbox.ts` 没有对应条目，按收录协议（任务手册 5）补一条——`cat` 用卡片的 `target`，`url` 用卡片的 `url`，`level` 一律「观望」，`intro` 一句话；**若已有条目，移除其 `graduated` 标记**（它退回成待评估状态，之后可以再次毕业）。
+2. 回收集箱：若 `src/data/inbox.ts` 没有对应条目，按收录协议（任务手册 5）补一条。`cat` 要按卡片 `target` 映射成「项目清单分类 · 理论模块」格式：target 本身就是该格式（卡片当初挂在收集箱条目上）可直接沿用；target 是理论点编号（如 `02-M1.3`）或清单项 id（如 `a-mcp`）时，按其所属模块推导成分类名（如 `Agent 开发 · 04-M2`），拿不准就问主人。`url` 用卡片的 `url`，`level` 一律「观望」，`intro` 一句话，`why` / `dive` 也要补上；**若已有条目，移除其 `graduated` 标记**（它退回成待评估状态，之后可以再次毕业）。
 3. **清理引用（枯叶不留断链）**：全局检查其他卡片的 `next` 中是否有指向该卡片 id 的，删除或改指到其他节点。
-4. 跑 `npm run build` 验证，commit（信息如 `cards: 退回 XX 到收集箱`），push 自动上线。
+4. 跑 `npm run build` 和 `python scripts/check-tree.py` 验证，commit（信息如 `cards: 退回 XX 到收集箱`），push 自动上线。
 5. 回复主人：确认已退回 + 收集箱条目状态 + 清理了哪些断链引用。
 
 注意：退回 ≠ 剔除（任务手册 7）。剔除是叶子枯死、不留痕迹；退回是"学不动/优先级下降"，条目回收集箱继续等待，可再次毕业。
+
+### 10. 换出可视化看板（任何 Agent 都能做）
+
+主人或另一个 Agent 想看树的界面时——这条是 **Agent 无关**的：不依赖特定产品，换出方式对所有 Agent 一致。
+
+1. 跑 `python scripts/export-dashboard.py` → 生成自包含的 `dashboard/tree.html`（内嵌全部树数据 + 原生 JS，**无需 node、无需服务器**，浏览器打开即看）。
+2. 看板有四个板块（理论地图 / 项目清单 / 收集箱 / 学习卡片），支持搜索；理论点、清单项、卡片、收集箱条目之间可以互相点击跳转，断链节点会标红——它是 `check-tree.py` 的可视化补充。
+3. 数据改动后重新跑一次即可刷新看板（提交前顺手跑一遍，让主人预览这次改动）。
+4. `--out PATH` 可指定输出位置——例如主人的 Kimi Work 小组件工作区 `index.html`，把看板常驻进看板页；其余平台同理，把产物挂到各自的界面宿主即可。
 
 ## 不要做
 
