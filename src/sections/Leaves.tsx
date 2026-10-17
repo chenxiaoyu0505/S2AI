@@ -169,22 +169,25 @@ export default function Leaves({
             <AccordionItem key={g.key} value={g.key}
               className={`rounded-lg border bg-card px-4 transition-shadow hover:shadow-md ${allDone ? 'border-emerald-500/40' : ''}`}>
               <AccordionTrigger className="hover:no-underline">
-                <div className="flex flex-1 items-center gap-3 pr-2">
+                {/* 与理论地图同修法：窄屏时右侧「计数 + 进度条」整体落到第二行，组名保持单行不换行 */}
+                <div className="flex flex-1 min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 pr-2">
                   {allDone
                     ? <CheckCircle2 className="h-4 w-4 flex-none text-emerald-500 dark:text-emerald-400" />
                     : g.key === 'wild'
                       ? <Sprout className="h-4 w-4 flex-none text-muted-foreground/60" />
                       : <TreePine className="h-4 w-4 flex-none text-muted-foreground/50" />}
-                  <span className={`text-sm font-medium ${g.opt ? 'text-muted-foreground' : ''}`}>
+                  <span className={`text-sm font-medium min-w-0 ${g.opt ? 'text-muted-foreground' : ''}`}>
                     {g.name}
                   </span>
-                  {g.opt && <Badge variant="secondary" className="text-xs">支线</Badge>}
-                  <span className="ml-auto text-xs tabular-nums text-muted-foreground">
-                    {cn} / {g.leaves.length}
+                  {g.opt && <Badge variant="secondary" className="text-xs flex-none">支线</Badge>}
+                  <span className="ml-auto flex flex-none items-center gap-3">
+                    <span className="text-xs tabular-nums text-muted-foreground">
+                      {cn} / {g.leaves.length}
+                    </span>
+                    <div className="w-24">
+                      <Progress value={(g.leaves.length ? cn / g.leaves.length : 0) * 100} className="h-1.5" />
+                    </div>
                   </span>
-                  <div className="w-24">
-                    <Progress value={(cn / g.leaves.length) * 100} className="h-1.5" />
-                  </div>
                 </div>
               </AccordionTrigger>
               <AccordionContent>
