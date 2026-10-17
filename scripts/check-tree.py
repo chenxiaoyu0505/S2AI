@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # check-tree.py —— 学习树完整性校验
 # 校验内容：叶子 id 唯一、anchor 挂得上树（树根/枝干/枝节/野生）、叶子标签里的理论点编号可解析、
-#           卡片 id 唯一、target/next 无断链、收集箱 cat 挂得上模块、毕业条目挂回树上（卡片或叶子）；
+#           卡片 id 唯一、卡片有链接、target/next 无断链、收集箱 url 唯一、cat 挂得上模块、
+#           毕业条目挂回树上（卡片或叶子）；
 #           另加元校验：任务手册条数与 AGENTS.md 一致、源码不重复拼接 card- 前缀。
 # 用法：在仓库根目录跑  python scripts/check-tree.py
 # 退出码：0 = 树完好；1 = 有断链（打印在 stdout，逐条列出）
@@ -67,6 +68,11 @@ if local_file.exists():
     local_slice = slice_export(local_text, 'EXTRA_LEAVES')
     leaf_ids.extend(re.findall(r"id: '([^']+)'", local_slice))
 
+# 叶子 id 唯一：id 是勾选进度 / 跳转锚点 / 卡片引用的主键，重复会让两处互相覆盖
+dup_leaf_ids = sorted({x for x in leaf_ids if leaf_ids.count(x) > 1})
+if dup_leaf_ids:
+    errors.append(f'叶子 id 重复：{"、".join(dup_leaf_ids)}（id 是进度与跳转主键，必须唯一）')
+
 for lid, url, anchor, tags, practice in leaf_rows:
     if anchor in ('root', 'wild'):
         pass
@@ -88,11 +94,13 @@ for lid, url, anchor, tags, practice in leaf_rows:
 inbox_text = (DATA / 'inbox.ts').read_text(encoding='utf-8')
 inbox_slice = slice_export(inbox_text, 'INBOX')
 inbox_urls, graduated_urls = set(), set()
+inbox_url_list = []
 for block in inbox_slice.split('\n  {'):
     url = re.search(r"url: '(https?://[^']+)'", block)
     cat = re.search(r"cat: '([^']+)'", block)
     if url:
         inbox_urls.add(url.group(1))
+        inbox_url_list.append(url.group(1))
     if url and 'graduated:' in block:
         graduated_urls.add(url.group(1))
     if cat:
@@ -102,6 +110,11 @@ for block in inbox_slice.split('\n  {'):
             continue
         if mod_part not in module_ids and mod_part not in point_ids:
             errors.append(f'收集箱 cat 挂不上模块：{cat.group(1)!r}（{url.group(1) if url else "?"}）')
+
+# 收集箱 url 唯一：条目以 url 为 React key，重复会让两条目渲染冲突、毕业校验互相覆盖
+dup_inbox_urls = sorted({u for u in inbox_url_list if inbox_url_list.count(u) > 1})
+if dup_inbox_urls:
+    errors.append(f'收集箱 url 重复：{"、".join(dup_inbox_urls)}')
 
 # ---------- 4. 学习卡片：id 唯一 / target / next ----------
 cards_text = (DATA / 'cards.ts').read_text(encoding='utf-8')
@@ -113,6 +126,9 @@ for block in cards_slice.split('\n  {'):
         continue
     cid = cid.group(1)
     card_ids.append(cid)
+    url = re.search(r"url: '(https?://[^']+)'", block)
+    if not url:
+        errors.append(f'卡片 {cid} 缺少链接：url 为空或不合法（应指向官方文档 / 论文 / 仓库）')
     target = re.search(r"target: '([^']+)'", block)
     card_targets[cid] = target.group(1) if target else None
     nxt = re.search(r'next: \[([^\]]*)\]', block, re.S)
