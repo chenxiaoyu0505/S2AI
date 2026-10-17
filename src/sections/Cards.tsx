@@ -57,6 +57,13 @@ function refJump(ref: string): { tab: 'checklist' | 'theory' | 'cards' | 'inbox'
   return null
 }
 
+// 卡片 ↔ 叶子：target/next 与叶子的 id / anchor / 标签相交即相关——
+// 卡片挂在理论点上时，锚在同枝节的叶子也算相关（双向关联的主通道）
+function relatedLeaves(card: (typeof CARDS)[number]) {
+  const keys = new Set([card.target, ...card.next])
+  return ALL_LEAVES.filter(l => keys.has(l.id) || keys.has(l.anchor) || l.tags.some(t => keys.has(t)))
+}
+
 export default function Cards() {
   const [demoted, setDemoted] = useState<string[]>(loadDemoted)
 
@@ -132,6 +139,7 @@ export default function Cards() {
         <div className="grid gap-3 md:grid-cols-2">
           {CARDS.map(card => {
             const target = resolveNode(card.target)
+            const leaves = relatedLeaves(card)
             return (
               <Card key={card.id} id={`card-${card.id}`} className="transition-shadow hover:shadow-md scroll-mt-20">
                 <CardHeader className="pb-2">
@@ -179,6 +187,37 @@ export default function Cards() {
                       ))}
                     </span>
                   </p>
+                  {leaves.length > 0 && (
+                    <p className="flex gap-2">
+                      <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">相关叶子</span>
+                      <span className="flex flex-wrap gap-1 min-w-0">
+                        {leaves.map(leaf => (
+                          <span key={leaf.id} className="inline-flex items-center gap-1">
+                            {leaf.url ? (
+                              <a
+                                href={leaf.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="rounded-full border bg-background px-2 py-0 text-[11px] text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors inline-flex items-center gap-1"
+                                title={`叶子：${leaf.intro}，点击直达项目官网`}
+                              >
+                                <Leaf className="h-2.5 w-2.5" />{leaf.name}
+                                <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+                              </a>
+                            ) : (
+                              <button
+                                onClick={() => jumpTo({ tab: 'checklist', anchor: leaf.id })}
+                                className="rounded-full border border-dashed px-2 py-0 text-[11px] text-muted-foreground/80 hover:text-primary hover:border-primary/50 transition-colors inline-flex items-center gap-1"
+                                title={`练习项：${leaf.intro}，点击在叶子清单中定位`}
+                              >
+                                <Leaf className="h-2.5 w-2.5" />{leaf.name}
+                              </button>
+                            )}
+                          </span>
+                        ))}
+                      </span>
+                    </p>
+                  )}
                   {card.next.length > 0 && (
                   <p className="flex gap-2">
                     <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">接下来</span>

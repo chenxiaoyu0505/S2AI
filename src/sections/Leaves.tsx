@@ -27,7 +27,6 @@ interface LeafGroup {
 }
 
 const ALL_LEAVES: Leaf[] = [...LEAVES, ...(LOCAL?.EXTRA_LEAVES ?? [])]
-const ITEM_IDS = new Set(ALL_LEAVES.map(l => l.id))
 
 // 组内排序：枝节锚点（含 '-'）排前，枝干锚点排后，各保序
 function sortGroup(leaves: Leaf[]): Leaf[] {
@@ -87,13 +86,22 @@ export default function Leaves({
   const groups = useMemo(() => buildGroups(), [])
   const [query, setQuery] = useState('')
 
-  // 清单项 ← 卡片（反向）：target 指向叶子 id 的卡片
+  // 叶子 ← 卡片（反向）：卡片 target/next 与叶子的 id / anchor / 标签相交即相关——
+  // 卡片挂在理论点上时，锚在同枝节的叶子也能看到它
   const cardsByLeaf = useMemo(() => {
-    const m = new Map<string, number>()
+    const count = new Map<string, number>()
+    const first = new Map<string, string>()
     for (const c of CARDS) {
-      if (ITEM_IDS.has(c.target)) m.set(c.target, (m.get(c.target) ?? 0) + 1)
+      const keys = new Set([c.target, ...c.next])
+      for (const leaf of ALL_LEAVES) {
+        const hit = keys.has(leaf.id) || keys.has(leaf.anchor) || leaf.tags.some(t => keys.has(t))
+        if (hit) {
+          count.set(leaf.id, (count.get(leaf.id) ?? 0) + 1)
+          if (!first.has(leaf.id)) first.set(leaf.id, c.id)
+        }
+      }
     }
-    return m
+    return { count, first }
   }, [])
 
   const q = query.trim().toLowerCase()
@@ -178,7 +186,7 @@ export default function Leaves({
                 <div className="grid gap-1 pb-2 md:grid-cols-2">
                   {g.leaves.map(leaf => {
                     const on = !!checked[leaf.id]
-                    const nCards = cardsByLeaf.get(leaf.id)
+                    const nCards = cardsByLeaf.count.get(leaf.id)
                     const isTwig = leaf.anchor.includes('-')
                     return (
                       <div
@@ -234,10 +242,11 @@ export default function Leaves({
                             <button
                               onClick={e => {
                                 e.stopPropagation()
-                                jumpTo({ tab: 'cards', anchor: `card-${CARDS.find(c => c.target === leaf.id)?.id}` })
+                                const cid = cardsByLeaf.first.get(leaf.id)
+                                if (cid) jumpTo({ tab: 'cards', anchor: `card-${cid}` })
                               }}
                               className="text-[10px] px-1.5 py-0 h-4 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:underline underline-offset-2"
-                              title={`${nCards} 张学习卡片挂在这片叶子上，点击跳去学习卡片`}
+                              title={`${nCards} 张学习卡片与本叶相关（挂在同枝节或引用了它），点击跳去学习卡片`}
                             >
                               卡 {nCards}
                             </button>
