@@ -43,6 +43,10 @@
   .badge { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 999px; background: #f0f0f0; color: #555; border: 1px solid #e0e0e0; white-space: nowrap; }
   .badge.ref, .badge.node { cursor: pointer; background: #eef2ff; color: #4338ca; border-color: #e0e7ff; }
   .badge.node:hover { background: #e0e7ff; }
+  .badge.cardchip { background: #ecfdf5; color: #047857; border-color: #d1fae5; }
+  .badge.cardchip:hover { background: #d1fae5; }
+  .orphan { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #e5e5e5; font-size: 12px; color: #888; }
+  .orphan .badge { margin-left: 4px; }
   .badge.broken { background: #fef2f2; color: #dc2626; border-color: #fecaca; text-decoration: line-through; }
   .badge.level-深入 { background: #ecfdf5; color: #047857; border-color: #d1fae5; }
   .badge.level-跟练 { background: #fffbeb; color: #b45309; border-color: #fef3c7; }
@@ -113,6 +117,24 @@ LEAF_GROUPS.forEach((g, gi) => g.items.forEach((l, i) => reg(l.id, 'list', gi, n
 T.inbox.forEach((it, i) => reg(it.url, 'inbox', i));
 T.cards.forEach((cd, i) => reg(cd.id, 'card', i));
 
+// 卡片 ↔ 叶子（同站点口径：卡片 target/next 与叶子 id/anchor/tags 相交即相关）
+function cardHits(c, l) {
+  const keys = new Set([c.target, ...c.next]);
+  return keys.has(l.id) || keys.has(l.anchor) || l.tags.some(t => keys.has(t));
+}
+const cardsByLeafId = {}, orphanCards = {};
+T.leaves.forEach(l => {
+  const cs = T.cards.filter(c => cardHits(c, l));
+  if (cs.length) cardsByLeafId[l.id] = cs;
+});
+T.cards.forEach(c => {
+  if (!T.leaves.some(l => cardHits(c, l))) {
+    const m = c.target.match(/^(\d{2})-M/);
+    const ch = m ? m[1] : 'root';
+    (orphanCards[ch] = orphanCards[ch] || []).push(c);
+  }
+});
+
 const esc = s => (s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const stars = n => '★'.repeat(n) + '<span style="color:#ddd">' + '★'.repeat(Math.max(0, 3 - n)) + '</span>';
 
@@ -170,10 +192,15 @@ function panelList() {
         <span class="id">${esc(it.id.replace(/^leaf-/, ''))}</span>
         <span><span style="font-weight:500">${it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.name)}</a>` : esc(it.name)}</span>
         ${it.practice ? '<span class="badge">练习</span>' : ''}
-        <span class="e"> — ${esc(it.intro)}</span></span>
+        <span class="e"> — ${esc(it.intro)}</span>
+        ${(cardsByLeafId[it.id] || []).map(c => `<span class="badge node cardchip" data-go="${esc(c.id)}" title="学习卡片「${esc(c.name)}」，点击跳转">📇 ${esc(c.name)}</span>`).join(' ')}
+        </span>
         ${it.anchor.includes('-') ? nodeBadge(it.anchor) : ''}
       </div>`).join('');
-    return items ? `<div class="card"><h3>${esc(g.name)}${g.opt ? ' <span class="badge">支线</span>' : ''}</h3>${items}</div>` : '';
+    const orphans = orphanCards[g.key] || [];
+    const orphanLine = orphans.length && !query ? `
+      <div class="orphan">📚 本枝干知识卡片（暂未挂到具体叶子）：${orphans.map(c => `<span class="badge node cardchip" data-go="${esc(c.id)}">${esc(c.name)}</span>`).join(' ')}</div>` : '';
+    return items ? `<div class="card"><h3>${esc(g.name)}${g.opt ? ' <span class="badge">支线</span>' : ''}</h3>${items}${orphanLine}</div>` : '';
   }).join('') || '<div class="empty">没有匹配的叶子</div>';
 }
 
@@ -193,15 +220,21 @@ function panelInbox() {
 }
 
 function panelCards() {
-  return T.cards.filter(cd => match(cd.name, cd.tags.join(' '), cd.target)).map((cd, i) => `
+  return T.cards.filter(cd => match(cd.name, cd.tags.join(' '), cd.target)).map((cd, i) => {
+    const relLeaves = T.leaves.filter(l => cardHits(cd, l));
+    return `
     <div class="card" id="cd-${i}">
       <h3><a href="${esc(cd.url)}" target="_blank" rel="noopener">${esc(cd.name)}</a>
         ${cd.date ? `<span class="badge">${esc(cd.date)}</span>` : ''}
         ${cd.madeBy ? `<span class="badge">${esc(cd.madeBy)}</span>` : ''}</h3>
       <div class="sub">挂载点 ${nodeBadge(cd.target)}</div>
       <div class="tags">${cd.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>
+      ${relLeaves.length ? `<div class="kv"><b>相关叶子</b>${relLeaves.map(l => l.url
+        ? `<a href="${esc(l.url)}" target="_blank" rel="noopener">📄 ${esc(l.name)}</a>`
+        : `<span class="badge node" data-go="${esc(l.id)}">📄 ${esc(l.name)}</span>`).join(' ')}</div>` : ''}
       <div class="kv"><b>接下来</b>${cd.next.map(n => nodeBadge(n)).join(' ') || '—'}</div>
-    </div>`).join('') || '<div class="empty">没有匹配的卡片</div>';
+    </div>`;
+  }).join('') || '<div class="empty">没有匹配的卡片</div>';
 }
 
 const panels = { theory: panelTheory, list: panelList, inbox: panelInbox, cards: panelCards };
