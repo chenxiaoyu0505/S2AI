@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
-import { Leaf, ExternalLink, CornerDownRight, Undo2, X, Bot, ArrowRight, Search } from 'lucide-react'
+import { Leaf, ExternalLink, CornerDownRight, Undo2, X, Bot, ArrowRight, Search, ChevronLeft, ChevronRight, ChevronsDownUp, ChevronsUpDown } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -94,6 +94,75 @@ function chapterOf(card: (typeof CARDS)[number]): string {
 
 // 展开的组也持久化（key 与理论地图 / 叶子清单同一套命名约定）
 const OPEN_KEY = 'ai-study-cards-open-v1'
+
+/**
+ * 组内卡片的横向滑动轨：移动端原生触摸滑动，桌面端用左右箭头 / 触控板横滚。
+ * 卡片数量增长后每组只占据一条固定高度的轨道，纵向滚动成本不随卡片数增长。
+ */
+function CardRail({ children, count }: { children: ReactNode; count: number }) {
+  const railRef = useRef<HTMLDivElement>(null)
+  const [canPrev, setCanPrev] = useState(false)
+  const [canNext, setCanNext] = useState(false)
+
+  // 滚动位置变化时更新箭头可用态（内容不超过一屏时两个箭头都禁用）
+  useEffect(() => {
+    const el = railRef.current
+    if (!el) return
+    const update = () => {
+      setCanPrev(el.scrollLeft > 4)
+      setCanNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 4)
+    }
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => {
+      el.removeEventListener('scroll', update)
+      ro.disconnect()
+    }
+  }, [count])
+
+  const step = (dir: 1 | -1) => {
+    const el = railRef.current
+    if (!el) return
+    // 一次滚动约一张卡片的宽度
+    const card = el.querySelector<HTMLElement>(':scope > *')
+    const w = card ? card.offsetWidth + 12 : el.clientWidth * 0.8
+    el.scrollBy({ left: dir * w, behavior: 'smooth' })
+  }
+
+  return (
+    <div className="relative group/rail">
+      <div
+        ref={railRef}
+        className="flex gap-3 overflow-x-auto snap-x snap-mandatory pt-1 pb-2 scroll-smooth [scrollbar-width:thin] [-webkit-overflow-scrolling:touch]"
+      >
+        {children}
+      </div>
+      {/* 桌面端左右箭头（触屏设备直接滑动，不显示） */}
+      {count > 1 && (
+        <>
+          <button
+            onClick={() => step(-1)}
+            disabled={!canPrev}
+            className="hidden md:flex absolute -left-2 top-1/2 -translate-y-1/2 z-10 h-7 w-7 items-center justify-center rounded-full border bg-background/95 shadow-sm text-muted-foreground transition-all hover:text-foreground disabled:opacity-0 disabled:pointer-events-none"
+            title="上一张"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => step(1)}
+            disabled={!canNext}
+            className="hidden md:flex absolute -right-2 top-1/2 -translate-y-1/2 z-10 h-7 w-7 items-center justify-center rounded-full border bg-background/95 shadow-sm text-muted-foreground transition-all hover:text-foreground disabled:opacity-0 disabled:pointer-events-none"
+            title="下一张"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
 
 export default function Cards() {
   const [demoted, setDemoted] = useState<string[]>(loadDemoted)
@@ -242,9 +311,29 @@ export default function Cards() {
                 </button>
               )}
             </div>
-            {q && (
+            {q ? (
               <span className="text-xs text-muted-foreground">
                 命中 {matchCount} 张卡片（{filtered?.length ?? 0} 个分组）
+              </span>
+            ) : (
+              /* 全选：一键展开 / 收起全部组（写入持久化，与手动点组头等价） */
+              <span className="flex items-center gap-1">
+                <button
+                  onClick={() => setOpen(groups.map(g => g.key))}
+                  disabled={open.length === groups.length}
+                  className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
+                  title="展开全部分组"
+                >
+                  <ChevronsUpDown className="h-3 w-3" />全部展开
+                </button>
+                <button
+                  onClick={() => setOpen([])}
+                  disabled={open.length === 0}
+                  className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
+                  title="收起全部分组"
+                >
+                  <ChevronsDownUp className="h-3 w-3" />全部收起
+                </button>
               </span>
             )}
           </div>
@@ -262,12 +351,17 @@ export default function Cards() {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <div className="grid gap-3 pt-1 pb-2 md:grid-cols-2">
+                  {/* 组内横向滑动：卡片定宽等高，移动端左右滑动浏览，数量再多也只占一条轨道 */}
+                  <CardRail count={g.cards.length}>
                     {g.cards.map(card => {
                       const target = resolveNode(card.target)
                       const leaves = relatedLeaves(card)
                       return (
-                        <Card key={card.id} id={card.id} className="transition-shadow hover:shadow-md scroll-mt-20">
+                        <Card
+                          key={card.id}
+                          id={card.id}
+                          className="w-[86%] sm:w-[330px] lg:w-[360px] flex-none snap-start flex flex-col transition-shadow hover:shadow-md scroll-mt-20"
+                        >
                           <CardHeader className="pb-2">
                             <div className="flex items-center gap-2 flex-wrap">
                               <a
@@ -304,7 +398,7 @@ export default function Cards() {
                               <span>{target ? target.label : card.target}</span>
                             </CardDescription>
                           </CardHeader>
-                          <CardContent className="space-y-1.5 text-sm">
+                          <CardContent className="flex-1 flex flex-col space-y-1.5 text-sm">
                             <p className="flex gap-2">
                               <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">技术栈</span>
                               <span className="flex flex-wrap gap-1">
@@ -404,7 +498,7 @@ export default function Cards() {
                         </Card>
                       )
                     })}
-                  </div>
+                  </CardRail>
                 </AccordionContent>
               </AccordionItem>
             ))}
