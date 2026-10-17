@@ -245,17 +245,20 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
             <AccordionItem key={ch.id} value={ch.id}
               className={`rounded-lg border bg-card px-4 transition-shadow hover:shadow-md ${allDone ? 'border-emerald-500/40' : ''}`}>
               <AccordionTrigger className="hover:no-underline">
-                <div className="flex flex-1 items-center gap-3 pr-2 text-left">
+                {/* 窄屏允许换行：一行放不下时，右侧的笔记数 / 掌握进度整体落到第二行（ml-auto 仍右对齐）。
+                    此前这行是 nowrap，篇章名不收缩、右侧组又 flex-none，手机上只能把内容顶出卡片。 */}
+                <div className="flex flex-1 min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 pr-2 text-left">
                   {allDone
                     ? <CheckCircle2 className="h-4 w-4 flex-none text-emerald-500 dark:text-emerald-400" />
                     : <Circle className="h-4 w-4 flex-none text-muted-foreground/50" />}
-                  <span className="text-sm font-medium whitespace-nowrap">{ch.id} · {ch.name}</span>
-                  <span className={`text-xs ${ch.weight >= 3 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground/80'}`}>{'★'.repeat(ch.weight)}</span>
-                  <span className="hidden md:inline text-xs text-muted-foreground truncate">{ch.summary}</span>
-                  <span className="ml-auto flex items-center gap-3 flex-none">
-                    {noted > 0 && (
-                      <Badge variant="secondary" className="text-xs gap-1"><BookOpenCheck className="h-3 w-3" />{noted} 篇笔记</Badge>
-                    )}
+                  <span className="text-sm font-medium truncate min-w-0">{ch.id} · {ch.name}</span>
+                  <span className={`flex-none text-xs ${ch.weight >= 3 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground/80'}`}>{'★'.repeat(ch.weight)}</span>
+                  <span className="hidden md:block flex-1 min-w-0 text-xs text-muted-foreground truncate">{ch.summary}</span>
+                  <span className="ml-auto flex flex-none items-center gap-3">
+                    {/* 没有笔记也标 0 篇：每个篇章的信息位置保持一致，扫读时不会串行 */}
+                    <Badge variant="secondary" className={`text-xs gap-1 ${noted > 0 ? '' : 'text-muted-foreground/70'}`}>
+                      <BookOpenCheck className="h-3 w-3" />{noted} 篇笔记
+                    </Badge>
                     <span className="text-xs tabular-nums text-muted-foreground">{cn} / {total}</span>
                   </span>
                 </div>
