@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { BookOpenCheck, Circle, CheckCircle2, Leaf, PenLine, RotateCcw, Search, Star, X } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
@@ -54,8 +54,6 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
   const [checked, setChecked] = useState<Record<string, boolean>>(loadProgress)
   const [open, setOpen] = useState<string[]>(loadOpen)
   const [query, setQuery] = useState('')
-  // 已消费过的跳转序号：同一次聚焦只展开一次，之后完全交给用户自己的展开状态
-  const consumedNonce = useRef<number | null>(null)
 
   useEffect(() => {
     localStorage.setItem(STORE_KEY, JSON.stringify(checked))
@@ -66,20 +64,23 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
   }, [open])
 
   // 外部跳转（清单 ref / 卡片引用点击 / 从哪开始入口）：展开涉及篇章并滚动定位学习点。
-  // 这里必须是「一次性写回 open」而不是「每次渲染都并入的派生值」——
-  // 后者会让 focus 一直把篇章并回展开集合，用户点收起时 open 变了、渲染没变，手风琴像被锁死。
-  // nonce 保证同一次跳转只写回一次；写回后用户手动收起即刻生效，且展开选择照常持久化。
-  useEffect(() => {
-    if (!focus || focus.nonce === consumedNonce.current) return
-    consumedNonce.current = focus.nonce
+  // 三个约束合在一起决定了写法：
+  // 1. 必须是「一次性写回 open」而不是「每次渲染都并入的派生值」——后者让 focus 一直把篇章
+  //    并回展开集合，用户点收起时 open 变了、渲染没变，手风琴像被锁死；
+  // 2. 不能在 effect 里 setOpen（react-hooks/set-state-in-effect 会拦，npm run lint 必须过）；
+  // 3. 同一次跳转只写回一次，写回后用户手动收起即刻生效，展开选择照常持久化。
+  // → 用 React 推荐的「渲染期间派生状态」模式：focus 对象身份变化即新的一次跳转
+  //   （Home 每次跳转都 new 新对象），在 render 里比较并调整 state，提交前即完成。
+  const [consumedFocus, setConsumedFocus] = useState(focus)
+  if (focus && focus !== consumedFocus) {
+    setConsumedFocus(focus)
     const ids = new Set<string>()
     for (const c of focus.chapters ?? []) {
       if (THEORY_CHAPTERS.some(x => x.id === c)) ids.add(c)
     }
     if (focus.ref && POINT_KEYS.has(focus.ref)) ids.add(focus.ref.split('-')[0])
-    if (ids.size === 0) return
-    setOpen(prev => [...new Set([...prev, ...ids])])
-  }, [focus])
+    if (ids.size > 0) setOpen(prev => [...new Set([...prev, ...ids])])
+  }
 
   useEffect(() => {
     if (!focus?.ref) return

@@ -11,7 +11,7 @@ import { LEAVES } from '@/data/leaves'
 import { LOCAL, TASK_MANUAL_COUNT } from '@/data/content'
 import { INBOX } from '@/data/inbox'
 import { loadDemoted, saveDemoted, demoteFeedText } from '@/lib/demoted'
-import { jumpTo } from '@/lib/jump'
+import { jumpTo, onJump } from '@/lib/jump'
 import HL from '@/components/HL'
 import IndexNote from '@/components/IndexNote'
 
@@ -209,7 +209,11 @@ export default function Cards() {
   const [open, setOpen] = useState<string[]>(() => {
     try {
       const v = JSON.parse(localStorage.getItem(OPEN_KEY) || 'null')
-      if (Array.isArray(v)) return v.filter(k => groupKeys.has(k))
+      if (Array.isArray(v)) {
+        const kept = v.filter(k => groupKeys.has(k))
+        // 用户主动全部收起（存的就是 []）要尊重；只有「存了值但数据更新后全部失效」才回退默认
+        if (kept.length > 0 || v.length === 0) return kept
+      }
     } catch { /* 数据损坏时回退默认 */ }
     const biggest = groups.reduce<(typeof groups)[number] | undefined>(
       (a, b) => (b.cards.length > (a?.cards.length ?? -1) ? b : a), undefined)
@@ -219,6 +223,17 @@ export default function Cards() {
   useEffect(() => {
     localStorage.setItem(OPEN_KEY, JSON.stringify(open))
   }, [open])
+
+  // 跨板块跳卡片（理论地图「卡 N」/ 叶子清单芯片 / 卡片间「接下来」互指）只带 anchor 不带分组。
+  // 分组折叠后目标卡片若在收起组里，元素尚未渲染，Home 的延迟滚动会静默失败——
+  // 这里订阅同一总线先把所在组展开（子组件 effect 先于父组件，展开先于 Home 的 300ms 滚动）。
+  useEffect(() => onJump(t => {
+    if (t.tab !== 'cards' || !t.anchor) return
+    const card = CARDS.find(c => c.id === t.anchor)
+    if (!card) return
+    const key = chapterOf(card)
+    setOpen(prev => (prev.includes(key) ? prev : [...prev, key]))
+  }), [])
 
   // 搜索：按名称 / 技术栈 / 分类 / 相关叶子 / 接下来引用的名称过滤。
   // 命中组强制展开，收起不持久化——与理论地图 / 叶子清单同一套搜索态约定。
