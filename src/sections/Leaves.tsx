@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactElement } from 'react'
 import {
-  CheckCircle2, ExternalLink, PenLine, Search, Sprout, TreePine, X,
+  BookOpen, CheckCircle2, ExternalLink, PenLine, Search, Sprout, TreePine, X,
 } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
@@ -87,21 +87,29 @@ export default function Leaves({
   const [query, setQuery] = useState('')
 
   // 叶子 ← 卡片（反向）：卡片 target/next 与叶子的 id / anchor / 标签相交即相关——
-  // 卡片挂在理论点上时，锚在同枝节的叶子也能看到它
+  // 卡片挂在理论点上时，锚在同枝节的叶子也能看到它（学习卡片也是叶子，挂在叶子名下展示）
   const cardsByLeaf = useMemo(() => {
-    const count = new Map<string, number>()
-    const first = new Map<string, string>()
+    const m = new Map<string, { id: string; name: string }[]>()
+    const orphanByChapter = new Map<string, { id: string; name: string }[]>()
     for (const c of CARDS) {
       const keys = new Set([c.target, ...c.next])
-      for (const leaf of ALL_LEAVES) {
-        const hit = keys.has(leaf.id) || keys.has(leaf.anchor) || leaf.tags.some(t => keys.has(t))
-        if (hit) {
-          count.set(leaf.id, (count.get(leaf.id) ?? 0) + 1)
-          if (!first.has(leaf.id)) first.set(leaf.id, c.id)
+      const hits = ALL_LEAVES.filter(l => keys.has(l.id) || keys.has(l.anchor) || l.tags.some(t => keys.has(t)))
+      if (hits.length > 0) {
+        for (const leaf of hits) {
+          const arr = m.get(leaf.id) ?? []
+          arr.push({ id: c.id, name: c.name })
+          m.set(leaf.id, arr)
         }
+      } else {
+        // 挂不到任何叶子（如纯架构模型卡）：按 target 的篇章归到组级展示，不让卡片落空
+        const pt = c.target.match(/^(\d{2})-M/)
+        const ch = pt ? pt[1] : 'root'
+        const arr = orphanByChapter.get(ch) ?? []
+        arr.push({ id: c.id, name: c.name })
+        orphanByChapter.set(ch, arr)
       }
     }
-    return { count, first }
+    return { byLeaf: m, orphanByChapter }
   }, [])
 
   const q = query.trim().toLowerCase()
@@ -186,7 +194,7 @@ export default function Leaves({
                 <div className="grid gap-1 pb-2 md:grid-cols-2">
                   {g.leaves.map(leaf => {
                     const on = !!checked[leaf.id]
-                    const nCards = cardsByLeaf.count.get(leaf.id)
+                    const leafCards = cardsByLeaf.byLeaf.get(leaf.id)
                     const isTwig = leaf.anchor.includes('-')
                     return (
                       <div
@@ -236,21 +244,23 @@ export default function Leaves({
                           <span className={`block text-xs text-muted-foreground leading-relaxed mt-0.5 ${on ? 'line-through' : ''}`}>
                             <HL text={leaf.intro} q={q} />
                           </span>
+                          {leafCards && leafCards.length > 0 && (
+                            // 学习卡片也是叶子：挂在相关叶子名下，点击跳去学习卡片
+                            <span className="mt-1 flex flex-wrap items-center gap-1" onClick={e => e.stopPropagation()}>
+                              {leafCards.map(c => (
+                                <button
+                                  key={c.id}
+                                  onClick={() => jumpTo({ tab: 'cards', anchor: `card-${c.id}` })}
+                                  className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0 text-[11px] text-emerald-700 dark:text-emerald-400 hover:underline underline-offset-2 transition-colors"
+                                  title={`学习卡片「${c.name}」，点击跳去学习卡片`}
+                                >
+                                  <BookOpen className="h-2.5 w-2.5" />{c.name}
+                                </button>
+                              ))}
+                            </span>
+                          )}
                         </span>
                         <span className="ml-auto flex flex-none items-start gap-1.5 pt-0.5">
-                          {nCards ? (
-                            <button
-                              onClick={e => {
-                                e.stopPropagation()
-                                const cid = cardsByLeaf.first.get(leaf.id)
-                                if (cid) jumpTo({ tab: 'cards', anchor: `card-${cid}` })
-                              }}
-                              className="text-[10px] px-1.5 py-0 h-4 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:underline underline-offset-2"
-                              title={`${nCards} 张学习卡片与本叶相关（挂在同枝节或引用了它），点击跳去学习卡片`}
-                            >
-                              卡 {nCards}
-                            </button>
-                          ) : null}
                           {isTwig ? (
                             <button
                               onClick={e => {
@@ -268,6 +278,26 @@ export default function Leaves({
                     )
                   })}
                 </div>
+                {(() => {
+                  const orphans = cardsByLeaf.orphanByChapter.get(g.key)
+                  if (!orphans?.length) return null
+                  return (
+                    // 挂不到任何叶子的卡片（如纯架构模型卡）在组级展示，不让卡片在清单里落空
+                    <p className="flex flex-wrap items-center gap-1.5 pb-2 text-xs text-muted-foreground">
+                      <BookOpen className="h-3 w-3 flex-none" />本枝干知识卡片（暂未挂到具体叶子）：
+                      {orphans.map(c => (
+                        <button
+                          key={c.id}
+                          onClick={() => jumpTo({ tab: 'cards', anchor: `card-${c.id}` })}
+                          className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0 text-[11px] text-emerald-700 dark:text-emerald-400 hover:underline underline-offset-2 transition-colors"
+                          title={`学习卡片「${c.name}」，点击跳去学习卡片`}
+                        >
+                          {c.name}
+                        </button>
+                      ))}
+                    </p>
+                  )
+                })()}
               </AccordionContent>
             </AccordionItem>
           )
