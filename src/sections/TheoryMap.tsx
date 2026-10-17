@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactElement } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react'
 import { BookOpenCheck, Circle, CheckCircle2, Leaf, PenLine, RotateCcw, Search, Star, X } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
@@ -71,6 +71,8 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
   const [checked, setChecked] = useState<Record<string, boolean>>(loadProgress)
   const [open, setOpen] = useState<string[]>(loadOpen)
   const [query, setQuery] = useState('')
+  // 已消费过的跳转序号：同一次聚焦只展开一次，之后完全交给用户自己的展开状态
+  const consumedNonce = useRef<number | null>(null)
 
   useEffect(() => {
     localStorage.setItem(STORE_KEY, JSON.stringify(checked))
@@ -80,19 +82,21 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
     localStorage.setItem(OPEN_KEY, JSON.stringify(open))
   }, [open])
 
-  // 外部跳转（清单 ref / 卡片引用点击 / 从哪开始入口）：展开涉及篇章（派生值，不写回持久化）并滚动定位学习点
-  const focusChapters = useMemo(() => {
-    if (!focus) return []
+  // 外部跳转（清单 ref / 卡片引用点击 / 从哪开始入口）：展开涉及篇章并滚动定位学习点。
+  // 这里必须是「一次性写回 open」而不是「每次渲染都并入的派生值」——
+  // 后者会让 focus 一直把篇章并回展开集合，用户点收起时 open 变了、渲染没变，手风琴像被锁死。
+  // nonce 保证同一次跳转只写回一次；写回后用户手动收起即刻生效，且展开选择照常持久化。
+  useEffect(() => {
+    if (!focus || focus.nonce === consumedNonce.current) return
+    consumedNonce.current = focus.nonce
     const ids = new Set<string>()
     for (const c of focus.chapters ?? []) {
       if (THEORY_CHAPTERS.some(x => x.id === c)) ids.add(c)
     }
     if (focus.ref && POINT_KEYS.has(focus.ref)) ids.add(focus.ref.split('-')[0])
-    return [...ids]
+    if (ids.size === 0) return
+    setOpen(prev => [...new Set([...prev, ...ids])])
   }, [focus])
-  const openWithFocus = focusChapters.length > 0
-    ? [...new Set([...open, ...focusChapters])]
-    : open
 
   useEffect(() => {
     if (!focus?.ref) return
@@ -187,7 +191,7 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
             <div className="text-xs text-muted-foreground mt-0.5">已掌握</div>
           </div>
           <div className="w-32">
-            <Progress value={(done / THEORY_TOTAL) * 100} className="h-1.5" />
+            <Progress value={THEORY_TOTAL > 0 ? (done / THEORY_TOTAL) * 100 : 0} className="h-1.5" />
           </div>
           <Button
             variant="outline"
@@ -229,7 +233,7 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
 
       {/* 搜索时命中篇章强制展开，收起/展开不持久化——否则搜索中收起一个篇章会污染 open，
           清空搜索后用户原本的展开选择就丢了 */}
-      <Accordion type="multiple" value={q ? (filtered?.map(c => c.ch.id) ?? []) : openWithFocus} onValueChange={v => { if (!q) setOpen(v) }} className="space-y-3">
+      <Accordion type="multiple" value={q ? (filtered?.map(c => c.ch.id) ?? []) : open} onValueChange={v => { if (!q) setOpen(v) }} className="space-y-3">
         {view.map(({ ch, modules }) => {
           const total = ch.modules.reduce((n, m) => n + m.points.length, 0)
           const cn = ch.modules.reduce(
@@ -344,7 +348,8 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
                                       e.preventDefault()
                                       e.stopPropagation()
                                       const ids = backRefs.cardIds.get(key)
-                                      if (ids) jumpTo({ tab: 'cards', anchor: `card-${ids[0]}` })
+                                      // 卡片 id 自带 card- 前缀，直接作为元素 id（不要再拼一次前缀）
+                                      if (ids) jumpTo({ tab: 'cards', anchor: ids[0] })
                                     }}
                                     className="text-[10px] px-1.5 py-0 h-4 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:underline underline-offset-2"
                                     title={`${backRefs.cardIds.get(key)?.length} 张学习卡片指向本点，点击跳去学习卡片`}

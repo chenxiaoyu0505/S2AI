@@ -7,6 +7,9 @@
 import type { Leaf } from './leaves'
 import type { JumpTarget } from '../lib/jump'
 
+/** AGENTS.md 里的任务手册条数：新增 / 删除手册时同步改这里，check-tree.py 会校验二者一致 */
+export const TASK_MANUAL_COUNT = 11
+
 /** 本地个人化内容的形状（src/data/content.local.ts，不进 git） */
 export interface LocalContent {
   INTERVIEW_FRAMEWORK?: { step: string; desc: string }[]

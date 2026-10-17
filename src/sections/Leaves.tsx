@@ -250,7 +250,7 @@ export default function Leaves({
                               {leafCards.map(c => (
                                 <button
                                   key={c.id}
-                                  onClick={() => jumpTo({ tab: 'cards', anchor: `card-${c.id}` })}
+                                  onClick={() => jumpTo({ tab: 'cards', anchor: c.id })}
                                   className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0 text-[11px] text-emerald-700 dark:text-emerald-400 hover:underline underline-offset-2 transition-colors"
                                   title={`学习卡片「${c.name}」，点击跳去学习卡片`}
                                 >
@@ -288,7 +288,7 @@ export default function Leaves({
                       {orphans.map(c => (
                         <button
                           key={c.id}
-                          onClick={() => jumpTo({ tab: 'cards', anchor: `card-${c.id}` })}
+                          onClick={() => jumpTo({ tab: 'cards', anchor: c.id })}
                           className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0 text-[11px] text-emerald-700 dark:text-emerald-400 hover:underline underline-offset-2 transition-colors"
                           title={`学习卡片「${c.name}」，点击跳去学习卡片`}
                         >

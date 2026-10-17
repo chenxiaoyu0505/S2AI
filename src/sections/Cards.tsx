@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { CARDS } from '@/data/cards'
 import { THEORY_CHAPTERS } from '@/data/theory'
 import { LEAVES } from '@/data/leaves'
-import { LOCAL } from '@/data/content'
+import { LOCAL, TASK_MANUAL_COUNT } from '@/data/content'
 import { INBOX } from '@/data/inbox'
 import { loadDemoted, saveDemoted, demoteFeedText } from '@/lib/demoted'
 import { jumpTo } from '@/lib/jump'
@@ -18,7 +18,14 @@ const CHAPTER_NAMES = new Map(THEORY_CHAPTERS.map(c => [c.id, c.name]))
 
 /** 复制 Agent 指令到剪贴板，成功/失败都有反馈 */
 function copyFeed(text: string, successMsg: string) {
-  navigator.clipboard?.writeText(text)
+  // clipboard 在非安全上下文（http + 非 localhost，如局域网 IP 访问 dev server）下为 undefined——
+  // 先接住 Promise 再链 then/catch，否则 undefined.then 直接抛 TypeError，且 catch 挂不上、用户零反馈
+  const pending = navigator.clipboard?.writeText(text)
+  if (!pending) {
+    toast.error('复制失败', { description: '当前环境无剪贴板权限（需 HTTPS 或 localhost 访问），请手动选中复制' })
+    return
+  }
+  pending
     .then(() => toast.success(successMsg, { description: '粘贴给你的 Agent 即可执行' }))
     .catch(() => toast.error('复制失败', { description: '请检查浏览器剪贴板权限后重试' }))
 }
@@ -51,7 +58,8 @@ function resolveNode(ref: string): NodeRef | null {
 // 节点引用 → 跨板块跳转目标（反向链接可点击）
 function refJump(ref: string): { tab: 'checklist' | 'theory' | 'cards' | 'inbox'; anchor?: string } | null {
   if (/^\d{2}-M\d+\.\d+$/.test(ref)) return { tab: 'theory', anchor: ref }
-  if (CARDS.some(c => c.id === ref)) return { tab: 'cards', anchor: `card-${ref}` }
+  // 卡片 id 自带 card- 前缀，直接作为 anchor（不要再拼一次前缀）
+  if (CARDS.some(c => c.id === ref)) return { tab: 'cards', anchor: ref }
   if (ALL_LEAVES.some(l => l.id === ref)) return { tab: 'checklist', anchor: ref }
   if (INBOX.some(i => i.url === ref || i.name === ref)) return { tab: 'inbox' }
   return null
@@ -113,7 +121,7 @@ export default function Cards() {
           </p>
           <ol className="space-y-1 text-xs text-muted-foreground">
             <li className="flex gap-1.5"><span className="flex-none font-medium">1.</span>打开 GitHub 仓库，把项目克隆或 Fork 到你的电脑（支持 Kimi / Claude Code / Cursor 等 Agent）</li>
-            <li className="flex gap-1.5"><span className="flex-none font-medium">2.</span>让你的 Agent 读仓库里的 AGENTS.md——制卡 / 收录 / 毕业等 9 个任务手册即开即用</li>
+            <li className="flex gap-1.5"><span className="flex-none font-medium">2.</span>让你的 Agent 读仓库里的 AGENTS.md——制卡 / 收录 / 毕业等 {TASK_MANUAL_COUNT} 个任务手册即开即用</li>
             <li className="flex gap-1.5"><span className="flex-none font-medium">3.</span>学过后对它说"帮我给 xxx 做张学习卡片"即可，支持学前做卡带着走</li>
           </ol>
           <div className="pt-1">
@@ -141,7 +149,7 @@ export default function Cards() {
             const target = resolveNode(card.target)
             const leaves = relatedLeaves(card)
             return (
-              <Card key={card.id} id={`card-${card.id}`} className="transition-shadow hover:shadow-md scroll-mt-20">
+              <Card key={card.id} id={card.id} className="transition-shadow hover:shadow-md scroll-mt-20">
                 <CardHeader className="pb-2">
                   <div className="flex items-center gap-2 flex-wrap">
                     <a
@@ -219,35 +227,35 @@ export default function Cards() {
                     </p>
                   )}
                   {card.next.length > 0 && (
-                  <p className="flex gap-2">
-                    <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">接下来</span>
-                    <span className="space-y-0.5 min-w-0">
-                      {card.next.map(ref => {
-                        const node = resolveNode(ref)
-                        const jump = refJump(ref)
-                        return (
-                          <span key={ref} className="flex items-start gap-1 text-xs text-muted-foreground leading-relaxed">
-                            <CornerDownRight className="h-3 w-3 mt-0.5 flex-none" />
-                            {jump ? (
-                              <button
-                                onClick={() => jumpTo(jump)}
-                                className="text-left hover:text-primary hover:underline underline-offset-2 transition-colors"
-                                title={`${node?.hint ?? ref}，点击跳转`}
-                              >
-                                {node ? node.label : ref}
-                                {node && <span className="text-muted-foreground/80">（{node.hint}）</span>}
-                              </button>
-                            ) : (
-                              <span>
-                                {node ? node.label : ref}
-                                {node && <span className="text-muted-foreground/80">（{node.hint}）</span>}
-                              </span>
-                            )}
-                          </span>
-                        )
-                      })}
-                    </span>
-                  </p>
+                    <p className="flex gap-2">
+                      <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">接下来</span>
+                      <span className="space-y-0.5 min-w-0">
+                        {card.next.map(ref => {
+                          const node = resolveNode(ref)
+                          const jump = refJump(ref)
+                          return (
+                            <span key={ref} className="flex items-start gap-1 text-xs text-muted-foreground leading-relaxed">
+                              <CornerDownRight className="h-3 w-3 mt-0.5 flex-none" />
+                              {jump ? (
+                                <button
+                                  onClick={() => jumpTo(jump)}
+                                  className="text-left hover:text-primary hover:underline underline-offset-2 transition-colors"
+                                  title={`${node?.hint ?? ref}，点击跳转`}
+                                >
+                                  {node ? node.label : ref}
+                                  {node && <span className="text-muted-foreground/80">（{node.hint}）</span>}
+                                </button>
+                              ) : (
+                                <span>
+                                  {node ? node.label : ref}
+                                  {node && <span className="text-muted-foreground/80">（{node.hint}）</span>}
+                                </span>
+                              )}
+                            </span>
+                          )
+                        })}
+                      </span>
+                    </p>
                   )}
                   <div className="flex items-center gap-2 pt-1">
                     <span className="text-xs text-muted-foreground/80">

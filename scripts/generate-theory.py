@@ -1,11 +1,18 @@
 # -*- coding: utf-8 -*-
 """从八股笔记的 00-目录总览.md 生成 src/data/theory.ts。
 
-用法：python scripts/generate-theory.py
+用法：python scripts/generate-theory.py            # 公共树：不写入个人笔记进度（done 全 false）
+      python scripts/generate-theory.py --personal # 私有树：从笔记 ✅ 解析 done
+
+theory.ts 是进 git 的公共数据，「哪篇已有成文笔记」属于个人进度（见 DESIGN.md 硬边界），
+默认一律输出 done: false；维护者在本地同步自己的私有树时才加 --personal。
 源文件更新后重跑本脚本即可同步网站数据。
 """
 import re
+import sys
 from pathlib import Path
+
+PERSONAL = '--personal' in sys.argv[1:]
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT.parent / '八股笔记' / '八股' / '00-目录总览.md'
@@ -62,7 +69,8 @@ for i, m in enumerate(chapter_iter):
         pm = re.match(r'^(\d+\.\d+)\s+(.*)$', pcell)
         num, pname = pm.group(1), pm.group(2).strip()
         freq = fcell.count('★')
-        done = '✅' in scell
+        # done = 是否已有成文笔记：只在 --personal（私有树）时才从笔记 ✅ 解析，公共树恒为 false
+        done = ('✅' in scell) if PERSONAL else False
         cur['points'].append({'id': f'M{num}', 'name': pname, 'freq': freq, 'done': done})
 
     chapters.append({
@@ -107,7 +115,7 @@ OUT.write_text('\n'.join(lines), encoding='utf-8')
 
 n_pts = sum(len(m['points']) for c in chapters for m in c['modules'])
 n_done = sum(1 for c in chapters for m in c['modules'] for p in m['points'] if p['done'])
-print(f'生成 {OUT}')
+print(f'生成 {OUT}（{"含个人笔记进度" if PERSONAL else "公共模式：done 全为 false"}）')
 print(f'章节 {len(chapters)} ｜ 模块 {sum(len(c["modules"]) for c in chapters)} ｜ 学习点 {n_pts}（已有笔记 {n_done}）')
 for c in chapters:
     pts = sum(len(m['points']) for m in c['modules'])

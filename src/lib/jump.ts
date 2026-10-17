@@ -1,6 +1,6 @@
 // 站内跳转总线：板块内引用徽标点击 → 切 tab + 展开分组 + 滚动定位
 // Home 订阅：切 tab（同步 ?tab= URL）+ 展开清单组 + 滚动锚点 + 理论点聚焦；
-// TheoryMap 另订阅 theory 目标：展开所在篇章（派生值，不写回持久化）并滚动。
+// TheoryMap 另订阅 theory 目标：一次性展开所在篇章（写回持久化，之后由用户接管）并滚动。
 
 export interface JumpTarget {
   tab: 'checklist' | 'theory' | 'cards' | 'inbox'

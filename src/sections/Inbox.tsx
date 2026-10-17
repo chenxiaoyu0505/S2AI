@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Inbox as InboxIcon, ExternalLink, Bot, ArrowRight } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { INBOX, type InboxLevel } from '@/data/inbox'
+import { TASK_MANUAL_COUNT } from '@/data/content'
 import { jumpTo } from '@/lib/jump'
 import IndexNote from '@/components/IndexNote'
 
@@ -58,7 +59,7 @@ export default function Inbox() {
           </p>
           <ol className="space-y-1 text-xs text-muted-foreground">
             <li className="flex gap-1.5"><span className="flex-none font-medium">1.</span>打开 GitHub 仓库，把项目克隆或 Fork 到你的电脑（支持 Kimi / Claude Code / Cursor 等 Agent）</li>
-            <li className="flex gap-1.5"><span className="flex-none font-medium">2.</span>让你的 Agent 读仓库里的 AGENTS.md——收录 / 制卡 / 毕业等 9 个任务手册即开即用</li>
+            <li className="flex gap-1.5"><span className="flex-none font-medium">2.</span>让你的 Agent 读仓库里的 AGENTS.md——收录 / 制卡 / 毕业等 {TASK_MANUAL_COUNT} 个任务手册即开即用</li>
             <li className="flex gap-1.5"><span className="flex-none font-medium">3.</span>之后把项目链接发给它即可，数据存在你自己的仓库，与公开站互不影响</li>
           </ol>
           <div className="pt-1">

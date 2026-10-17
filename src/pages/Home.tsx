@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import {
   ListChecks, Briefcase, Leaf,
@@ -43,7 +43,7 @@ function loadOpen(): string[] {
     const raw = localStorage.getItem(OPEN_KEY)
     if (raw == null) return DEFAULT_OPEN
     const v = JSON.parse(raw)
-    return Array.isArray(v) ? v.filter(name => GROUP_KEYS.has(name)) : []
+    return Array.isArray(v) ? v.filter(name => GROUP_KEYS.has(name)) : DEFAULT_OPEN
   } catch {
     return DEFAULT_OPEN
   }
@@ -110,6 +110,8 @@ export default function Home() {
   const tab = searchParams.get('tab') ?? 'theory'
   const setTab = (t: string) => setSearchParams(t === 'theory' ? {} : { tab: t }, { replace: true })
   // 站内跳转（枝节索引 / 卡片引用点击 / 从哪开始入口）：切到理论地图并定位学习点 / 展开篇章
+  // nonce 每次递增：保证连续点同一个入口时 TheoryMap 也能识别为「新的一次聚焦」
+  const nonceRef = useRef(0)
   const [theoryFocus, setTheoryFocus] = useState<{ ref?: string; chapters?: string[]; nonce: number } | null>(null)
 
   useEffect(() => {
@@ -121,19 +123,28 @@ export default function Home() {
   }, [openCats])
 
   // 统一跳转处理器：切 tab（同步 ?tab= URL）+ 展开清单组 + 滚动锚点 / 理论点聚焦
-  useEffect(() => onJump(t => {
-    setSearchParams(t.tab === 'theory' ? {} : { tab: t.tab }, { replace: true })
-    if (t.expand) setOpenCats(prev => (prev.includes(t.expand!) ? prev : [...prev, t.expand!]))
-    if (t.tab === 'theory') {
-      // anchor = 定位到具体学习点；chapters = 仅展开篇章（从哪开始入口），两者都经 theoryFocus 派生展开
-      setTheoryFocus({ ref: t.anchor, chapters: t.chapters, nonce: Date.now() })
-    } else if (t.anchor) {
-      // 等目标 tab 渲染完成后再滚动
-      setTimeout(() => {
-        document.getElementById(t.anchor!)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }, 300)
+  useEffect(() => {
+    // 定时器句柄提到外面：卸载 / 重订阅时清掉还没触发的滚动，避免在已切走的 tab 上滚
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const off = onJump(t => {
+      setSearchParams(t.tab === 'theory' ? {} : { tab: t.tab }, { replace: true })
+      if (t.expand) setOpenCats(prev => (prev.includes(t.expand!) ? prev : [...prev, t.expand!]))
+      if (t.tab === 'theory') {
+        // anchor = 定位到具体学习点；chapters = 仅展开篇章（从哪开始入口），两者都经 theoryFocus 交给 TheoryMap
+        setTheoryFocus({ ref: t.anchor, chapters: t.chapters, nonce: ++nonceRef.current })
+      } else if (t.anchor) {
+        // 等目标 tab 渲染完成后再滚动
+        clearTimeout(timer)
+        timer = setTimeout(() => {
+          document.getElementById(t.anchor!)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }, 300)
+      }
+    })
+    return () => {
+      off()
+      clearTimeout(timer)
     }
-  }), [setSearchParams])
+  }, [setSearchParams])
 
   // 只统计仍然存在的叶子（数据更新后旧 key 不再计入）
   const done = useMemo(
@@ -218,7 +229,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center gap-6">
-              <ProgressRing value={(done / LEAF_TOTAL) * 100} />
+              <ProgressRing value={LEAF_TOTAL > 0 ? (done / LEAF_TOTAL) * 100 : 0} />
               <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                 {stats.map(s => (
                   <div key={s.label} className="flex items-center gap-2.5">

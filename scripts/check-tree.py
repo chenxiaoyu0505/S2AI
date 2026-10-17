@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # check-tree.py —— 学习树完整性校验
 # 校验内容：叶子 id 唯一、anchor 挂得上树（树根/枝干/枝节/野生）、叶子标签里的理论点编号可解析、
-#           卡片 id 唯一、target/next 无断链、收集箱 cat 挂得上模块、毕业条目有对应卡片。
+#           卡片 id 唯一、target/next 无断链、收集箱 cat 挂得上模块、毕业条目挂回树上（卡片或叶子）；
+#           另加元校验：任务手册条数与 AGENTS.md 一致、源码不重复拼接 card- 前缀。
 # 用法：在仓库根目录跑  python scripts/check-tree.py
 # 退出码：0 = 树完好；1 = 有断链（打印在 stdout，逐条列出）
 import re
@@ -130,10 +131,40 @@ for cid, nxt in card_nexts.items():
         if n not in nodes:
             errors.append(f'卡片 {cid} 的 next 断链：{n}')
 
-# ---------- 5. 毕业一致性：毕业的收集箱条目应有卡片挂回来 ----------
+# ---------- 5. 毕业一致性：毕业的收集箱条目应挂回树上 ----------
+# 协议允许两种毕业形态（AGENTS.md 任务手册 5）：需要卡片的写进 cards.ts；
+# 纯项目不需要卡片，直接长成叶子进 leaves.ts。只认卡片会让「纯项目毕业」误报断链。
+leaf_urls = {u for _, u, _, _, _ in leaf_rows if u}
+card_target_set = set(card_targets.values())
 for url in graduated_urls:
-    if url not in set(card_targets.values()):
-        errors.append(f'收集箱条目已毕业但没有卡片挂载：{url}')
+    if url not in card_target_set and url not in leaf_urls:
+        errors.append(f'收集箱条目已毕业但没挂回树上：{url}'
+                      '（应有卡片 target 指向它，或已在叶子清单里长成同 url 的叶子）')
+
+# ---------- 6. 元校验：协议与代码的一致性（断了不会白屏，但会让跳转 / 文案悄悄错） ----------
+# 6a. 任务手册条数：AGENTS.md 的「### N. 」小节数必须与 content.ts 里的常量一致
+agents_file = ROOT / 'AGENTS.md'
+if agents_file.exists():
+    manual_nums = [int(n) for n in re.findall(r'^### (\d+)\. ', agents_file.read_text(encoding='utf-8'), re.M)]
+    content_text = (DATA / 'content.ts').read_text(encoding='utf-8')
+    cm = re.search(r'export const TASK_MANUAL_COUNT = (\d+)', content_text)
+    if not cm:
+        errors.append('content.ts 里找不到 TASK_MANUAL_COUNT 常量')
+    elif manual_nums:
+        if manual_nums != list(range(1, len(manual_nums) + 1)):
+            errors.append(f'AGENTS.md 任务手册编号不连续：{manual_nums}')
+        if int(cm.group(1)) != len(manual_nums):
+            errors.append(f'任务手册条数漂移：AGENTS.md 有 {len(manual_nums)} 条，'
+                          f'content.ts 的 TASK_MANUAL_COUNT 是 {cm.group(1)}')
+
+# 6b. 卡片 id 自带 card- 前缀：源码里再拼一次前缀会产生 card-card-xxx（元素 id 与 anchor 会一起错，
+#     跳转侥幸可用但一改就全线断链，而本脚本管不到 DOM id——直接卡在源码层）
+for path in sorted((ROOT / 'src').rglob('*.tsx')):
+    if 'components/ui' in str(path):
+        continue
+    for i, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
+        if 'card-${' in line:
+            errors.append(f'{path.relative_to(ROOT)}:{i} 重复拼接 card- 前缀：{line.strip()}')
 
 # ---------- 结果 ----------
 print(f'理论点 {len(point_ids)} ｜ 模块 {len(module_ids)} ｜ 枝干 {len(chapter_ids)} ｜ '
