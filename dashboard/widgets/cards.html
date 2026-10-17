@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S2AI 学习卡片</title>
+<style>
+  :root {
+    font-family: var(--kimi-font-sans, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif);
+    --kt: var(--kimi-color-text-primary, #1a1a1a);
+    --k2: var(--kimi-color-text-secondary, #555);
+    --k3: var(--kimi-color-text-tertiary, #888);
+    --k4: var(--kimi-color-text-quaternary, #aaa);
+    --bd: var(--kimi-color-border, #e5e5e5);
+    --sm: var(--kimi-color-surface-muted, #f5f5f5);
+    --pos: var(--kimi-color-positive, #16a34a);
+    --warn: var(--kimi-color-warning, #d97706);
+    --dan: var(--kimi-color-danger, #dc2626);
+    --c4: var(--kimi-chart-4, #9333ea);
+    --sans: var(--kimi-font-sans, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif);
+    --mono: var(--kimi-font-mono, ui-monospace, Consolas, monospace);
+    --sp1: var(--kimi-space-1, 4px); --sp2: var(--kimi-space-2, 8px); --sp3: var(--kimi-space-3, 12px);
+    --sp4: var(--kimi-space-4, 16px); --sp5: var(--kimi-space-5, 20px); --sp6: var(--kimi-space-6, 24px);
+    --rc: var(--kimi-radius-chip, 6px); --rp: var(--kimi-radius-panel, 12px); --ri: var(--kimi-radius-input, 10px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  .root { padding: var(--sp3) var(--sp4); font-family: var(--sans); color: var(--kt); font-size: 14px; line-height: 1.55; }
+  .head { margin-block-end: var(--sp2); }
+  .head h1 { font-size: 17px; font-weight: 500; }
+  .head .meta { font-size: 12px; color: var(--k3); margin-block-start: 2px; }
+  .stats { display: flex; flex-wrap: wrap; gap: var(--sp1); margin-block-end: var(--sp2); }
+  .stat { font-size: 12px; color: var(--k3); border: 1px solid var(--bd); border-radius: var(--rc); padding: 1px var(--sp2); font-variant-numeric: tabular-nums; }
+  .stat b { color: var(--kt); font-weight: 500; margin-inline-end: 3px; }
+  .toolbar { margin-block-end: var(--sp2); }
+  .toolbar input { width: 100%; padding: 6px var(--sp3); border: 1px solid var(--bd); border-radius: var(--ri); background: transparent; font-size: 13px; color: var(--kt); font-family: var(--sans); }
+  .toolbar input::placeholder { color: var(--k4); }
+  .toolbar input:focus { outline: 2px solid var(--kt); outline-offset: -1px; }
+
+  details.ch { border-block-start: 1px solid var(--bd); }
+  details.ch:first-of-type { border-block-start: none; }
+  details.ch summary { display: flex; align-items: center; gap: var(--sp2); padding-block: var(--sp2); cursor: pointer; list-style: none; font-size: 14px; font-weight: 500; }
+  details.ch summary::-webkit-details-marker { display: none; }
+  details.ch summary .chev { flex: none; width: 16px; height: 16px; color: var(--k3); transition: transform .15s ease-out; }
+  details.ch[open] summary .chev { transform: rotate(90deg); }
+  details.ch summary .stars { color: var(--warn); font-size: 12px; letter-spacing: 1px; }
+  details.ch summary .sum { font-weight: 400; font-size: 12px; color: var(--k3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  details.ch summary .n { margin-inline-start: auto; font-size: 12px; color: var(--k4); font-variant-numeric: tabular-nums; flex: none; }
+  .ch-body { padding-block-end: var(--sp3); }
+  .p0 { font-size: 12px; color: var(--k2); background: var(--sm); border-radius: var(--rc); padding: var(--sp2) var(--sp3); margin-block-end: var(--sp2); }
+  .mod { margin-block-end: var(--sp2); }
+  .mod h4 { font-size: 12px; color: var(--k3); font-weight: 500; margin-block-end: 2px; }
+  .pt { display: flex; align-items: baseline; gap: var(--sp2); padding-block: 3px; padding-inline: var(--sp1); border-radius: var(--rc); }
+  .pt:hover { background: var(--sm); }
+  .pt .id { font-family: var(--mono); font-size: 11px; color: var(--k4); flex: none; }
+  .pt .nm { flex: 1; min-width: 0; }
+  .pt .done { color: var(--pos); font-size: 12px; flex: none; }
+
+  .leaf { display: flex; gap: var(--sp2); align-items: baseline; padding-block: 4px; padding-inline: var(--sp1); border-radius: var(--rc); }
+  .leaf:hover { background: var(--sm); }
+  .leaf .nm { font-weight: 500; }
+  .leaf .intro { color: var(--k3); font-size: 12px; }
+  .gnote { font-size: 12px; color: var(--k3); margin-block: var(--sp1) var(--sp2); }
+  .orphan { margin-block-start: var(--sp2); padding-block-start: var(--sp2); border-block-start: 1px dashed var(--bd); font-size: 12px; color: var(--k3); display: flex; flex-wrap: wrap; gap: var(--sp1); align-items: baseline; }
+
+  .cardx { border: 1px solid var(--bd); border-radius: var(--ri); padding: var(--sp3); margin-block-end: var(--sp2); }
+  .cardx h3 { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: var(--sp2); flex-wrap: wrap; }
+  .cardx .sub { font-size: 12px; color: var(--k3); margin-block-start: 2px; }
+  .kv { display: flex; gap: var(--sp2); margin-block-start: var(--sp1); font-size: 13px; }
+  .kv b { flex: none; width: 60px; font-weight: 500; font-size: 12px; color: var(--k3); padding-block-start: 1px; }
+  .tags { display: flex; flex-wrap: wrap; gap: var(--sp1); }
+
+  a { color: var(--kt); text-decoration: none; border-block-end: 1px solid transparent; }
+  a:hover { border-block-end-color: var(--kt); }
+  .badge { display: inline-block; font-size: 11px; padding: 0 var(--sp2); border-radius: var(--rc); border: 1px solid var(--bd); color: var(--k3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .badge.leafy { color: var(--pos); border-color: color-mix(in srgb, var(--pos) 35%, transparent); background: color-mix(in srgb, var(--pos) 8%, transparent); }
+  .badge.lv-深入 { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 35%, transparent); background: color-mix(in srgb, var(--warn) 8%, transparent); }
+  .badge.lv-跟练 { color: var(--pos); border-color: color-mix(in srgb, var(--pos) 35%, transparent); background: color-mix(in srgb, var(--pos) 8%, transparent); }
+  .badge.grad { color: var(--c4); border-color: color-mix(in srgb, var(--c4) 35%, transparent); background: color-mix(in srgb, var(--c4) 8%, transparent); }
+  .badge.kind-twig { color: var(--c4); border-color: color-mix(in srgb, var(--c4) 35%, transparent); background: color-mix(in srgb, var(--c4) 8%, transparent); }
+  .mono { font-family: var(--mono); font-size: 11px; }
+  .empty { color: var(--k4); text-align: center; padding-block: var(--sp6); font-size: 13px; }
+  footer { margin-block-start: var(--sp3); font-size: 11px; color: var(--k4); }
+</style>
+</head>
+<body>
+<div class="root">
+  <div class="head"><h1>S2AI 学习卡片</h1><p class="meta" id="meta"></p></div>
+  <div class="stats" id="stats"></div>
+  <div class="toolbar"><input id="q" type="search" placeholder="搜索：名称 / 编号 / 关键词…" aria-label="搜索"></div>
+  <main id="main"></main>
+  <footer>S2AI 学习树 · 由 scripts/export-widgets.py 生成 · 数据更新后重跑脚本并覆盖组件即可刷新</footer>
+</div>
+<script id="tree-data" type="application/json">{"cards": [{"id": "card-gqa", "name": "GQA（分组查询注意力）", "target": "02-M1.3", "url": "https://arxiv.org/abs/2305.13245", "tags": ["KV Cache", "MHA / MQA / GQA", "推理显存优化", "LLaMA"], "next": ["03-M1.1", "02-M2.4", "leaf-q-vram"], "madeBy": "让模型帮忙", "date": "2026-10", "rel": [{"name": "Gated DeltaNet / 混合注意力", "url": ""}, {"name": "手算推理显存", "url": ""}]}, {"id": "card-kvcache", "name": "KV Cache 原理与显存估算", "target": "03-M1.1", "url": "https://huggingface.co/docs/transformers/kv_cache", "tags": ["自回归推理", "显存构成", "MHA / GQA / MLA 差异"], "next": ["card-gqa", "03-M1.4", "leaf-q-vram"], "madeBy": "让模型帮忙", "date": "2026-10", "rel": [{"name": "手算推理显存", "url": ""}]}, {"id": "card-lora", "name": "LoRA（低秩适配）", "target": "02-M5.2", "url": "https://arxiv.org/abs/2106.09685", "tags": ["PEFT", "低秩矩阵", "QLoRA", "显存友好微调"], "next": ["08-M2.1", "leaf-p-sft", "02-M5.3"], "madeBy": "让模型帮忙", "date": "2026-10", "rel": [{"name": "PEFT", "url": "https://huggingface.co/docs/peft/"}, {"name": "Unsloth", "url": "https://docs.unsloth.ai/"}, {"name": "LoRA / QLoRA SFT", "url": ""}]}, {"id": "card-qwen3", "name": "Qwen3 系列", "target": "02-M2.2", "url": "https://github.com/QwenLM/Qwen3", "tags": ["GQA", "MoE", "混合注意力", "FP8", "Apache 2.0"], "next": ["02-M1.3", "02-M2.3", "card-deepseek"], "madeBy": "站长策展", "date": "2026-10", "rel": [{"name": "Gated DeltaNet / 混合注意力", "url": ""}]}, {"id": "card-deepseek", "name": "DeepSeek V3 / R1", "target": "02-M2.4", "url": "https://github.com/deepseek-ai/DeepSeek-V3", "tags": ["MoE", "MLA", "MTP", "FP8 训练", "MIT"], "next": ["02-M1.3", "02-M4.5", "card-mixtral"], "madeBy": "站长策展", "date": "2026-10", "rel": [{"name": "Gated DeltaNet / 混合注意力", "url": ""}]}, {"id": "card-kimi-k2", "name": "Kimi K2", "target": "02-M2.2", "url": "https://github.com/MoonshotAI/Kimi-K2", "tags": ["MoE", "MLA", "MuonClip 优化器", "Agentic RL"], "next": ["02-M2.3", "05-M4.1", "card-glm45"], "madeBy": "站长策展", "date": "2026-10", "rel": [{"name": "小规模 GRPO", "url": ""}]}, {"id": "card-llama4", "name": "Llama 4 Scout / Maverick", "target": "02-M2.5", "url": "https://github.com/meta-llama/llama-models", "tags": ["MoE", "原生多模态", "超长上下文", "社区许可"], "next": ["02-M2.3", "card-llava"], "madeBy": "站长策展", "date": "2026-10", "rel": []}, {"id": "card-glm45", "name": "GLM-4.5 系列", "target": "02-M2.2", "url": "https://github.com/zai-org/GLM-4.5", "tags": ["MoE", "Agent 任务", "FP8 官方版", "MIT"], "next": ["02-M2.3", "card-kimi-k2"], "madeBy": "站长策展", "date": "2026-10", "rel": []}, {"id": "card-mixtral", "name": "Mixtral 8x7B / 8x22B", "target": "02-M2.3", "url": "https://github.com/mistralai/mistral-inference", "tags": ["MoE 鼻祖", "稀疏激活 top-2", "Apache 2.0", "单卡可跑"], "next": ["02-M2.4", "card-deepseek"], "madeBy": "站长策展", "date": "2026-10", "rel": []}, {"id": "card-qwen3vl", "name": "Qwen3-VL", "target": "leaf-m-vlm", "url": "https://huggingface.co/Qwen", "tags": ["多语言 OCR", "原生视频理解", "Visual Agent"], "next": ["leaf-m-doc", "leaf-m-video"], "madeBy": "站长策展", "date": "2026-10", "rel": [{"name": "本地 VLM 图文问答", "url": ""}, {"name": "文档/图表/截图理解", "url": ""}, {"name": "视频理解", "url": ""}]}, {"id": "card-internvl", "name": "InternVL 系列", "target": "leaf-m-doc", "url": "https://github.com/OpenGVLab/InternVL", "tags": ["大视觉塔", "细粒度理解", "代码截图 / UI 分析"], "next": ["leaf-m-vlm", "card-llava"], "madeBy": "站长策展", "date": "2026-10", "rel": [{"name": "本地 VLM 图文问答", "url": ""}, {"name": "文档/图表/截图理解", "url": ""}]}, {"id": "card-llava", "name": "LLaVA / LLaVA-OneVision", "target": "leaf-m-vlm", "url": "https://github.com/haotian-liu/LLaVA", "tags": ["VLM 入门首选", "社区最大", "微调生态完善"], "next": ["leaf-m-deploy", "leaf-m-doc"], "madeBy": "站长策展", "date": "2026-10", "rel": [{"name": "本地 VLM 图文问答", "url": ""}, {"name": "文档/图表/截图理解", "url": ""}, {"name": "多模态服务化与微调", "url": ""}]}, {"id": "card-minicpmv", "name": "MiniCPM-V", "target": "leaf-m-doc", "url": "https://github.com/OpenBMB/MiniCPM-V", "tags": ["端侧部署", "OCR", "密集文档"], "next": ["leaf-m-vlm"], "madeBy": "站长策展", "date": "2026-10", "rel": [{"name": "本地 VLM 图文问答", "url": ""}, {"name": "文档/图表/截图理解", "url": ""}]}, {"id": "card-gemma3", "name": "Gemma 3 / 4", "target": "leaf-m-vlm", "url": "https://ai.google.dev/gemma", "tags": ["轻量多模态", "140+ 语言", "本地部署友好"], "next": ["leaf-m-deploy"], "madeBy": "站长策展", "date": "2026-10", "rel": [{"name": "本地 VLM 图文问答", "url": ""}, {"name": "多模态服务化与微调", "url": ""}]}, {"id": "card-whisper", "name": "Whisper / FunASR", "target": "leaf-whisper", "url": "https://github.com/openai/whisper", "tags": ["语音识别", "多语言转写", "词级时间戳"], "next": [], "madeBy": "站长策展", "date": "2026-10", "rel": [{"name": "Whisper / FunASR", "url": "https://github.com/openai/whisper"}]}], "generated": "2026-10-17"}</script>
+<script>
+const T = JSON.parse(document.getElementById('tree-data').textContent);
+
+const $ = s => document.querySelector(s);
+const esc = s => (s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const stars = n => '★'.repeat(n) + '<span style="opacity:.25">' + '★'.repeat(Math.max(0, 3 - n)) + '</span>';
+const chev = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>';
+let query = '';
+function match(...fields) { const q = query.toLowerCase(); return !q || fields.some(f => (f || '').toLowerCase().includes(q)); }
+function bindAccordion(store) {
+  document.querySelectorAll('details.ch').forEach(d => d.ontoggle = () => {
+    if (!query) { d.open ? store.add(d.dataset.key) : store.delete(d.dataset.key); }
+  });
+}
+
+function renderStats() {
+  $('#meta').textContent = '生成于 ' + T.generated + ' · 只读投影（新建卡片动作在 Agent 端）';
+  $('#stats').innerHTML = [['卡片', T.cards.length]]
+    .map(([k, v]) => `<span class="stat"><b>${v}</b>${k}</span>`).join('');
+}
+function render() {
+  $('#main').innerHTML = T.cards.filter(cd => match(cd.name, cd.tags.join(' '), cd.target)).map(cd => {
+    const rel = cd.rel || [];
+    return `
+    <div class="cardx">
+      <h3><a href="${esc(cd.url)}" target="_blank" rel="noopener">${esc(cd.name)} ↗</a>
+        ${cd.date ? `<span class="badge">${esc(cd.date)}</span>` : ''}
+        ${cd.madeBy ? `<span class="badge">${esc(cd.madeBy)}</span>` : ''}</h3>
+      <div class="sub">挂载点 ${cd.target ? `<span class="badge mono">${esc(cd.target)}</span>` : '—'}</div>
+      <div class="kv"><b>技术栈</b><span class="tags">${cd.tags.map(x => `<span class="badge">${esc(x)}</span>`).join('')}</span></div>
+      ${rel.length ? `<div class="kv"><b>相关叶子</b><span>${rel.map(l => l.url
+        ? `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.name)} ↗</a>`
+        : `<span class="badge">${esc(l.name)}</span>`).join('　')}</span></div>` : ''}
+      <div class="kv"><b>接下来</b><span>${cd.next.map(n => `<span class="badge mono">${esc(n)}</span>`).join(' ') || '—'}</span></div>
+    </div>`;
+  }).join('') || '<div class="empty">没有匹配的卡片</div>';
+}
+$('#q').addEventListener('input', e => { query = e.target.value.trim(); render(); });
+renderStats(); render();
+
+</script>
+</body>
+</html>

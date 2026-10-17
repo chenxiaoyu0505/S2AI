@@ -171,6 +171,16 @@ AGENTS.md          本文件
 3. 数据改动后重新跑一次即可刷新看板（提交前顺手跑一遍，让主人预览这次改动）。
 4. `--out PATH` 可指定输出位置——例如主人的 Kimi Work 小组件工作区 `index.html`，把看板常驻进看板页；其余平台同理，把产物挂到各自的界面宿主即可。
 
+数据解析统一在 `scripts/tree_data.py`（export-dashboard.py 与 export-widgets.py 共用，别在两处各写一份正则）。
+
+### 11. 刷新 Kimi Work 四板块小组件（任何 Agent 都能做）
+
+主人把学习树常驻进了 Kimi Work 看板，理论地图 / 叶子清单 / 收集箱 / 学习卡片是**四个各自独立、可拖移的小组件**（不是单文件看板那种互跳版）：
+
+1. 数据改动后跑 `python scripts/export-widgets.py` → 生成 `dashboard/widgets/{theory,leaves,inbox,cards}.html`（每个文件只内嵌自己板块的数据切片）。
+2. 把四个 html 分别覆盖到对应组件工作区的 `workspace/index.html`（组件 widgetId 记录在主人的 Kimi Work 里，换了机器就问主人或 `Widget.list`）。
+3. 跑 `python scripts/export-dashboard.py` 顺手刷新单文件看板，然后 commit + push 让网页版同步。
+
 ## 不要做
 
 - 不要 `git push --force` 到 main（主人明确要求时除外）。
