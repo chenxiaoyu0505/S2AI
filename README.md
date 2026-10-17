@@ -78,4 +78,5 @@ push 到 `main` 后，GitHub Actions 自动执行构建并发布到 GitHub Pages
 
 ## License
 
-MIT（代码）；站点内容欢迎注明出处的非商业转载。
+- **代码**：MIT，见 [LICENSE](./LICENSE)
+- **站点内容**（`src/data/` 学习树数据、学习卡片文案等）：[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)——欢迎注明出处的非商业转载与衍生；商业使用请联系维护者
