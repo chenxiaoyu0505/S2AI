@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { Leaf, ExternalLink, CornerDownRight, Undo2, X, Bot, ArrowRight } from 'lucide-react'
+import { Leaf, ExternalLink, CornerDownRight, Undo2, X, Bot, ArrowRight, Search } from 'lucide-react'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { CARDS } from '@/data/cards'
 import { THEORY_CHAPTERS } from '@/data/theory'
 import { LEAVES } from '@/data/leaves'
@@ -10,6 +12,7 @@ import { LOCAL, TASK_MANUAL_COUNT } from '@/data/content'
 import { INBOX } from '@/data/inbox'
 import { loadDemoted, saveDemoted, demoteFeedText } from '@/lib/demoted'
 import { jumpTo } from '@/lib/jump'
+import HL from '@/components/HL'
 import IndexNote from '@/components/IndexNote'
 
 // 叶子全集（含本地个人叶子），否则挂在其上的卡片解析失败
@@ -72,8 +75,29 @@ function relatedLeaves(card: (typeof CARDS)[number]) {
   return ALL_LEAVES.filter(l => keys.has(l.id) || keys.has(l.anchor) || l.tags.some(t => keys.has(t)))
 }
 
+// 卡片归组：优先按 target 的理论点篇章，其次按 target 叶子的锚点篇章，
+// 再按 next 里第一个理论点兜底；挂到树根/野生叶子/收集箱的归「跨篇章」
+function chapterOf(card: (typeof CARDS)[number]): string {
+  const m = card.target.match(/^(\d{2})-M/)
+  if (m) return m[1]
+  const leaf = ALL_LEAVES.find(l => l.id === card.target)
+  if (leaf) {
+    const am = leaf.anchor.match(/^(\d{2})/)
+    return am ? am[1] : 'other'
+  }
+  for (const r of card.next) {
+    const mm = r.match(/^(\d{2})-M/)
+    if (mm) return mm[1]
+  }
+  return 'other'
+}
+
+// 展开的组也持久化（key 与理论地图 / 叶子清单同一套命名约定）
+const OPEN_KEY = 'ai-study-cards-open-v1'
+
 export default function Cards() {
   const [demoted, setDemoted] = useState<string[]>(loadDemoted)
+  const [query, setQuery] = useState('')
 
   function demote(card: (typeof CARDS)[number]) {
     copyFeed(demoteFeedText(card), `「${card.name}」的退回指令已复制`)
@@ -91,6 +115,59 @@ export default function Cards() {
       return next
     })
   }
+
+  // 卡片按挂靠的篇章分组（组顺序 = 理论地图篇章顺序，跨篇章垫底）。
+  // 数量增长后扫读成本集中在组头列表，不再随卡片总数线性变长。
+  const groups = useMemo(() => {
+    const byChapter = new Map<string, typeof CARDS>()
+    for (const card of CARDS) {
+      const key = chapterOf(card)
+      byChapter.set(key, [...(byChapter.get(key) ?? []), card])
+    }
+    const ordered: { key: string; name: string; cards: typeof CARDS }[] = []
+    for (const ch of THEORY_CHAPTERS) {
+      const cards = byChapter.get(ch.id)
+      if (cards?.length) ordered.push({ key: ch.id, name: `${ch.id} · ${ch.name}`, cards })
+    }
+    const other = byChapter.get('other')
+    if (other?.length) ordered.push({ key: 'other', name: '跨篇章 · 收集箱', cards: other })
+    return ordered
+  }, [])
+
+  const groupKeys = useMemo(() => new Set(groups.map(g => g.key)), [groups])
+
+  // 首次访问默认展开卡片最多的一组，之后记住用户自己的选择（同叶子清单的持久化约定）
+  const [open, setOpen] = useState<string[]>(() => {
+    try {
+      const v = JSON.parse(localStorage.getItem(OPEN_KEY) || 'null')
+      if (Array.isArray(v)) return v.filter(k => groupKeys.has(k))
+    } catch { /* 数据损坏时回退默认 */ }
+    const biggest = groups.reduce<(typeof groups)[number] | undefined>(
+      (a, b) => (b.cards.length > (a?.cards.length ?? -1) ? b : a), undefined)
+    return biggest ? [biggest.key] : []
+  })
+
+  useEffect(() => {
+    localStorage.setItem(OPEN_KEY, JSON.stringify(open))
+  }, [open])
+
+  // 搜索：按名称 / 技术栈 / 分类 / 相关叶子 / 接下来引用的名称过滤。
+  // 命中组强制展开，收起不持久化——与理论地图 / 叶子清单同一套搜索态约定。
+  const q = query.trim().toLowerCase()
+  const filtered = useMemo(() => {
+    if (!q) return null
+    return groups.map(g => ({
+      ...g,
+      cards: g.cards.filter(card => [
+        card.name, ...card.tags,
+        resolveNode(card.target)?.label ?? card.target,
+        ...card.next.map(r => resolveNode(r)?.label ?? r),
+        ...relatedLeaves(card).map(l => l.name),
+      ].join(' ').toLowerCase().includes(q)),
+    })).filter(g => g.cards.length > 0)
+  }, [q, groups])
+  const matchCount = filtered ? filtered.reduce((n, g) => n + g.cards.length, 0) : 0
+  const view = filtered ?? groups
 
   return (
     <div className="space-y-4">
@@ -144,149 +221,201 @@ export default function Cards() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-3 md:grid-cols-2">
-          {CARDS.map(card => {
-            const target = resolveNode(card.target)
-            const leaves = relatedLeaves(card)
-            return (
-              <Card key={card.id} id={card.id} className="transition-shadow hover:shadow-md scroll-mt-20">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <a
-                      href={card.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-sm font-medium underline-offset-4 hover:underline inline-flex items-center gap-1"
-                    >
-                      {card.name}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                    {target ? (
-                      refJump(card.target) ? (
-                        <button
-                          onClick={() => {
-                            const j = refJump(card.target)
-                            if (j) jumpTo(j)
-                          }}
-                          className="rounded-full border px-1.5 py-0 h-4 text-[10px] text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
-                          title={`挂在树上：${target.hint}，点击跳转`}
-                        >
-                          {target.hint}
-                        </button>
-                      ) : (
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4"
-                          title={`挂在树上：${target.hint}`}>
-                          {target.hint}
-                        </Badge>
-                      )
-                    ) : null}
+        <>
+          {/* 搜索框：按名称 / 技术栈 / 分类 / 相关叶子过滤，命中组强制展开（不持久化） */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <Input
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="搜索卡片：名称 / 技术栈，如「LoRA」「MoE」"
+                className="h-8 pl-8 pr-7 text-sm"
+              />
+              {query && (
+                <button
+                  onClick={() => setQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  title="清空搜索"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+            {q && (
+              <span className="text-xs text-muted-foreground">
+                命中 {matchCount} 张卡片（{filtered?.length ?? 0} 个分组）
+              </span>
+            )}
+          </div>
+
+          {/* 按挂靠篇章分组折叠：卡片增多后扫读组头即可定位，不用滚完全部卡片 */}
+          <Accordion type="multiple" value={q ? (filtered?.map(g => g.key) ?? []) : open} onValueChange={v => { if (!q) setOpen(v) }} className="space-y-3">
+            {view.map(g => (
+              <AccordionItem key={g.key} value={g.key} className="rounded-lg border bg-card px-4 transition-shadow hover:shadow-md">
+                <AccordionTrigger className="hover:no-underline">
+                  {/* 与理论地图 / 叶子清单同一修法：窄屏时计数落到第二行，组名保持单行 */}
+                  <div className="flex flex-1 min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 pr-2 text-left">
+                    <Leaf className="h-4 w-4 flex-none text-muted-foreground/50" />
+                    <span className="text-sm font-medium min-w-0">{g.name}</span>
+                    <span className="ml-auto flex-none text-xs tabular-nums text-muted-foreground">{g.cards.length} 张</span>
                   </div>
-                  <CardDescription className="flex gap-2 text-xs leading-relaxed">
-                    <span className="flex-none w-14 font-medium text-foreground/70">分类</span>
-                    <span>{target ? target.label : card.target}</span>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-1.5 text-sm">
-                  <p className="flex gap-2">
-                    <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">技术栈</span>
-                    <span className="flex flex-wrap gap-1">
-                      {card.tags.map(t => (
-                        <span key={t} className="rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">{t}</span>
-                      ))}
-                    </span>
-                  </p>
-                  {leaves.length > 0 && (
-                    <p className="flex gap-2">
-                      <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">相关叶子</span>
-                      <span className="flex flex-wrap gap-1 min-w-0">
-                        {leaves.map(leaf => (
-                          <span key={leaf.id} className="inline-flex items-center gap-1">
-                            {leaf.url ? (
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="grid gap-3 pt-1 pb-2 md:grid-cols-2">
+                    {g.cards.map(card => {
+                      const target = resolveNode(card.target)
+                      const leaves = relatedLeaves(card)
+                      return (
+                        <Card key={card.id} id={card.id} className="transition-shadow hover:shadow-md scroll-mt-20">
+                          <CardHeader className="pb-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <a
-                                href={leaf.url}
+                                href={card.url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="rounded-full border bg-background px-2 py-0 text-[11px] text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors inline-flex items-center gap-1"
-                                title={`叶子：${leaf.intro}，点击直达项目官网`}
+                                className="text-sm font-medium underline-offset-4 hover:underline inline-flex items-center gap-1"
                               >
-                                <Leaf className="h-2.5 w-2.5" />{leaf.name}
-                                <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+                                <HL text={card.name} q={q} />
+                                <ExternalLink className="h-3 w-3" />
                               </a>
-                            ) : (
-                              <button
-                                onClick={() => jumpTo({ tab: 'checklist', anchor: leaf.id })}
-                                className="rounded-full border border-dashed px-2 py-0 text-[11px] text-muted-foreground/80 hover:text-primary hover:border-primary/50 transition-colors inline-flex items-center gap-1"
-                                title={`练习项：${leaf.intro}，点击在叶子清单中定位`}
-                              >
-                                <Leaf className="h-2.5 w-2.5" />{leaf.name}
-                              </button>
-                            )}
-                          </span>
-                        ))}
-                      </span>
-                    </p>
-                  )}
-                  {card.next.length > 0 && (
-                    <p className="flex gap-2">
-                      <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">接下来</span>
-                      <span className="space-y-0.5 min-w-0">
-                        {card.next.map(ref => {
-                          const node = resolveNode(ref)
-                          const jump = refJump(ref)
-                          return (
-                            <span key={ref} className="flex items-start gap-1 text-xs text-muted-foreground leading-relaxed">
-                              <CornerDownRight className="h-3 w-3 mt-0.5 flex-none" />
-                              {jump ? (
-                                <button
-                                  onClick={() => jumpTo(jump)}
-                                  className="text-left hover:text-primary hover:underline underline-offset-2 transition-colors"
-                                  title={`${node?.hint ?? ref}，点击跳转`}
-                                >
-                                  {node ? node.label : ref}
-                                  {node && <span className="text-muted-foreground/80">（{node.hint}）</span>}
-                                </button>
-                              ) : (
-                                <span>
-                                  {node ? node.label : ref}
-                                  {node && <span className="text-muted-foreground/80">（{node.hint}）</span>}
+                              {target ? (
+                                refJump(card.target) ? (
+                                  <button
+                                    onClick={() => {
+                                      const j = refJump(card.target)
+                                      if (j) jumpTo(j)
+                                    }}
+                                    className="rounded-full border px-1.5 py-0 h-4 text-[10px] text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+                                    title={`挂在树上：${target.hint}，点击跳转`}
+                                  >
+                                    {target.hint}
+                                  </button>
+                                ) : (
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4"
+                                    title={`挂在树上：${target.hint}`}>
+                                    {target.hint}
+                                  </Badge>
+                                )
+                              ) : null}
+                            </div>
+                            <CardDescription className="flex gap-2 text-xs leading-relaxed">
+                              <span className="flex-none w-14 font-medium text-foreground/70">分类</span>
+                              <span>{target ? target.label : card.target}</span>
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-1.5 text-sm">
+                            <p className="flex gap-2">
+                              <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">技术栈</span>
+                              <span className="flex flex-wrap gap-1">
+                                {card.tags.map(t => (
+                                  <span key={t} className="rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">{t}</span>
+                                ))}
+                              </span>
+                            </p>
+                            {leaves.length > 0 && (
+                              <p className="flex gap-2">
+                                <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">相关叶子</span>
+                                <span className="flex flex-wrap gap-1 min-w-0">
+                                  {leaves.map(leaf => (
+                                    <span key={leaf.id} className="inline-flex items-center gap-1">
+                                      {leaf.url ? (
+                                        <a
+                                          href={leaf.url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="rounded-full border bg-background px-2 py-0 text-[11px] text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors inline-flex items-center gap-1"
+                                          title={`叶子：${leaf.intro}，点击直达项目官网`}
+                                        >
+                                          <Leaf className="h-2.5 w-2.5" />{leaf.name}
+                                          <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+                                        </a>
+                                      ) : (
+                                        <button
+                                          onClick={() => jumpTo({ tab: 'checklist', anchor: leaf.id })}
+                                          className="rounded-full border border-dashed px-2 py-0 text-[11px] text-muted-foreground/80 hover:text-primary hover:border-primary/50 transition-colors inline-flex items-center gap-1"
+                                          title={`练习项：${leaf.intro}，点击在叶子清单中定位`}
+                                        >
+                                          <Leaf className="h-2.5 w-2.5" />{leaf.name}
+                                        </button>
+                                      )}
+                                    </span>
+                                  ))}
                                 </span>
+                              </p>
+                            )}
+                            {card.next.length > 0 && (
+                              <p className="flex gap-2">
+                                <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">接下来</span>
+                                <span className="space-y-0.5 min-w-0">
+                                  {card.next.map(ref => {
+                                    const node = resolveNode(ref)
+                                    const jump = refJump(ref)
+                                    return (
+                                      <span key={ref} className="flex items-start gap-1 text-xs text-muted-foreground leading-relaxed">
+                                        <CornerDownRight className="h-3 w-3 mt-0.5 flex-none" />
+                                        {jump ? (
+                                          <button
+                                            onClick={() => jumpTo(jump)}
+                                            className="text-left hover:text-primary hover:underline underline-offset-2 transition-colors"
+                                            title={`${node?.hint ?? ref}，点击跳转`}
+                                          >
+                                            {node ? node.label : ref}
+                                            {node && <span className="text-muted-foreground/80">（{node.hint}）</span>}
+                                          </button>
+                                        ) : (
+                                          <span>
+                                            {node ? node.label : ref}
+                                            {node && <span className="text-muted-foreground/80">（{node.hint}）</span>}
+                                          </span>
+                                        )}
+                                      </span>
+                                    )
+                                  })}
+                                </span>
+                              </p>
+                            )}
+                            <div className="flex items-center gap-2 pt-1">
+                              <span className="text-xs text-muted-foreground/80">
+                                {[card.madeBy, card.date].filter(Boolean).join(' · ')}
+                              </span>
+                              {demoted.includes(card.id) ? (
+                                <span className="ml-auto inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 font-medium">
+                                  已申请退回
+                                  <button
+                                    onClick={() => unmarkDemote(card.id)}
+                                    className="hover:text-foreground transition-colors"
+                                    title="撤回退回申请（只影响本机标记，公共数据需 Agent 操作后才会变）"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => demote(card)}
+                                  className="ml-auto inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                                  title="学不动 / 优先级下降时退回收集箱：复制 Agent 指令，Agent 执行移除卡片并清理引用"
+                                >
+                                  <Undo2 className="h-3 w-3" />退回收集箱
+                                </button>
                               )}
-                            </span>
-                          )
-                        })}
-                      </span>
-                    </p>
-                  )}
-                  <div className="flex items-center gap-2 pt-1">
-                    <span className="text-xs text-muted-foreground/80">
-                      {[card.madeBy, card.date].filter(Boolean).join(' · ')}
-                    </span>
-                    {demoted.includes(card.id) ? (
-                      <span className="ml-auto inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 font-medium">
-                        已申请退回
-                        <button
-                          onClick={() => unmarkDemote(card.id)}
-                          className="hover:text-foreground transition-colors"
-                          title="撤回退回申请（只影响本机标记，公共数据需 Agent 操作后才会变）"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => demote(card)}
-                        className="ml-auto inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-                        title="学不动 / 优先级下降时退回收集箱：复制 Agent 指令，Agent 执行移除卡片并清理引用"
-                      >
-                        <Undo2 className="h-3 w-3" />退回收集箱
-                      </button>
-                    )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
                   </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+
+          {q && filtered && filtered.length === 0 && (
+            <p className="text-sm text-muted-foreground py-10 text-center">
+              没有找到匹配「{query.trim()}」的卡片——换个关键词试试
+            </p>
+          )}
+        </>
       )}
     </div>
   )

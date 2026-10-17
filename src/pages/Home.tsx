@@ -236,11 +236,11 @@ export default function Home() {
                     <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-muted">
                       <s.icon className="h-4 w-4 text-muted-foreground" />
                     </span>
-                    <div>
+                    <div className="min-w-0">
                       <div className="text-lg font-medium tabular-nums leading-none">
                         {s.value}<span className="text-xs font-normal text-muted-foreground ml-0.5">{s.unit}</span>
                       </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">{s.label}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5 leading-tight">{s.label}</div>
                     </div>
                   </div>
                 ))}

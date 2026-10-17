@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BookOpenCheck, Circle, CheckCircle2, Leaf, PenLine, RotateCcw, Search, Star, X } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
@@ -11,6 +11,7 @@ import { THEORY_CHAPTERS, THEORY_TOTAL, THEORY_DONE, type TheoryChapter } from '
 import { LEAVES, leafGroupKey, type Leaf as LeafItem } from '@/data/leaves'
 import { CARDS } from '@/data/cards'
 import { jumpTo } from '@/lib/jump'
+import HL from '@/components/HL'
 import IndexNote from '@/components/IndexNote'
 
 const STORE_KEY = 'ai-study-theory-v1'
@@ -47,24 +48,6 @@ function FreqStars({ freq }: { freq: number }) {
       {'★'.repeat(freq)}{'☆'.repeat(3 - freq)}
     </span>
   )
-}
-
-// 搜索命中高亮：标出全部匹配片段（不止第一个）
-function HL({ text, q }: { text: string; q: string }) {
-  if (!q) return <>{text}</>
-  const lower = text.toLowerCase()
-  let from = 0
-  let hit = lower.indexOf(q)
-  if (hit < 0) return <>{text}</>
-  const parts: (string | ReactElement)[] = []
-  while (hit >= 0) {
-    if (hit > from) parts.push(text.slice(from, hit))
-    parts.push(<mark key={hit} className="bg-transparent text-primary font-medium">{text.slice(hit, hit + q.length)}</mark>)
-    from = hit + q.length
-    hit = lower.indexOf(q, from)
-  }
-  parts.push(text.slice(from))
-  return <>{parts}</>
 }
 
 export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?: string[]; nonce: number } | null }) {

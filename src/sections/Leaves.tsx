@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactElement } from 'react'
+import { useMemo, useState } from 'react'
 import {
   BookOpen, CheckCircle2, ExternalLink, PenLine, Search, Sprout, TreePine, X,
 } from 'lucide-react'
@@ -12,6 +12,7 @@ import { LOCAL } from '@/data/content'
 import { THEORY_CHAPTERS } from '@/data/theory'
 import { CARDS } from '@/data/cards'
 import { jumpTo } from '@/lib/jump'
+import HL from '@/components/HL'
 import IndexNote from '@/components/IndexNote'
 
 // 叶子清单（第二板块）：这棵树上长出的全部叶子（项目 + 练习项），按枝干分组。
@@ -55,24 +56,6 @@ function buildGroups(): LeafGroup[] {
     groups.push({ key: 'wild', name: '野生叶子', note: '已进树但未落户：树还没长出对应枝干，长出后移入正式分组', opt: true, leaves: sortGroup(wild) })
   }
   return groups
-}
-
-// 搜索命中高亮：标出全部匹配片段（不止第一个）
-function HL({ text, q }: { text: string; q: string }) {
-  if (!q) return <>{text}</>
-  const lower = text.toLowerCase()
-  let from = 0
-  let hit = lower.indexOf(q)
-  if (hit < 0) return <>{text}</>
-  const parts: (string | ReactElement)[] = []
-  while (hit >= 0) {
-    if (hit > from) parts.push(text.slice(from, hit))
-    parts.push(<mark key={hit} className="bg-transparent text-primary font-medium">{text.slice(hit, hit + q.length)}</mark>)
-    from = hit + q.length
-    hit = lower.indexOf(q, from)
-  }
-  parts.push(text.slice(from))
-  return <>{parts}</>
 }
 
 export default function Leaves({
