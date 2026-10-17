@@ -103,6 +103,8 @@ function CardRail({ children, count }: { children: ReactNode; count: number }) {
   const railRef = useRef<HTMLDivElement>(null)
   const [canPrev, setCanPrev] = useState(false)
   const [canNext, setCanNext] = useState(false)
+  // 手机端位置指示（第几张 / 共几张）：原生横滑没有箭头，靠圆点提示「还能往右滑」
+  const [active, setActive] = useState(0)
 
   // 滚动位置变化时更新箭头可用态（内容不超过一屏时两个箭头都禁用）
   useEffect(() => {
@@ -111,6 +113,11 @@ function CardRail({ children, count }: { children: ReactNode; count: number }) {
     const update = () => {
       setCanPrev(el.scrollLeft > 4)
       setCanNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 4)
+      const first = el.querySelector<HTMLElement>(':scope > *')
+      const w = first ? first.offsetWidth + 12 : el.clientWidth
+      // 滚到底时最后几张可能对不齐起点，直接记为最后一张
+      const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 4
+      setActive(atEnd ? count - 1 : Math.round(el.scrollLeft / w))
     }
     update()
     el.addEventListener('scroll', update, { passive: true })
@@ -135,10 +142,18 @@ function CardRail({ children, count }: { children: ReactNode; count: number }) {
     <div className="relative group/rail">
       <div
         ref={railRef}
-        className="flex gap-3 overflow-x-auto snap-x snap-mandatory pt-1 pb-2 scroll-smooth [scrollbar-width:thin] [-webkit-overflow-scrolling:touch]"
+        className="-mx-3 flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-px-3 px-3 pt-1 pb-2 scroll-smooth [scrollbar-width:none] md:mx-0 md:scroll-px-0 md:px-0 md:[scrollbar-width:thin] [-webkit-overflow-scrolling:touch]"
       >
         {children}
       </div>
+      {count > 1 && (
+        <div className="flex items-center justify-center gap-1.5 pt-1 md:hidden" aria-hidden>
+          {Array.from({ length: count }, (_, i) => (
+            <span key={i} className={`h-1.5 rounded-full transition-all ${i === active ? 'w-4 bg-foreground/60' : 'w-1.5 bg-foreground/20'}`} />
+          ))}
+          <span className="ml-1.5 text-[11px] tabular-nums text-muted-foreground">{active + 1} / {count} · 左右滑动</span>
+        </div>
+      )}
       {/* 桌面端左右箭头（触屏设备直接滑动，不显示） */}
       {count > 1 && (
         <>
@@ -290,7 +305,7 @@ export default function Cards() {
               href="https://github.com/chenxiaoyu0505/S2AI"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2.5 md:py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
             >
               前往 GitHub 仓库部署 <ArrowRight className="h-3.5 w-3.5" />
             </a>
@@ -314,13 +329,14 @@ export default function Cards() {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="搜索卡片：名称 / 技术栈，如「LoRA」「MoE」"
-                className="h-8 pl-8 pr-7 text-sm"
+                className="h-10 pl-8 pr-10 md:h-8 md:pr-7 md:text-sm"
               />
               {query && (
                 <button
                   onClick={() => setQuery('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground transition-colors md:right-2 md:h-auto md:w-auto"
                   title="清空搜索"
+                  aria-label="清空搜索"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -336,7 +352,7 @@ export default function Cards() {
                 <button
                   onClick={() => setOpen(groups.map(g => g.key))}
                   disabled={open.length === groups.length}
-                  className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
+                  className="inline-flex items-center gap-1 rounded-full border px-3 py-2 md:px-2.5 md:py-1 text-[12px] md:text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
                   title="展开全部分组"
                 >
                   <ChevronsUpDown className="h-3 w-3" />全部展开
@@ -344,7 +360,7 @@ export default function Cards() {
                 <button
                   onClick={() => setOpen([])}
                   disabled={open.length === 0}
-                  className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
+                  className="inline-flex items-center gap-1 rounded-full border px-3 py-2 md:px-2.5 md:py-1 text-[12px] md:text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
                   title="收起全部分组"
                 >
                   <ChevronsDownUp className="h-3 w-3" />全部收起
@@ -356,7 +372,7 @@ export default function Cards() {
           {/* 按挂靠篇章分组折叠：卡片增多后扫读组头即可定位，不用滚完全部卡片 */}
           <Accordion type="multiple" value={q ? (filtered?.map(g => g.key) ?? []) : open} onValueChange={v => { if (!q) setOpen(v) }} className="space-y-3">
             {view.map(g => (
-              <AccordionItem key={g.key} value={g.key} className="rounded-lg border bg-card px-4 transition-shadow hover:shadow-md">
+              <AccordionItem key={g.key} value={g.key} className="rounded-lg border bg-card px-3 md:px-4 transition-shadow hover:shadow-md">
                 <AccordionTrigger className="hover:no-underline">
                   {/* 与理论地图 / 叶子清单同一修法：窄屏时计数落到第二行，组名保持单行 */}
                   <div className="flex flex-1 min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 pr-2 text-left">
@@ -395,7 +411,7 @@ export default function Cards() {
                                       const j = refJump(card.target)
                                       if (j) jumpTo(j)
                                     }}
-                                    className="rounded-full border px-1.5 py-0 h-4 text-[10px] text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+                                    className="rounded-full border px-2 md:px-1.5 py-0 h-7 md:h-4 text-[12px] md:text-[10px] text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
                                     title={`挂在树上：${target.hint}，点击跳转`}
                                   >
                                     {target.hint}
@@ -418,7 +434,7 @@ export default function Cards() {
                               <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">技术栈</span>
                               <span className="flex flex-wrap gap-1">
                                 {card.tags.map(t => (
-                                  <span key={t} className="rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">{t}</span>
+                                  <span key={t} className="rounded bg-muted px-1.5 py-0.5 text-[12px] md:text-[11px] text-muted-foreground">{t}</span>
                                 ))}
                               </span>
                             </p>
@@ -433,7 +449,7 @@ export default function Cards() {
                                           href={leaf.url}
                                           target="_blank"
                                           rel="noreferrer"
-                                          className="rounded-full border bg-background px-2 py-0 text-[11px] text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors inline-flex items-center gap-1"
+                                          className="rounded-full border bg-background px-2.5 py-1 md:px-2 md:py-0 text-[12px] md:text-[11px] text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors inline-flex items-center gap-1"
                                           title={`叶子：${leaf.intro}，点击直达项目官网`}
                                         >
                                           <Leaf className="h-2.5 w-2.5" />{leaf.name}
@@ -442,7 +458,7 @@ export default function Cards() {
                                       ) : (
                                         <button
                                           onClick={() => jumpTo({ tab: 'checklist', anchor: leaf.id })}
-                                          className="rounded-full border border-dashed px-2 py-0 text-[11px] text-muted-foreground/80 hover:text-primary hover:border-primary/50 transition-colors inline-flex items-center gap-1"
+                                          className="rounded-full border border-dashed px-2.5 py-1 md:px-2 md:py-0 text-[12px] md:text-[11px] text-muted-foreground/80 hover:text-primary hover:border-primary/50 transition-colors inline-flex items-center gap-1"
                                           title={`练习项：${leaf.intro}，点击在叶子清单中定位`}
                                         >
                                           <Leaf className="h-2.5 w-2.5" />{leaf.name}
@@ -466,7 +482,7 @@ export default function Cards() {
                                         {jump ? (
                                           <button
                                             onClick={() => jumpTo(jump)}
-                                            className="text-left hover:text-primary hover:underline underline-offset-2 transition-colors"
+                                            className="py-1 md:py-0 text-left hover:text-primary hover:underline underline-offset-2 transition-colors"
                                             title={`${node?.hint ?? ref}，点击跳转`}
                                           >
                                             {node ? node.label : ref}
@@ -502,7 +518,7 @@ export default function Cards() {
                               ) : (
                                 <button
                                   onClick={() => demote(card)}
-                                  className="ml-auto inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                                  className="ml-auto inline-flex items-center gap-1 rounded-full border px-3 py-1.5 md:px-2.5 md:py-0.5 text-[12px] md:text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
                                   title="学不动 / 优先级下降时退回收集箱：复制 Agent 指令，Agent 执行移除卡片并清理引用"
                                 >
                                   <Undo2 className="h-3 w-3" />退回收集箱

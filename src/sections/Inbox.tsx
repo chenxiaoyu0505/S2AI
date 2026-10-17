@@ -67,7 +67,7 @@ export default function Inbox() {
               href="https://github.com/chenxiaoyu0505/S2AI"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2.5 md:py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
             >
               前往 GitHub 仓库部署 <ArrowRight className="h-3.5 w-3.5" />
             </a>
@@ -83,12 +83,13 @@ export default function Inbox() {
         </Card>
       ) : (
         <>
-          <div className="flex flex-wrap gap-1.5">
+          {/* 手机端分类筛选改为单行横滑，不再折成多行占掉半屏 */}
+          <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
             {['全部', ...cats].map(c => (
               <button
                 key={c}
                 onClick={() => setFilter(c)}
-                className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                className={`flex-none whitespace-nowrap rounded-full border px-3.5 py-2 md:px-3 md:py-1 text-xs transition-colors ${
                   filter === c
                     ? 'bg-primary text-primary-foreground border-primary'
                     : 'bg-background text-muted-foreground hover:bg-accent'
@@ -102,7 +103,7 @@ export default function Inbox() {
           <div className="grid gap-3 md:grid-cols-2">
             {shown.map(item => (
               <Card key={item.url} className="transition-shadow hover:shadow-md">
-                <CardHeader className="pb-2">
+                <CardHeader className="px-4 pb-2 md:px-6">
                   <div className="flex items-center gap-2 flex-wrap">
                     <a
                       href={item.url}
@@ -135,7 +136,7 @@ export default function Inbox() {
                         const m = item.cat.match(/(\d{2})-M/)
                         jumpTo({ tab: 'checklist', expand: m ? m[1] : item.cat.includes('野生') ? 'wild' : 'root' })
                       }}
-                      className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground hover:underline underline-offset-2"
+                      className="text-xs px-2.5 py-1 md:px-2 md:py-0.5 rounded-full bg-secondary text-secondary-foreground hover:underline underline-offset-2"
                       title="跳到叶子清单对应分组"
                     >
                       {item.cat}
@@ -146,7 +147,7 @@ export default function Inbox() {
                   </div>
                   <CardDescription className="text-sm leading-relaxed">{item.intro}</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-1.5 text-sm">
+                <CardContent className="space-y-1.5 px-4 text-sm md:px-6">
                   <p className="flex gap-2 leading-relaxed">
                     <span className="flex-none w-14 text-xs font-medium text-foreground/70 pt-0.5">为什么收</span>
                     <span className="text-muted-foreground">{item.why}</span>
