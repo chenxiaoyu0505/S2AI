@@ -17,6 +17,7 @@
     --warn: var(--kimi-color-warning, #d97706);
     --dan: var(--kimi-color-danger, #dc2626);
     --c4: var(--kimi-chart-4, #9333ea);
+    --em: var(--kimi-chart-2, #059669);
     --sans: var(--kimi-font-sans, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif);
     --mono: var(--kimi-font-mono, ui-monospace, Consolas, monospace);
     --sp1: var(--kimi-space-1, 4px); --sp2: var(--kimi-space-2, 8px); --sp3: var(--kimi-space-3, 12px);
@@ -53,7 +54,12 @@
   .pt:hover { background: var(--sm); }
   .pt .id { font-family: var(--mono); font-size: 11px; color: var(--k4); flex: none; }
   .pt .nm { flex: 1; min-width: 0; }
+  .pt .nm .chips { display: flex; flex-wrap: wrap; gap: var(--sp1); margin-block-start: 2px; }
   .pt .done { color: var(--pos); font-size: 12px; flex: none; }
+  .badge.dash { border-style: dashed; color: var(--k3); }
+  .cnt { display: inline-block; font-size: 10px; padding: 0 5px; border-radius: var(--rc); flex: none; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .cnt.leafy { color: var(--pos); background: color-mix(in srgb, var(--pos) 10%, transparent); }
+  .cnt.cardy { color: var(--em); background: color-mix(in srgb, var(--em) 10%, transparent); }
 
   .leaf { display: flex; gap: var(--sp2); align-items: baseline; padding-block: 4px; padding-inline: var(--sp1); border-radius: var(--rc); }
   .leaf:hover { background: var(--sm); }

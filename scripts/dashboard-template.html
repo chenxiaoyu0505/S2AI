@@ -89,7 +89,14 @@
   .pt:hover { background: var(--sm); }
   .pt .id { font-family: var(--mono); font-size: 11px; color: var(--k4); flex: none; }
   .pt .nm { flex: 1; min-width: 0; }
+  .pt .nm .chips { display: flex; flex-wrap: wrap; gap: var(--sp1); margin-block-start: 2px; }
   .pt .done { color: var(--pos); font-size: 12px; flex: none; }
+  .badge.dash { border-style: dashed; color: var(--k3); }
+  .cnt { display: inline-block; font-size: 10px; padding: 0 5px; border-radius: var(--rc); flex: none; font-variant-numeric: tabular-nums; white-space: nowrap; cursor: pointer; border: 1px solid transparent; }
+  .cnt.leafy { color: var(--pos); background: color-mix(in srgb, var(--pos) 10%, transparent); }
+  .cnt.cardy { color: var(--em); background: color-mix(in srgb, var(--em) 10%, transparent); }
+  .cnt:hover { border-color: currentColor; }
+  :root { --em: var(--kimi-chart-2, #059669); }
 
   .grp { margin-block-end: var(--sp4); }
   .grp h3 { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: var(--sp2); flex-wrap: wrap; }
@@ -189,6 +196,26 @@ T.cards.forEach(c => {
   }
 });
 
+// 理论点 ← 叶子/卡片（反向引用，与网页版 TheoryMap 同口径）：叶子的 anchor 或 tags 指向点编号
+// 即挂在本枝节；卡片的 target/next 指向点编号即计入
+const PT_RE = /^\d{2}-M\d+\.\d+$/;
+const leavesByPoint = {}, cardIdsByPoint = {};
+T.leaves.forEach(l => {
+  const pts = new Set();
+  if (PT_RE.test(l.anchor)) pts.add(l.anchor);
+  l.tags.forEach(t => { if (PT_RE.test(t)) pts.add(t); });
+  pts.forEach(pid => { (leavesByPoint[pid] = leavesByPoint[pid] || []).push(l); });
+});
+T.cards.forEach(c => {
+  const seen = new Set();
+  [c.target, ...c.next].forEach(r => {
+    if (PT_RE.test(r) && !seen.has(r)) {
+      seen.add(r);
+      (cardIdsByPoint[r] = cardIdsByPoint[r] || []).push(c.id);
+    }
+  });
+});
+
 const esc = s => (s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const stars = n => '★'.repeat(n) + '<span style="opacity:.25">' + '★'.repeat(Math.max(0, 3 - n)) + '</span>';
 const chev = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>';
@@ -226,11 +253,21 @@ function panelTheory() {
     const chHit = match(ch.name, ch.summary, ch.p0);
     const modsHtml = ch.modules.map((mo, m) => {
       const rows = mo.points.map((pt, p) => ({ pt, p })).filter(({ pt }) =>
-        chHit || match(pt.name, pt.id, ch.id + '-' + pt.id)).map(({ pt, p }) => `
+        chHit || match(pt.name, pt.id, ch.id + '-' + pt.id)).map(({ pt, p }) => {
+        const key = ch.id + '-' + pt.id;
+        const here = leavesByPoint[key] || [];
+        const chips = here.length ? `<span class="chips">${here.map(l => l.url
+          ? `<span class="badge leafy node" data-go="${esc(l.id)}" title="叶子：${esc(l.intro)}，点击在叶子清单定位">${esc(l.name)} ↗</span>`
+          : `<span class="badge dash" title="练习项：${esc(l.intro)}">✎ ${esc(l.name)}</span>`).join('')}</span>` : '';
+        const leafCnt = here.length ? `<span class="cnt leafy" data-go="${esc(here[0].id)}" title="${here.length} 片叶子长在本枝节，点击在叶子清单定位">叶 ${here.length}</span>` : '';
+        const cardIds = cardIdsByPoint[key] || [];
+        const cardCnt = cardIds.length ? `<span class="cnt cardy" data-go="${esc(cardIds[0])}" title="${cardIds.length} 张学习卡片指向本点，点击跳去学习卡片">卡 ${cardIds.length}</span>` : '';
+        return `
         <div class="pt" id="th-${c}-${m}-${p}">
-          <span class="id">${ch.id}-${pt.id}</span><span class="nm">${esc(pt.name)}</span>
-          <span>${stars(pt.freq)}</span>${pt.done ? '<span class="done">✓</span>' : ''}
-        </div>`).join('');
+          <span class="id">${ch.id}-${pt.id}</span><span class="nm">${esc(pt.name)}${chips}</span>
+          <span>${stars(pt.freq)}</span>${leafCnt}${cardCnt}${pt.done ? '<span class="done">✓</span>' : ''}
+        </div>`;
+      }).join('');
       return rows ? `<div class="mod"><h4>${esc(mo.name)}</h4>${rows}</div>` : '';
     }).join('');
     if (query && !modsHtml) return '';

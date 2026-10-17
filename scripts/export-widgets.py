@@ -28,6 +28,7 @@ CSS = r"""
     --warn: var(--kimi-color-warning, #d97706);
     --dan: var(--kimi-color-danger, #dc2626);
     --c4: var(--kimi-chart-4, #9333ea);
+    --em: var(--kimi-chart-2, #059669);
     --sans: var(--kimi-font-sans, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif);
     --mono: var(--kimi-font-mono, ui-monospace, Consolas, monospace);
     --sp1: var(--kimi-space-1, 4px); --sp2: var(--kimi-space-2, 8px); --sp3: var(--kimi-space-3, 12px);
@@ -64,7 +65,12 @@ CSS = r"""
   .pt:hover { background: var(--sm); }
   .pt .id { font-family: var(--mono); font-size: 11px; color: var(--k4); flex: none; }
   .pt .nm { flex: 1; min-width: 0; }
+  .pt .nm .chips { display: flex; flex-wrap: wrap; gap: var(--sp1); margin-block-start: 2px; }
   .pt .done { color: var(--pos); font-size: 12px; flex: none; }
+  .badge.dash { border-style: dashed; color: var(--k3); }
+  .cnt { display: inline-block; font-size: 10px; padding: 0 5px; border-radius: var(--rc); flex: none; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .cnt.leafy { color: var(--pos); background: color-mix(in srgb, var(--pos) 10%, transparent); }
+  .cnt.cardy { color: var(--em); background: color-mix(in srgb, var(--em) 10%, transparent); }
 
   .leaf { display: flex; gap: var(--sp2); align-items: baseline; padding-block: 4px; padding-inline: var(--sp1); border-radius: var(--rc); }
   .leaf:hover { background: var(--sm); }
@@ -137,15 +143,38 @@ def page(title: str, data: dict, body_js: str) -> str:
 
 
 def theory_page(t: dict) -> str:
-    chapters = t['chapters']
+    chapters, leaves, cards = t['chapters'], t['leaves'], t['cards']
+    # 反向引用与网页版 / 单文件看板同口径：叶子的 anchor 或 tags 指向点编号即挂在本枝节；
+    # 卡片的 target/next 指向点编号即计入。挂载关系在 Python 侧算好内嵌进每个学习点。
+    pt_re = re.compile(r'^\d{2}-M\d+\.\d+$')
+    leaves_by_pt, card_ids_by_pt = {}, {}
+    for l in leaves:
+        pts = {l['anchor'], *l['tags']}
+        for pid in pts:
+            if pt_re.match(pid):
+                leaves_by_pt.setdefault(pid, []).append(
+                    {'id': l['id'], 'name': l['name'], 'url': l['url'], 'intro': l['intro']})
+    for c in cards:
+        for r in dict.fromkeys([c['target'], *c['next']]):
+            if r and pt_re.match(r):
+                card_ids_by_pt.setdefault(r, []).append({'id': c['id'], 'name': c['name']})
+    for ch in chapters:
+        for mo in ch['modules']:
+            for pt in mo['points']:
+                # 叶子/卡片的引用带篇章前缀（'02-M5.2'），学习点 id 是相对篇章的（'M5.2'）——按全编号对齐
+                full_id = f"{ch['id']}-{pt['id']}"
+                pt['leaves'] = leaves_by_pt.get(full_id, [])
+                pt['cards'] = card_ids_by_pt.get(full_id, [])
     data = {'chapters': chapters, 'generated': t['generated']}
     pts = sum(len(m['points']) for c in chapters for m in c['modules'])
     body = r"""
 const openCh = new Set(T.chapters.length ? [T.chapters[0].id] : []);
 function renderStats() {
   $('#meta').textContent = '生成于 ' + T.generated + ' · 只读投影（生长动作在 Agent 端）';
+  const nLeaves = T.chapters.reduce((n, c) => n + c.modules.reduce((k, m) => k + m.points.reduce((x, p) => x + p.leaves.length, 0), 0), 0);
   $('#stats').innerHTML = [
     ['篇章', T.chapters.length], ['学习点', """ + str(pts) + r"""],
+    ['挂枝叶子', nLeaves],
     ['已点亮', T.chapters.reduce((n, c) => n + c.modules.reduce((k, m) => k + m.points.filter(p => p.done).length, 0), 0)],
   ].map(([k, v]) => `<span class="stat"><b>${v}</b>${k}</span>`).join('');
 }
@@ -153,9 +182,16 @@ function render() {
   $('#main').innerHTML = T.chapters.map(ch => {
     const chHit = match(ch.name, ch.summary, ch.p0);
     const modsHtml = ch.modules.map(mo => {
-      const rows = mo.points.filter(pt => chHit || match(pt.name, pt.id, ch.id + '-' + pt.id)).map(pt => `
-        <div class="pt"><span class="id">${ch.id}-${pt.id}</span><span class="nm">${esc(pt.name)}</span>
-          <span>${stars(pt.freq)}</span>${pt.done ? '<span class="done">✓</span>' : ''}</div>`).join('');
+      const rows = mo.points.filter(pt => chHit || match(pt.name, pt.id, ch.id + '-' + pt.id)).map(pt => {
+        const chips = pt.leaves.length ? `<span class="chips">${pt.leaves.map(l => l.url
+          ? `<a class="badge leafy" href="${esc(l.url)}" target="_blank" rel="noopener" title="叶子：${esc(l.intro)}">${esc(l.name)} ↗</a>`
+          : `<span class="badge dash" title="练习项：${esc(l.intro)}">✎ ${esc(l.name)}</span>`).join('')}</span>` : '';
+        const leafCnt = pt.leaves.length ? `<span class="cnt leafy" title="${pt.leaves.length} 片叶子长在本枝节">叶 ${pt.leaves.length}</span>` : '';
+        const cardCnt = pt.cards.length ? `<span class="cnt cardy" title="${pt.cards.length} 张学习卡片指向本点：${pt.cards.map(c => esc(c.name)).join(' / ')}">卡 ${pt.cards.length}</span>` : '';
+        return `
+        <div class="pt"><span class="id">${ch.id}-${pt.id}</span><span class="nm">${esc(pt.name)}${chips}</span>
+          <span>${stars(pt.freq)}</span>${leafCnt}${cardCnt}${pt.done ? '<span class="done">✓</span>' : ''}</div>`;
+      }).join('');
       return rows ? `<div class="mod"><h4>${esc(mo.name)}</h4>${rows}</div>` : '';
     }).join('');
     if (query && !modsHtml) return '';
