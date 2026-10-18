@@ -2,7 +2,7 @@
   "name": "s2ai",
   "private": true,
   "version": "0.0.0",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "dev": "vite",
