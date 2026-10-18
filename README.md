@@ -78,7 +78,7 @@ push 到 `main` 后，GitHub Actions 自动执行构建并发布到 GitHub Pages
 
 ## License
 
-> 2026-10-18 起由 MIT 改为以下授权（两位作者一致同意）：此前 MIT 版本（含 v0.0.0 tag）已发布的部分无法追溯，新授权自本次提交起生效。
+> 2026-10-18 起由 MIT 改为以下授权：此前 MIT 版本（含 v0.0.0 tag）已发布的部分无法追溯，新授权自本次提交起生效。
 
 - **代码**：保留所有权利（All Rights Reserved），见 [LICENSE](./LICENSE)——未经书面许可不得使用、修改或分发；想商用或二次开发请联系维护者
 - **站点内容**（`src/data/` 学习树数据、学习卡片文案等）：[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)——欢迎注明出处的非商业转载与衍生；商业使用请联系维护者
