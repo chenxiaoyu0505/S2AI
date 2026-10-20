@@ -65,6 +65,19 @@ const RECIPE: QuizSource = { title: 'A Recipe for Training Neural Networks（Kar
 const DLBOOK_PRAC: QuizSource = { title: 'Deep Learning（Goodfellow 等）第 11 章 实践方法论', url: 'https://www.deeplearningbook.org/contents/guidelines.html' }
 const CODEX: QuizSource = { title: 'Evaluating LLMs Trained on Code / HumanEval（arXiv 2107.03374）', url: 'https://arxiv.org/abs/2107.03374' }
 const SWEAGENT: QuizSource = { title: 'SWE-agent（arXiv 2405.15793）', url: 'https://arxiv.org/abs/2405.15793' }
+const FLASH: QuizSource = { title: 'FlashAttention（arXiv 2205.14135）', url: 'https://arxiv.org/abs/2205.14135' }
+const SPLITWISE: QuizSource = { title: 'Splitwise（arXiv 2311.18677）', url: 'https://arxiv.org/abs/2311.18677' }
+const VLLM: QuizSource = { title: 'vLLM / PagedAttention（arXiv 2309.06180）', url: 'https://arxiv.org/abs/2309.06180' }
+const INTQ: QuizSource = { title: 'Quantization and Training of NNs for Integer-Arithmetic-Only Inference（arXiv 1712.05877）', url: 'https://arxiv.org/abs/1712.05877' }
+const INT8: QuizSource = { title: 'LLM.int8()（arXiv 2208.07339）', url: 'https://arxiv.org/abs/2208.07339' }
+const GPTQP: QuizSource = { title: 'GPTQ（arXiv 2210.17323）', url: 'https://arxiv.org/abs/2210.17323' }
+const AWQP: QuizSource = { title: 'AWQ（arXiv 2306.00978）', url: 'https://arxiv.org/abs/2306.00978' }
+const SMOOTH: QuizSource = { title: 'SmoothQuant（arXiv 2211.10438）', url: 'https://arxiv.org/abs/2211.10438' }
+const ZERO: QuizSource = { title: 'ZeRO（arXiv 1910.02054）', url: 'https://arxiv.org/abs/1910.02054' }
+const RECOMP: QuizSource = { title: 'Reducing Activation Recomputation（arXiv 2205.05198）', url: 'https://arxiv.org/abs/2205.05198' }
+const MEGATRON: QuizSource = { title: 'Megatron-LM（arXiv 1909.08053）', url: 'https://arxiv.org/abs/1909.08053' }
+const GPIPE: QuizSource = { title: 'GPipe（arXiv 1811.06965）', url: 'https://arxiv.org/abs/1811.06965' }
+const FSDP: QuizSource = { title: 'PyTorch FSDP（arXiv 2304.11277）', url: 'https://arxiv.org/abs/2304.11277' }
 
 export const QUIZ: QuizQuestion[] = [
   // ---------- 02-M1.1 自注意力机制 ----------
@@ -715,4 +728,234 @@ assert pass_at_k(5, 3, 3) == 1.0`,
     keyPoints: ['循环：生成 / 修改代码 → 运行（测试、编译、复现脚本）→ 读取报错与输出 → 再修改', '先写复现问题的脚本或测试，用它判断是否修好', '界面设计：简洁、结构化的命令反馈（如编辑后立即做语法检查）减少无效步骤', '控制上下文：只展示相关文件片段与截断后的日志，避免淹没关键信息', '多次采样 + 用测试筛选（pass@k 思想）'],
     explanation: 'SWE-agent 的 ACI 设计（如编辑命令附带 linter、搜索结果摘要）就是围绕高质量执行反馈展开的。',
     source: SWEAGENT },
+  // ---------- 03-M1.1 KV Cache 原理与显存计算 ----------
+  { id: 'q-03-m1-1-a', pointId: '03-M1.1', type: 'choice',
+    question: '自回归解码中为什么缓存 K 和 V，而不缓存 Q？',
+    options: ['Q 太大放不下', '每步只有新 token 的 query 参与计算，历史 token 的 Q 之后不再使用；而它们的 K、V 每一步都要被新 query 访问', 'Q 可以从 V 推出来', '缓存 Q 会改变模型输出'],
+    answer: 1,
+    explanation: '因果注意力下第 t 步的输出只依赖 q_t 与 k_1..t、v_1..t。历史 K、V 不变，缓存后每步只算新 token 的 q、k、v。',
+    source: MQA },
+  { id: 'q-03-m1-1-b', pointId: '03-M1.1', type: 'choice',
+    question: '32 层、32 个 KV 头、每头 128 维的模型，用 FP16 缓存，每个 token 的 KV Cache 约占多少？',
+    options: ['16 KiB', '512 KiB', '8 MiB', '64 KiB'],
+    answer: 1,
+    explanation: '2（K、V）× 32 层 × 32 头 × 128 维 × 2 字节 = 524,288 字节 = 512 KiB；4096 个 token 就是 2 GiB。vLLM 论文也举例：OPT-13B 每个 token 的 KV Cache 约 800 KB。',
+    source: VLLM },
+  { id: 'q-03-m1-1-c', pointId: '03-M1.1', type: 'code',
+    question: '实现带 KV Cache 的单步解码注意力：给定新 token 的 q、k、v（形状 (B, H, 1, d)）和已有缓存 (B, H, T, d)，拼接缓存并返回输出与新缓存。',
+    reference: `import math, torch
+
+def attend_with_cache(q, k, v, cache_k=None, cache_v=None):
+    if cache_k is not None:
+        k = torch.cat([cache_k, k], dim=2)
+        v = torch.cat([cache_v, v], dim=2)
+    scores = q @ k.transpose(-2, -1) / math.sqrt(q.size(-1))   # (B, H, 1, T+1)
+    out = torch.softmax(scores, dim=-1) @ v                    # 新 token 可看全部历史，无需 mask
+    return out, k, v`,
+    tests: `B, H, T, d = 1, 2, 6, 8
+x_q, x_k, x_v = (torch.randn(B, H, T, d) for _ in range(3))
+full = torch.nn.functional.scaled_dot_product_attention(x_q, x_k, x_v, is_causal=True)
+ck = cv = None
+for t in range(T):
+    o, ck, cv = attend_with_cache(x_q[:, :, t:t+1], x_k[:, :, t:t+1], x_v[:, :, t:t+1], ck, cv)
+    assert torch.allclose(o, full[:, :, t:t+1], atol=1e-5)   # 与整段因果注意力逐步一致
+assert ck.shape == (B, H, T, d)`,
+    explanation: '要点：沿序列维（dim=2）拼接；单个新 query 能看到全部已缓存位置，所以不需要因果掩码；逐步结果应与整段因果注意力一致。',
+    source: AIAYN },
+
+  // ---------- 03-M1.2 Attention 推理复杂度与瓶颈 ----------
+  { id: 'q-03-m1-2-a', pointId: '03-M1.2', type: 'choice',
+    question: 'Splitwise 论文对 LLM 推理两个阶段的刻画是？',
+    options: ['两个阶段都受算力限制', 'prompt 处理（prefill）是计算密集型，逐 token 生成（decode）是访存密集型', 'prefill 访存密集，decode 计算密集', '两个阶段都受网络带宽限制'],
+    answer: 1,
+    explanation: '摘要：a compute-intensive prompt computation, and a memory-intensive token generation。decode 每步只处理一个 token，却要读出全部权重与 KV Cache，算术强度低。',
+    source: SPLITWISE },
+  { id: 'q-03-m1-2-b', pointId: '03-M1.2', type: 'choice',
+    question: 'FlashAttention 主要通过什么加速注意力？',
+    options: ['近似注意力，牺牲精度', '分块（tiling）计算并在片上 SRAM 中完成 softmax，减少 GPU 高带宽显存（HBM）的读写，结果是精确的', '减少注意力头数', '把注意力换成卷积'],
+    answer: 1,
+    explanation: '论文称其为 IO-aware 的精确注意力：不在 HBM 中物化 n×n 注意力矩阵，用分块与在线 softmax 减少 HBM 访问；反向时重算而不存储注意力矩阵，额外显存与序列长度成线性。',
+    source: FLASH },
+  { id: 'q-03-m1-2-c', pointId: '03-M1.2', type: 'short',
+    question: '分析标准注意力在推理时的计算与显存瓶颈，以及常见的优化方向。',
+    keyPoints: ['计算 O(n²·d)、注意力矩阵显存 O(n²)，长序列下成为瓶颈', '标准实现受 HBM 读写限制（memory-bound），而不只是算力', 'decode 阶段每步读取整个 KV Cache，KV Cache 大小与带宽决定速度', '优化：FlashAttention 类 IO-aware kernel', '优化：MQA / GQA / MLA 减少 KV Cache，PagedAttention 管理缓存，量化 KV'],
+    explanation: 'FlashAttention 论文指出注意力的瓶颈往往是显存访问而非 FLOPs；KV 侧的优化则针对 decode 阶段的访存。',
+    source: FLASH },
+
+  // ---------- 03-M1.4 显存构成与估算（推理） ----------
+  { id: 'q-03-m1-4-a', pointId: '03-M1.4', type: 'choice',
+    question: '一个 7B 参数的模型，FP16 / BF16 推理时仅权重大约占多少显存？',
+    options: ['约 3.5 GB', '约 7 GB', '约 14 GB', '约 28 GB'],
+    answer: 2,
+    explanation: '每参数 2 字节：7×10⁹ × 2 ≈ 14 GB（约 13 GiB）。INT8 约 7 GB，4-bit 约 3.5 GB，FP32 约 28 GB。',
+    source: INT8 },
+  { id: 'q-03-m1-4-b', pointId: '03-M1.4', type: 'short',
+    question: 'LLM 推理服务的显存由哪些部分组成？如何估算能支撑的并发？',
+    keyPoints: ['模型权重：参数量 × 每参数字节数', 'KV Cache：2 × 层数 × KV 头数 × 每头维度 × 字节数 × token 数，随并发与长度线性增长', '激活与临时缓冲（推理时相对较小）以及框架 / CUDA 上下文开销', '并发上限 ≈（总显存 − 权重 − 预留）/ 每请求 KV Cache', '减小 KV Cache 的手段：GQA、KV 量化、PagedAttention 减少碎片'],
+    explanation: 'vLLM 论文指出 KV Cache 管理不当（碎片、过度预留）会严重限制 batch 大小与吞吐。',
+    source: VLLM },
+  { id: 'q-03-m1-4-c', pointId: '03-M1.4', type: 'choice',
+    question: 'LLM.int8() 是怎样在 8-bit 推理中保持大模型精度的？',
+    options: ['所有权重统一用 int8', '向量级量化，并把少数含离群值的特征维单独用 16 位矩阵乘处理（混合精度分解）', '只量化 embedding', '训练时加噪声'],
+    answer: 1,
+    explanation: '论文发现大模型中出现系统性的离群特征，于是对超过阈值的维度用 FP16 计算，其余 99.9% 以上的值用 int8，显存约减半且几乎无损。',
+    source: INT8 },
+
+  // ---------- 03-M2.1 vLLM 与 PagedAttention ----------
+  { id: 'q-03-m2-1-a', pointId: '03-M2.1', type: 'choice',
+    question: 'PagedAttention 借鉴了操作系统的什么思想？',
+    options: ['进程调度', '虚拟内存与分页：把 KV Cache 切成固定大小的块，逻辑上连续、物理上可不连续存放', '文件系统日志', '中断处理'],
+    answer: 1,
+    explanation: 'vLLM 论文：受虚拟内存和分页启发，用块表把逻辑块映射到物理块，按需分配，几乎消除外部碎片，只有每个序列最后一个块存在少量内部碎片。',
+    source: VLLM },
+  { id: 'q-03-m2-1-b', pointId: '03-M2.1', type: 'choice',
+    question: '在并行采样 / beam search 中，vLLM 如何减少 KV Cache 的重复占用？',
+    options: ['每个候选各自复制完整缓存', '多个序列共享 prompt 等相同前缀的物理块，用引用计数 + 写时复制（copy-on-write）', '禁止并行采样', '把缓存放到 CPU'],
+    answer: 1,
+    explanation: '块级共享配合引用计数，只有在某序列要修改共享块时才复制，显著降低多序列解码的显存。',
+    source: VLLM },
+  { id: 'q-03-m2-1-c', pointId: '03-M2.1', type: 'short',
+    question: '传统推理系统的 KV Cache 管理有什么问题？vLLM 带来了什么效果？',
+    keyPoints: ['传统做法按最大长度为每个请求预留连续显存，造成预留浪费', '内部碎片与外部碎片使实际利用率很低', 'PagedAttention 按块按需分配，KV Cache 浪费接近于零', '支持请求内与请求间的块共享', '论文报告在相同延迟下吞吐比 FasterTransformer、Orca 等提升 2–4 倍'],
+    explanation: '以上出自 vLLM 论文摘要与正文的问题分析。',
+    source: VLLM },
+
+  // ---------- 03-M3.1 量化基础 ----------
+  { id: 'q-03-m3-1-a', pointId: '03-M3.1', type: 'choice',
+    question: '在仿射量化 r = S·(q − Z) 中，对称量化与非对称量化的区别是？',
+    options: ['对称量化 Z = 0，范围关于 0 对称；非对称量化用零点 Z 适配偏移的分布（如 ReLU 后的激活）', '对称量化不需要缩放 S', '非对称量化只能用于权重', '两者没有区别'],
+    answer: 0,
+    explanation: 'Jacob 等的量化方案用 scale S 与 zero-point Z 把实数映射到整数并保证 0 可被精确表示。对称量化固定 Z = 0，计算更简单；非对称量化对非零中心的分布更省码值。',
+    source: INTQ },
+  { id: 'q-03-m3-1-b', pointId: '03-M3.1', type: 'code',
+    question: '用 NumPy 实现逐张量对称 INT8 量化与反量化：scale = max|x| / 127，q = clip(round(x / scale), −127, 127)。',
+    reference: `import numpy as np
+
+def quantize_sym_int8(x):
+    scale = np.abs(x).max() / 127.0
+    if scale == 0:
+        scale = 1.0
+    q = np.clip(np.round(x / scale), -127, 127).astype(np.int8)
+    return q, scale
+
+def dequantize(q, scale):
+    return q.astype(np.float32) * scale`,
+    tests: `x = np.random.randn(1000).astype(np.float32)
+q, s = quantize_sym_int8(x)
+assert q.dtype == np.int8 and q.max() <= 127 and q.min() >= -127
+err = np.abs(dequantize(q, s) - x).max()
+assert err <= s / 2 + 1e-6          # 舍入误差不超过半个量化步长
+assert quantize_sym_int8(np.zeros(4))[0].tolist() == [0, 0, 0, 0]`,
+    explanation: '最大误差为 scale/2。离群值会拉大 max|x|、让其余值的分辨率变差，这正是 LLM.int8()、SmoothQuant、AWQ 等方法要解决的问题；逐通道 / 分组量化可以缓解。',
+    source: INTQ },
+  { id: 'q-03-m3-1-c', pointId: '03-M3.1', type: 'short',
+    question: '比较 PTQ 与 QAT，并说明 LLM 量化为什么多用 PTQ。',
+    keyPoints: ['PTQ（训练后量化）：训练完成后用少量校准数据确定量化参数，无需重新训练', 'QAT（量化感知训练）：训练中模拟量化（伪量化 + 直通估计）让模型适应量化误差，精度通常更好', 'QAT 需要完整训练流程与算力，对百亿参数的 LLM 成本很高', '因此 LLM 多用 PTQ（GPTQ、AWQ、SmoothQuant 等）', '粒度选择：逐张量 / 逐通道 / 分组（group-wise）影响精度与开销'],
+    explanation: 'Jacob 等提出的量化感知训练（模拟量化）是 QAT 的经典方案；GPTQ 摘要强调其为 one-shot 训练后量化，可在数小时内完成 175B 模型。',
+    source: INTQ },
+
+  // ---------- 03-M3.2 GPTQ / AWQ / SmoothQuant / GGUF ----------
+  { id: 'q-03-m3-2-a', pointId: '03-M3.2', type: 'choice',
+    question: 'GPTQ 的核心方法与效果是？',
+    options: ['量化感知训练', '基于近似二阶信息（Hessian）的逐层 one-shot 权重量化，约 4 个 GPU 小时可把 175B 模型量化到 3–4 bit', '只量化激活', '剪掉一半权重'],
+    answer: 1,
+    explanation: '摘要：one-shot weight quantization method based on approximate second-order information，可在约四个 GPU 小时内把 175B 模型量化到每权重 3 或 4 bit，精度损失很小。',
+    source: GPTQP },
+  { id: 'q-03-m3-2-b', pointId: '03-M3.2', type: 'choice',
+    question: 'SmoothQuant 是如何实现 W8A8 量化的？',
+    options: ['只量化权重', '用数学等价的逐通道缩放，把激活中的离群值「迁移」到权重上，使激活和权重都易于 8-bit 量化', '训练一个新模型', '把激活转成 FP32'],
+    answer: 1,
+    explanation: '摘要：权重容易量化而激活不容易，SmoothQuant 离线地把量化难度从激活迁移到权重，从而对 LLM 的权重和激活都做 INT8 量化。',
+    source: SMOOTH },
+  { id: 'q-03-m3-2-c', pointId: '03-M3.2', type: 'short',
+    question: '说明 AWQ 的核心观察与做法，并解释 GGUF 是什么。',
+    keyPoints: ['AWQ 观察：权重并非同等重要，只保护约 1% 的显著权重就能大幅降低量化误差', '显著权重按激活幅度（而非权重幅度）挑选', '做法：对显著通道做逐通道缩放而不是混合精度，对硬件友好', 'AWQ 不依赖反向传播或重建，对校准集过拟合风险小', 'GGUF：ggml / llama.cpp 使用的单文件模型格式，包含张量与元数据，便于加载与本地推理，支持多种量化类型'],
+    explanation: 'AWQ 要点出自论文摘要；GGUF 的定义见 ggml 官方文档：一种用于存储 GGML 推理模型的二进制文件格式。',
+    source: AWQP },
+
+  // ---------- 03-M4.1 显存构成估算（训练） ----------
+  { id: 'q-03-m4-1-a', pointId: '03-M4.1', type: 'choice',
+    question: '按 ZeRO 论文的分析，用 Adam + 混合精度训练参数量为 Ψ 的模型，模型状态（不含激活）约占多少字节？',
+    options: ['2Ψ', '4Ψ', '16Ψ', '32Ψ'],
+    answer: 2,
+    explanation: 'FP16 参数 2Ψ + FP16 梯度 2Ψ + 优化器状态 12Ψ（FP32 主参数、动量、方差各 4Ψ）= 16Ψ。7.5B 模型就是约 120 GB。',
+    source: ZERO },
+  { id: 'q-03-m4-1-b', pointId: '03-M4.1', type: 'code',
+    question: '写函数估算训练时每张卡上的模型状态显存（GB），参数：参数量 psi、数据并行度 nd、ZeRO 阶段 stage（0–3），按 ZeRO 论文的 2 + 2 + 12 字节划分。',
+    reference: `def zero_model_state_gb(psi, nd=1, stage=0):
+    p, g, o = 2 * psi, 2 * psi, 12 * psi     # 参数 / 梯度 / 优化器状态（字节）
+    if stage >= 1: o /= nd
+    if stage >= 2: g /= nd
+    if stage >= 3: p /= nd
+    return (p + g + o) / 1e9`,
+    tests: `psi = 7.5e9
+assert round(zero_model_state_gb(psi)) == 120               # 16Ψ
+assert round(zero_model_state_gb(psi, 64, 1), 1) == 31.4    # 4Ψ + 12Ψ/Nd
+assert round(zero_model_state_gb(psi, 64, 2), 1) == 16.6    # 2Ψ + 14Ψ/Nd
+assert round(zero_model_state_gb(psi, 64, 3), 2) == 1.88    # 16Ψ/Nd`,
+    explanation: '这四个数字正是 ZeRO 论文 Figure 1 中 7.5B 模型、Nd = 64 的示例。激活显存需另外估算。',
+    source: ZERO },
+  { id: 'q-03-m4-1-c', pointId: '03-M4.1', type: 'choice',
+    question: '激活重计算（activation checkpointing）用什么换什么？',
+    options: ['用显存换计算速度', '前向时只保存部分激活，反向时重新计算其余激活：用额外计算换显存', '用精度换显存', '用通信换计算'],
+    answer: 1,
+    explanation: 'Korthikanti 等指出全量重计算会带来明显的额外计算开销，并提出序列并行 + 选择性重计算，只重算显存占用大但计算便宜的部分（如注意力的 softmax / dropout）。',
+    source: RECOMP },
+
+  // ---------- 03-M4.2 并行策略 ----------
+  { id: 'q-03-m4-2-a', pointId: '03-M4.2', type: 'choice',
+    question: 'Megatron-LM 的张量并行如何切分 Transformer 的 MLP（两个线性层）？',
+    options: ['两个线性层都按行切', '第一层按列切、第二层按行切，前向只需在 MLP 输出处做一次 all-reduce', '只复制，不切分', '按层切到不同 GPU'],
+    answer: 1,
+    explanation: '第一层列切后每张卡得到部分隐藏维，GeLU 可独立计算；第二层行切后各卡得到部分和，一次 all-reduce 汇总。注意力按头切分同理。',
+    source: MEGATRON },
+  { id: 'q-03-m4-2-b', pointId: '03-M4.2', type: 'choice',
+    question: 'GPipe 式流水线并行为什么要把 mini-batch 切成多个 micro-batch？',
+    options: ['为了减少参数量', '让不同阶段可以同时处理不同 micro-batch，减少流水线气泡（设备空闲时间）', '为了做数据增强', '为了避免梯度累积'],
+    answer: 1,
+    explanation: 'GPipe 把模型按层切到多个设备，再把 batch 拆成 micro-batch 依次流过各阶段，所有 micro-batch 的梯度累积后同步更新；micro-batch 越多，气泡占比越小。',
+    source: GPIPE },
+  { id: 'q-03-m4-2-c', pointId: '03-M4.2', type: 'short',
+    question: '概述 DP、TP、PP、EP、SP 五种并行各切什么、通信特点是什么。',
+    keyPoints: ['DP：复制模型、切数据，反向后 all-reduce 梯度（ZeRO / FSDP 进一步切模型状态）', 'TP：层内切权重矩阵（如 Megatron 的列切 / 行切），每层都有集合通信，通常放在节点内高带宽互联上', 'PP：按层切成多个阶段，阶段间点对点传激活，需 micro-batch 减少气泡', 'EP：MoE 的不同专家放到不同设备，token 经 all-to-all 分发与汇聚', 'SP：沿序列维切分 LayerNorm、dropout 等 TP 未覆盖的部分，降低激活显存'],
+    explanation: '大规模训练通常组合多种并行（如 TP 在节点内、PP 跨节点、DP 最外层）。SP 的定义见 Korthikanti 等。',
+    source: RECOMP },
+
+  // ---------- 03-M4.3 ZeRO 与 FSDP ----------
+  { id: 'q-03-m4-3-a', pointId: '03-M4.3', type: 'choice',
+    question: 'ZeRO 三个阶段依次在数据并行进程间切分了什么？',
+    options: ['Stage 1 切参数、Stage 2 切梯度、Stage 3 切优化器状态', 'Stage 1 切优化器状态、Stage 2 再切梯度、Stage 3 再切参数', '三个阶段都只切激活', 'Stage 1 切激活、Stage 2 切参数、Stage 3 切数据'],
+    answer: 1,
+    explanation: 'ZeRO-DP 的 P_os、P_os+g、P_os+g+p：逐级切分优化器状态、梯度、参数。切参数时需在前向 / 反向按需 all-gather。',
+    source: ZERO },
+  { id: 'q-03-m4-3-b', pointId: '03-M4.3', type: 'short',
+    question: '说明 ZeRO-3 / FSDP 的工作流程与通信代价。',
+    keyPoints: ['每个进程只常驻自己那份参数、梯度与优化器状态分片', '前向计算某层（单元）前 all-gather 该层完整参数，用完释放', '反向时再次 all-gather 参数，计算梯度后 reduce-scatter，各进程只保留自己分片的梯度', '各进程用本地梯度分片更新本地参数分片', '通信量约为标准数据并行的 1.5 倍，可通过与计算重叠、预取下一层参数来隐藏'],
+    explanation: 'ZeRO 论文分析了 P_os+g+p 的通信量约为基线 DP 的 1.5 倍；PyTorch FSDP 论文介绍了其工业级实现（分片单元、预取与通信计算重叠）。',
+    source: FSDP },
+  { id: 'q-03-m4-3-c', pointId: '03-M4.3', type: 'choice',
+    question: '数据并行度 Nd = 64 时，ZeRO Stage 3 下每卡模型状态显存约为全量的多少？',
+    options: ['1/2', '1/4', '1/64', '不变'],
+    answer: 2,
+    explanation: 'Stage 3 下参数、梯度、优化器状态全部切分，每卡为 16Ψ/Nd，即 1/64；代价是更多的 all-gather 通信。',
+    source: ZERO },
+
+  // ---------- 03-M4.4 混合精度 ----------
+  { id: 'q-03-m4-4-a', pointId: '03-M4.4', type: 'short',
+    question: 'Micikevicius 等提出的混合精度训练包含哪三项关键技术？',
+    keyPoints: ['保留一份 FP32 主权重，用 FP16 做前向 / 反向，更新累加到 FP32 主权重上', 'loss scaling：放大损失防止小梯度在 FP16 中下溢', '矩阵乘用 FP16 输入、FP32 累加，再写回', '小的权重更新量若直接加到 FP16 权重会因精度不足被舍去，这是需要 FP32 主权重的原因'],
+    explanation: '三项技术均出自该论文；它们让 FP16 训练能匹配 FP32 精度，同时显存与带宽减半。',
+    source: MIXPREC },
+  { id: 'q-03-m4-4-b', pointId: '03-M4.4', type: 'choice',
+    question: 'FP16 与 BF16 的位数分配分别是（符号 / 指数 / 尾数）？',
+    options: ['FP16：1/5/10；BF16：1/8/7', 'FP16：1/8/7；BF16：1/5/10', '两者都是 1/8/7', '两者都是 1/5/10'],
+    answer: 0,
+    explanation: 'BF16 用 8 位指数，动态范围与 FP32 一致、但精度较低；FP16 精度更高但范围窄，容易上溢 / 下溢，因此 FP16 通常需要 loss scaling。',
+    source: BF16 },
+  { id: 'q-03-m4-4-c', pointId: '03-M4.4', type: 'choice',
+    question: '使用 PyTorch autocast 混合精度时，下列说法正确的是？',
+    options: ['所有算子都会被转成低精度', 'autocast 按算子选择精度：矩阵乘、卷积等用低精度，对精度敏感的归约等算子保持 FP32', 'autocast 只在推理时生效', '用了 autocast 就不能用 GradScaler'],
+    answer: 1,
+    explanation: 'PyTorch AMP 文档：autocast 为每个算子自动选择精度（如 linear、matmul 用 float16，softmax、各类归约与损失函数等倾向 float32）；FP16 训练通常配合 GradScaler 使用。',
+    source: AMPDOC },
 ]
