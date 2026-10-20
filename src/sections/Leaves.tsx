@@ -124,13 +124,14 @@ export default function Leaves({
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="搜索叶子：如「LoRA」「GRPO」「向量库」"
-            className="h-8 pl-8 pr-7 text-sm"
+            className="h-10 pl-8 pr-10 md:h-8 md:pr-7 md:text-sm"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground transition-colors md:right-2 md:h-auto md:w-auto"
               title="清空搜索"
+              aria-label="清空搜索"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -150,7 +151,7 @@ export default function Leaves({
           const allDone = cn === g.leaves.length
           return (
             <AccordionItem key={g.key} value={g.key}
-              className={`rounded-lg border bg-card px-4 transition-shadow hover:shadow-md ${allDone ? 'border-emerald-500/40' : ''}`}>
+              className={`rounded-lg border bg-card px-3 md:px-4 transition-shadow hover:shadow-md ${allDone ? 'border-emerald-500/40' : ''}`}>
               <AccordionTrigger className="hover:no-underline">
                 {/* 与理论地图同修法：窄屏时右侧「计数 + 进度条」整体落到第二行，组名保持单行不换行 */}
                 <div className="flex flex-1 min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 pr-2">
@@ -167,7 +168,7 @@ export default function Leaves({
                     <span className="text-xs tabular-nums text-muted-foreground">
                       {cn} / {g.leaves.length}
                     </span>
-                    <div className="w-24">
+                    <div className="w-16 md:w-24">
                       <Progress value={(g.leaves.length ? cn / g.leaves.length : 0) * 100} className="h-1.5" />
                     </div>
                   </span>
@@ -196,7 +197,7 @@ export default function Leaves({
                             onToggle(leaf.id)
                           }
                         }}
-                        className="flex cursor-pointer select-none items-start gap-2.5 rounded-md px-2 py-1.5 hover:bg-accent transition-colors scroll-mt-20"
+                        className="flex cursor-pointer select-none items-start gap-2.5 rounded-md px-1.5 py-2.5 md:px-2 md:py-1.5 hover:bg-accent active:bg-accent transition-colors scroll-mt-20"
                       >
                         <Checkbox
                           className="mt-0.5 pointer-events-none"
@@ -232,12 +233,12 @@ export default function Leaves({
                           </span>
                           {leafCards && leafCards.length > 0 && (
                             // 学习卡片也是叶子：挂在相关叶子名下，点击跳去学习卡片
-                            <span className="mt-1 flex flex-wrap items-center gap-1" onClick={e => e.stopPropagation()}>
+                            <span className="mt-1.5 md:mt-1 flex flex-wrap items-center gap-1.5 md:gap-1" onClick={e => e.stopPropagation()}>
                               {leafCards.map(c => (
                                 <button
                                   key={c.id}
                                   onClick={() => jumpTo({ tab: 'cards', anchor: c.id })}
-                                  className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0 text-[11px] text-emerald-700 dark:text-emerald-400 hover:underline underline-offset-2 transition-colors"
+                                  className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 md:px-2 md:py-0 text-[12px] md:text-[11px] text-emerald-700 dark:text-emerald-400 hover:underline underline-offset-2 transition-colors"
                                   title={`学习卡片「${c.name}」，点击跳去学习卡片`}
                                 >
                                   <BookOpen className="h-2.5 w-2.5" />{c.name}
@@ -253,7 +254,7 @@ export default function Leaves({
                                 e.stopPropagation()
                                 jumpTo({ tab: 'theory', anchor: leaf.anchor })
                               }}
-                              className="rounded border px-1.5 py-0 h-4 text-[10px] font-mono text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+                              className="rounded border px-2 md:px-1.5 py-0 h-7 md:h-4 text-[12px] md:text-[10px] font-mono text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
                               title={`枝节索引 ${leaf.anchor}，点击跳去理论地图`}
                             >
                               {leaf.anchor}
@@ -275,7 +276,7 @@ export default function Leaves({
                         <button
                           key={c.id}
                           onClick={() => jumpTo({ tab: 'cards', anchor: c.id })}
-                          className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0 text-[11px] text-emerald-700 dark:text-emerald-400 hover:underline underline-offset-2 transition-colors"
+                          className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 md:px-2 md:py-0 text-[12px] md:text-[11px] text-emerald-700 dark:text-emerald-400 hover:underline underline-offset-2 transition-colors"
                           title={`学习卡片「${c.name}」，点击跳去学习卡片`}
                         >
                           {c.name}

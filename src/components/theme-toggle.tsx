@@ -19,7 +19,7 @@ export default function ThemeToggle() {
     <Button
       variant="outline"
       size="icon"
-      className="h-8 w-8 flex-none"
+      className="h-10 w-10 md:h-8 md:w-8 flex-none"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       title={mounted ? (isDark ? '切换到浅色' : '切换到深色') : '切换深浅色主题'}
       aria-label="切换深浅色主题"

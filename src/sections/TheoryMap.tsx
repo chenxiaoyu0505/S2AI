@@ -71,7 +71,10 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
   // 3. 同一次跳转只写回一次，写回后用户手动收起即刻生效，展开选择照常持久化。
   // → 用 React 推荐的「渲染期间派生状态」模式：focus 对象身份变化即新的一次跳转
   //   （Home 每次跳转都 new 新对象），在 render 里比较并调整 state，提交前即完成。
-  const [consumedFocus, setConsumedFocus] = useState(focus)
+  // 初值为 null 而不是 focus：从其他 tab 跳过来时 TheoryMap 是带着 focus 新挂载的（Radix Tabs 会卸载非活动 tab），
+  // 若初值就是 focus，这次跳转会被当成「已消费」，篇章不展开、学习点找不到（卡片「理论点」徽标点了没反应）。
+  // 手动切 tab 时 Home 会清空 focus，所以重新挂载不会重放旧的跳转。
+  const [consumedFocus, setConsumedFocus] = useState<typeof focus>(null)
   if (focus && focus !== consumedFocus) {
     setConsumedFocus(focus)
     const ids = new Set<string>()
@@ -169,18 +172,18 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
             ★★★ 推荐深入 · ★★ 推荐学习 · ★ 了解即可 ｜ 「笔记 ✓」= 已有成文笔记（{THEORY_DONE} 篇）｜ 勾选 = 已掌握，进度存本机
           </span>
         </p>
-        <div className="flex items-center gap-3">
-          <div className="text-right">
+        <div className="flex w-full items-center gap-3 md:w-auto">
+          <div className="text-left md:text-right">
             <div className="text-lg font-medium tabular-nums leading-none">{done}<span className="text-xs font-normal text-muted-foreground"> / {THEORY_TOTAL}</span></div>
             <div className="text-xs text-muted-foreground mt-0.5">已掌握</div>
           </div>
-          <div className="w-32">
+          <div className="flex-1 md:w-32 md:flex-none">
             <Progress value={THEORY_TOTAL > 0 ? (done / THEORY_TOTAL) * 100 : 0} className="h-1.5" />
           </div>
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5"
+            className="gap-1.5 h-9 md:h-8"
             onClick={() => { if (window.confirm('确定重置全部验收进度？')) setChecked({}) }}
           >
             <RotateCcw className="h-3.5 w-3.5" /> 重置
@@ -196,13 +199,14 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="搜索学习点：名称 / 编号 / 模块，如「RoPE」「02-M1.7」"
-            className="h-8 pl-8 pr-7 text-sm"
+            className="h-10 pl-8 pr-10 md:h-8 md:pr-7 md:text-sm"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground transition-colors md:right-2 md:h-auto md:w-auto"
               title="清空搜索"
+              aria-label="清空搜索"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -227,7 +231,7 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
           const allDone = cn === total
           return (
             <AccordionItem key={ch.id} value={ch.id}
-              className={`rounded-lg border bg-card px-4 transition-shadow hover:shadow-md ${allDone ? 'border-emerald-500/40' : ''}`}>
+              className={`rounded-lg border bg-card px-3 md:px-4 transition-shadow hover:shadow-md ${allDone ? 'border-emerald-500/40' : ''}`}>
               <AccordionTrigger className="hover:no-underline">
                 {/* 窄屏允许换行：一行放不下时，右侧的笔记数 / 掌握进度整体落到第二行（ml-auto 仍右对齐）。
                     此前这行是 nowrap，篇章名不收缩、右侧组又 flex-none，手机上只能把内容顶出卡片。 */}
@@ -238,6 +242,10 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
                   <span className="text-sm font-medium truncate min-w-0">{ch.id} · {ch.name}</span>
                   <span className={`flex-none text-xs ${ch.weight >= 3 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground/80'}`}>{'★'.repeat(ch.weight)}</span>
                   <span className="hidden md:block flex-1 min-w-0 text-xs text-muted-foreground truncate">{ch.summary}</span>
+                  {/* 手机端篇章简介不再隐藏：独占一行、最多两行，与篇章名左对齐 */}
+                  {ch.summary && (
+                    <span className="basis-full pl-7 text-xs font-normal leading-relaxed text-muted-foreground line-clamp-2 md:hidden">{ch.summary.replace(/\*\*/g, '')}</span>
+                  )}
                   <span className="ml-auto flex flex-none items-center gap-3">
                     {/* 没有笔记也标 0 篇：每个篇章的信息位置保持一致，扫读时不会串行 */}
                     <Badge variant="secondary" className={`text-xs gap-1 ${noted > 0 ? '' : 'text-muted-foreground/70'}`}>
@@ -279,7 +287,7 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
                                   togglePoint(key)
                                 }
                               }}
-                              className="flex cursor-pointer select-none items-start gap-2.5 rounded-md px-2 py-1.5 hover:bg-accent transition-colors"
+                              className="flex cursor-pointer select-none items-start gap-2.5 rounded-md px-1.5 py-2.5 md:px-2 md:py-1.5 hover:bg-accent active:bg-accent transition-colors"
                             >
                               <Checkbox className="mt-0.5 pointer-events-none" checked={on} aria-hidden />
                               <span className={`text-sm leading-relaxed min-w-0 ${on ? 'text-muted-foreground line-through' : ''}`}>
@@ -290,14 +298,14 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
                                   if (here.length === 0) return null
                                   return (
                                     // 枝节上挂的叶子：点击叶子名直达项目官网（练习项为虚线样式）
-                                    <span className="mt-1 flex flex-wrap items-center gap-1" onClick={e => e.stopPropagation()}>
+                                    <span className="mt-1.5 md:mt-1 flex flex-wrap items-center gap-1.5 md:gap-1" onClick={e => e.stopPropagation()}>
                                       {here.map(leaf => leaf.url ? (
                                         <a
                                           key={leaf.id}
                                           href={leaf.url}
                                           target="_blank"
                                           rel="noreferrer"
-                                          className="inline-flex items-center gap-1 rounded-full border bg-background px-2 py-0 text-[11px] text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+                                          className="inline-flex items-center gap-1 rounded-full border bg-background px-2.5 py-1 md:px-2 md:py-0 text-[12px] md:text-[11px] text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
                                           title={`叶子：${leaf.intro}`}
                                         >
                                           <Leaf className="h-2.5 w-2.5" />{leaf.name}
@@ -305,7 +313,7 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
                                       ) : (
                                         <span
                                           key={leaf.id}
-                                          className="inline-flex items-center gap-1 rounded-full border border-dashed px-2 py-0 text-[11px] text-muted-foreground/80"
+                                          className="inline-flex items-center gap-1 rounded-full border border-dashed px-2.5 py-1 md:px-2 md:py-0 text-[12px] md:text-[11px] text-muted-foreground/80"
                                           title={`练习项：${leaf.intro}（去叶子清单勾选）`}
                                         >
                                           <PenLine className="h-2.5 w-2.5" />{leaf.name}
@@ -315,7 +323,7 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
                                   )
                                 })()}
                               </span>
-                              <span className="ml-auto flex items-center gap-1.5 flex-none pt-0.5">
+                              <span className="ml-auto flex items-center gap-1.5 flex-none md:pt-0.5">
                                 {backRefs.leafCount.get(key) ? (
                                   <button
                                     onClick={e => {
@@ -323,7 +331,7 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
                                       e.stopPropagation()
                                       jumpTo({ tab: 'checklist', expand: leafGroupKey(key) })
                                     }}
-                                    className="text-[10px] px-1.5 py-0 h-4 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:underline underline-offset-2"
+                                    className="text-[12px] md:text-[10px] px-2 md:px-1.5 py-0 h-7 md:h-4 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:underline underline-offset-2"
                                     title={`${backRefs.leafCount.get(key)} 片叶子长在本枝节，点击跳去叶子清单`}
                                   >
                                     叶 {backRefs.leafCount.get(key)}
@@ -338,7 +346,7 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
                                       // 卡片 id 自带 card- 前缀，直接作为元素 id（不要再拼一次前缀）
                                       if (ids) jumpTo({ tab: 'cards', anchor: ids[0] })
                                     }}
-                                    className="text-[10px] px-1.5 py-0 h-4 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:underline underline-offset-2"
+                                    className="text-[12px] md:text-[10px] px-2 md:px-1.5 py-0 h-7 md:h-4 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:underline underline-offset-2"
                                     title={`${backRefs.cardIds.get(key)?.length} 张学习卡片指向本点，点击跳去学习卡片`}
                                   >
                                     卡 {backRefs.cardIds.get(key)?.length}

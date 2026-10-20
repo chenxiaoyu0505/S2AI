@@ -107,12 +107,25 @@ export default function Home() {
   const [openCats, setOpenCats] = useState<string[]>(loadOpen)
   // tab 状态同步到 URL（?tab=checklist），刷新 / 分享后停留在原 tab；理论地图是默认首页
   const [searchParams, setSearchParams] = useSearchParams()
-  const tab = searchParams.get('tab') ?? 'theory'
-  const setTab = (t: string) => setSearchParams(t === 'theory' ? {} : { tab: t }, { replace: true })
-  // 站内跳转（枝节索引 / 卡片引用点击 / 从哪开始入口）：切到理论地图并定位学习点 / 展开篇章
-  // nonce 每次递增：保证连续点同一个入口时 TheoryMap 也能识别为「新的一次聚焦」
   const nonceRef = useRef(0)
   const [theoryFocus, setTheoryFocus] = useState<{ ref?: string; chapters?: string[]; nonce: number } | null>(null)
+  const tab = searchParams.get('tab') ?? 'theory'
+  const setTab = (t: string) => {
+    // 手动切 tab 清掉上一次站内跳转的聚焦目标，避免 TheoryMap 重新挂载时重放旧跳转
+    setTheoryFocus(null)
+    setSearchParams(t === 'theory' ? {} : { tab: t }, { replace: true })
+  }
+  // 手机底部导航：切 tab 后若已滚过首屏，回到内容区顶部（否则新 tab 从上一个 tab 的滚动位置中间开始）
+  const mainRef = useRef<HTMLElement>(null)
+  const switchTabMobile = (t: string) => {
+    setTab(t)
+    const el = mainRef.current
+    if (!el) return
+    const top = el.getBoundingClientRect().top + window.scrollY
+    if (window.scrollY > top) window.scrollTo({ top, behavior: 'auto' })
+  }
+  // 站内跳转（枝节索引 / 卡片引用点击 / 从哪开始入口）：切到理论地图并定位学习点 / 展开篇章
+  // nonce 每次递增：保证连续点同一个入口时 TheoryMap 也能识别为「新的一次聚焦」
 
   useEffect(() => {
     localStorage.setItem(STORE_KEY, JSON.stringify(checked))
@@ -163,8 +176,17 @@ export default function Home() {
     { icon: CheckCircle2, label: '已完成', value: done, unit: '片' },
   ]
 
+  // tab 定义：桌面端顶部 TabsList 与手机端底部导航共用
+  const tabs = [
+    { value: 'theory', icon: MapIcon, label: '理论地图', short: '理论' },
+    { value: 'checklist', icon: ListChecks, label: '叶子清单', short: '叶子' },
+    { value: 'cards', icon: Leaf, label: '学习卡片', short: '卡片' },
+    ...(SHOW_TEARDOWN ? [{ value: 'teardown', icon: Briefcase, label: '项目拆解', short: '拆解' }] : []),
+    { value: 'inbox', icon: InboxIcon, label: '收集箱', short: '收集箱' },
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/[0.04] via-background to-background">
+    <div className="min-h-screen bg-gradient-to-b from-primary/[0.04] via-background to-background pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
       {/* Hero */}
       <header className="relative overflow-hidden border-b bg-card/60 backdrop-blur">
         {/* 装饰光晕：增加首屏层次，不承载信息 */}
@@ -172,25 +194,25 @@ export default function Home() {
           <div className="absolute -top-28 right-[8%] h-80 w-80 rounded-full bg-primary/[0.06] blur-3xl dark:bg-primary/[0.14]" />
           <div className="absolute -bottom-36 left-[28%] h-80 w-80 rounded-full bg-emerald-500/[0.08] blur-3xl dark:bg-emerald-400/[0.10]" />
         </div>
-        <div className="absolute right-4 top-4 z-10">
+        <div className="absolute right-3 top-3 z-10 md:right-4 md:top-4">
           <ThemeToggle />
         </div>
-        <div className="relative mx-auto max-w-6xl px-6 py-10">
-          <div className="flex flex-wrap items-center gap-8">
+        <div className="relative mx-auto max-w-6xl px-4 pt-6 pb-5 md:px-6 md:py-10">
+          <div className="flex flex-wrap items-center gap-5 md:gap-8">
             <div className="flex-1 min-w-64">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                 <Sparkles className="h-3.5 w-3.5" />
                 s2ai · science to AI · 公开学习树
               </div>
-              <h1 className="text-3xl font-medium tracking-tight">AI 学习树</h1>
+              <h1 className="text-2xl md:text-3xl font-medium tracking-tight">AI 学习树</h1>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-xl">
                 面向想系统学大模型 / Agent 的人——零基础转行或有基础进阶。
                 理论是树（理论地图），项目是叶子（叶子清单），互相挂靠；
                 只做索引、顺序和取舍，详细内容在官方文档里。
               </p>
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-4 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
                 {['Agent 开发', 'RAG / 知识库', 'LLM 后训练', '强化学习', '模型量化', '多模态', '具身智能', '量化交易'].map(t => (
-                  <span key={t} className="rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground">
+                  <span key={t} className="flex-none whitespace-nowrap rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground">
                     {t}
                   </span>
                 ))}
@@ -198,21 +220,21 @@ export default function Home() {
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {STARTERS.map(s => (
                   <div key={s.who} className="rounded-lg border bg-background p-3 transition-colors hover:border-primary/30">
-                    <p className="text-xs font-medium">从哪开始 · {s.who}</p>
+                    <p className="text-sm md:text-xs font-medium">从哪开始 · {s.who}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 mb-2">{s.desc}</p>
                     <ol className="space-y-1.5">
                       {s.steps.map((st, i) => {
                         const step = typeof st === 'string' ? { t: st } : st
                         return (
-                          <li key={step.t} className="flex gap-1.5 text-xs text-muted-foreground">
-                            <span className="flex h-4 w-4 flex-none items-center justify-center rounded-full bg-muted text-[10px] font-medium">
+                          <li key={step.t} className="flex gap-1.5 text-[13px] md:text-xs text-muted-foreground">
+                            <span className="mt-1 md:mt-0 flex h-4 w-4 flex-none items-center justify-center rounded-full bg-muted text-[10px] font-medium">
                               {i + 1}
                             </span>
                             {step.to ? (
                               // 入口路径可点击：复用 jump.ts 总线切 tab + 展开对应组 / 篇章
                               <button
                                 onClick={() => jumpTo(step.to!)}
-                                className="text-left leading-relaxed hover:text-primary hover:underline underline-offset-2 transition-colors"
+                                className="-my-1 py-1 md:my-0 md:py-0 text-left leading-relaxed hover:text-primary hover:underline underline-offset-2 transition-colors"
                                 title="点击跳转到对应板块"
                               >
                                 {step.t}
@@ -228,9 +250,9 @@ export default function Home() {
                 ))}
               </div>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex w-full items-center justify-between gap-4 rounded-lg border bg-background/60 p-3 md:w-auto md:justify-start md:gap-6 md:rounded-none md:border-0 md:bg-transparent md:p-0">
               <ProgressRing value={LEAF_TOTAL > 0 ? (done / LEAF_TOTAL) * 100 : 0} />
-              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3 md:gap-x-6">
                 {stats.map(s => (
                   <div key={s.label} className="flex items-center gap-2.5">
                     <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-muted">
@@ -250,16 +272,13 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-6">
+      <main ref={mainRef} className="mx-auto max-w-6xl px-4 py-4 md:px-6 md:py-6 scroll-mt-0">
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="sticky top-3 z-20 mb-6 flex-wrap h-auto gap-1 border bg-card/90 p-1.5 shadow-sm backdrop-blur">
-            <TabsTrigger value="theory" className="gap-1.5"><MapIcon className="h-3.5 w-3.5" />理论地图</TabsTrigger>
-            <TabsTrigger value="checklist" className="gap-1.5"><ListChecks className="h-3.5 w-3.5" />叶子清单</TabsTrigger>
-            <TabsTrigger value="cards" className="gap-1.5"><Leaf className="h-3.5 w-3.5" />学习卡片</TabsTrigger>
-            {SHOW_TEARDOWN && (
-              <TabsTrigger value="teardown" className="gap-1.5"><Briefcase className="h-3.5 w-3.5" />项目拆解</TabsTrigger>
-            )}
-            <TabsTrigger value="inbox" className="gap-1.5"><InboxIcon className="h-3.5 w-3.5" />收集箱</TabsTrigger>
+          {/* 桌面端顶部 tab；手机端改用底部导航（见页面末尾），避免四个 tab 在窄屏折成两行、吸顶后遮住内容 */}
+          <TabsList className="sticky top-3 z-20 mb-6 hidden md:inline-flex flex-wrap h-auto gap-1 border bg-card/90 p-1.5 shadow-sm backdrop-blur">
+            {tabs.map(t => (
+              <TabsTrigger key={t.value} value={t.value} className="gap-1.5"><t.icon className="h-3.5 w-3.5" />{t.label}</TabsTrigger>
+            ))}
           </TabsList>
 
           {/* 理论地图（树） */}
@@ -273,7 +292,7 @@ export default function Home() {
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1.5"
+                className="gap-1.5 h-9 md:h-8"
                 onClick={() => { if (window.confirm('确定重置全部进度？')) setChecked({}) }}
               >
                 <RotateCcw className="h-3.5 w-3.5" /> 重置进度
@@ -403,7 +422,7 @@ export default function Home() {
       </main>
 
       <footer className="border-t mt-8 bg-card/60">
-        <div className="mx-auto max-w-6xl px-6 py-5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <div className="mx-auto max-w-6xl px-4 md:px-6 py-5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span>S2AI · science to AI ｜ 一棵预制的 AI 学习树：理论地图 + 叶子清单 · 数据驱动、可私有化生长</span>
           <span className="ml-auto flex gap-4">
             <a href="https://github.com/chenxiaoyu0505/S2AI" target="_blank" rel="noreferrer" className="hover:underline inline-flex items-center gap-1">GitHub 仓库 <ExternalLink className="h-3 w-3" /></a>
@@ -416,6 +435,33 @@ export default function Home() {
           </span>
         </div>
       </footer>
+
+      {/* 手机端底部导航：拇指可达、一行放下全部 tab，带 iPhone 底部安全区留白（桌面端隐藏） */}
+      <nav
+        aria-label="板块导航"
+        className="fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_-8px_rgba(0,0,0,0.12)] backdrop-blur md:hidden"
+      >
+        <div className="mx-auto flex max-w-md">
+          {tabs.map(t => {
+            const active = tab === t.value
+            return (
+              <button
+                key={t.value}
+                onClick={() => switchTabMobile(t.value)}
+                aria-current={active ? 'page' : undefined}
+                className={`flex h-16 flex-1 flex-col items-center justify-center gap-1 text-[11px] transition-colors ${
+                  active ? 'font-medium text-foreground' : 'text-muted-foreground'
+                }`}
+              >
+                <span className={`flex h-7 w-12 items-center justify-center rounded-full transition-colors ${active ? 'bg-primary/10' : ''}`}>
+                  <t.icon className="h-[18px] w-[18px]" />
+                </span>
+                {t.short}
+              </button>
+            )
+          })}
+        </div>
+      </nav>
     </div>
   )
 }
