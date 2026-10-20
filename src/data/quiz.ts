@@ -175,6 +175,17 @@ const SELFINST: QuizSource = { title: 'Self-Instruct（arXiv 2212.10560）', url
 const REPHRASE: QuizSource = { title: 'Rethinking Benchmark and Contamination for Language Models with Rephrased Samples（arXiv 2311.04850）', url: 'https://arxiv.org/abs/2311.04850' }
 const STAR: QuizSource = { title: 'STaR: Self-Taught Reasoner（arXiv 2203.14465）', url: 'https://arxiv.org/abs/2203.14465' }
 const DSKETCH: QuizSource = { title: 'datasketch 文档：MinHash LSH', url: 'https://ekzhu.com/datasketch/lsh.html' }
+const DEVALS: QuizSource = { title: 'Demystifying evals for AI agents（Anthropic）', url: 'https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents' }
+const SWEBENCH: QuizSource = { title: 'SWE-bench（arXiv 2310.06770）', url: 'https://arxiv.org/abs/2310.06770' }
+const GAIA: QuizSource = { title: 'GAIA（arXiv 2311.12983）', url: 'https://arxiv.org/abs/2311.12983' }
+const TAUBENCH: QuizSource = { title: 'τ-bench（arXiv 2406.12045）', url: 'https://arxiv.org/abs/2406.12045' }
+const RAGAS: QuizSource = { title: 'Ragas: Automated Evaluation of RAG（arXiv 2309.15217）', url: 'https://arxiv.org/abs/2309.15217' }
+const LF_MODEL: QuizSource = { title: 'Langfuse 文档：Core Concepts（数据模型）', url: 'https://langfuse.com/docs/observability/data-model' }
+const CLAUDE_CACHE: QuizSource = { title: 'Claude 文档：Prompt caching', url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-caching' }
+const WHOWHEN: QuizSource = { title: 'Which Agent Causes Task Failures and When?（Who&When，arXiv 2505.00212）', url: 'https://arxiv.org/abs/2505.00212' }
+const AGENTDOJO: QuizSource = { title: 'AgentDojo（arXiv 2406.13352）', url: 'https://arxiv.org/abs/2406.13352' }
+const HARMBENCH: QuizSource = { title: 'HarmBench（arXiv 2402.04249）', url: 'https://arxiv.org/abs/2402.04249' }
+const LLAMAGUARD: QuizSource = { title: 'Llama Guard（arXiv 2312.06674）', url: 'https://arxiv.org/abs/2312.06674' }
 
 export const QUIZ: QuizQuestion[] = [
   // ---------- 02-M1.1 自注意力机制 ----------
@@ -2965,4 +2976,317 @@ print('ok')`,
     answer: 1,
     explanation: '见《Rethinking Benchmark and Contamination…》摘要。',
     source: REPHRASE },
+  // ---------- 11-M1.1 三类评测 ----------
+  { id: 'q-11-m1-1-a', pointId: '11-M1.1', type: 'choice',
+    question: '按 Anthropic《Demystifying evals for AI agents》，生产监控（production monitoring）的主要缺点是？',
+    options: ['无法反映真实用户行为', '被动：问题先到达用户你才知道；信号嘈杂，且缺少用于评分的标准答案', '必须在每次提交时运行', '完全不需要埋点'],
+    answer: 1,
+    explanation: '文中对比表：自动化评测快、可复现、不影响用户，可在每次提交时运行；生产监控能揭示真实行为，但是被动的、信号嘈杂、需要埋点投入、缺少 ground truth。',
+    source: DEVALS },
+  { id: 'q-11-m1-1-b', pointId: '11-M1.1', type: 'short',
+    question: '离线评测、Guardrail（运行时防护）、在线评测三者分别解决什么问题？如何配合？',
+    keyPoints: ['离线评测：上线前在固定任务集上自动跑，快、可复现，可在每次提交时回归', 'Guardrail：运行时对输入 / 输出逐条校验与拦截（如安全分类、格式校验），防止单次请求出事故', '在线评测：生产监控、A/B 测试、用户反馈，衡量真实效果并发现离线没覆盖的问题', '三者互补：线上发现的失败案例回流成离线用例'],
+    explanation: 'Anthropic 文章列举了自动化评测、生产监控、A/B 测试、用户反馈、人工审阅等方法及利弊；Llama Guard 是输入 / 输出防护模型的代表。',
+    source: DEVALS, extraSources: [LLAMAGUARD] },
+  { id: 'q-11-m1-1-c', pointId: '11-M1.1', type: 'choice',
+    question: '能力评测（capability eval）与回归评测（regression eval）的区别是？',
+    options: ['两者相同', '能力评测问“能做到吗”，起始通过率可以较低；回归评测问“还能稳定做到以前能做的吗”，通过率应接近 100%', '回归评测只看延迟', '能力评测只能人工做'],
+    answer: 1,
+    explanation: '文中说明：高通过率的能力评测可以“毕业”成为持续运行的回归套件，用来捕获漂移。',
+    source: DEVALS },
+
+  // ---------- 11-M1.2 LLM-as-Judge 与校准 ----------
+  { id: 'q-11-m1-2-a', pointId: '11-M1.2', type: 'choice',
+    question: 'MT-Bench / Chatbot Arena 论文发现 GPT-4 作为评审与人类偏好的一致率如何？',
+    options: ['低于 50%', '超过 80%，与人类之间的一致水平相当', '恰好 100%', '无法衡量'],
+    answer: 1,
+    explanation: '论文摘要：强 LLM 评审（如 GPT-4）与人类偏好的一致率超过 80%，与人类之间的一致水平相同。',
+    source: JUDGE },
+  { id: 'q-11-m1-2-b', pointId: '11-M1.2', type: 'code',
+    question: '实现位置互换的成对评审 pairwise(judge, q, a, b)：judge(q, first, second) 返回 \'first\' / \'second\' / \'tie\'。调用两次（第二次交换 a、b 顺序），只有两次都偏好同一个答案时才判它胜，否则判 tie。返回 \'A\' / \'B\' / \'tie\'。',
+    reference: `def pairwise(judge, q, a, b):
+    r1 = judge(q, a, b)
+    r2 = judge(q, b, a)
+    if r1 == 'first' and r2 == 'second':
+        return 'A'
+    if r1 == 'second' and r2 == 'first':
+        return 'B'
+    return 'tie'`,
+    tests: `always_first = lambda q, x, y: 'first'                  # 纯位置偏差的评审
+assert pairwise(always_first, 'q', 'a', 'b') == 'tie'
+longer = lambda q, x, y: 'first' if len(x) > len(y) else 'second'
+assert pairwise(longer, 'q', 'long answer', 'short') == 'A'
+assert pairwise(longer, 'q', 'short', 'long answer') == 'B'
+print('ok')`,
+    explanation: '论文发现 LLM 评审存在位置偏差，做法之一是交换顺序调用两次、只在两次一致时判胜。注意：上例的“偏爱长答案”评审也能通过互换检查——冗长偏差需要另外处理。',
+    source: JUDGE },
+  { id: 'q-11-m1-2-c', pointId: '11-M1.2', type: 'short',
+    question: 'LLM-as-Judge 有哪些已知偏差？如何校准？',
+    keyPoints: ['位置偏差：交换顺序两次评审', '冗长偏差：偏爱更长的回答', '自我增强偏差：偏爱自己生成的回答', '推理能力有限：数学 / 推理题可提供参考答案或让其先独立解题', '用人工标注的小样本定期校准评审与人类的一致率'],
+    explanation: '前四项见 Zheng 等论文；Anthropic 文章也强调模型评审需要与人工评分定期校准。',
+    source: JUDGE, extraSources: [DEVALS] },
+
+  // ---------- 11-M1.3 指标定义与口径 ----------
+  { id: 'q-11-m1-3-a', pointId: '11-M1.3', type: 'choice',
+    question: 'pass@k 与 pass^k 的区别是？',
+    options: ['两者相同', 'pass@k 是 k 次中至少一次成功的概率，随 k 上升；pass^k 是 k 次全部成功的概率，随 k 下降', 'pass^k 随 k 上升', 'pass@k 只用于对话'],
+    answer: 1,
+    explanation: 'Anthropic 文章：到 k=10 时二者可以给出相反结论；一次成功即可的工具看 pass@k，要求稳定一致的 agent 看 pass^k。',
+    source: DEVALS },
+  { id: 'q-11-m1-3-b', pointId: '11-M1.3', type: 'code',
+    question: '每题采样 n 次、其中 c 次成功。实现无偏估计 pass_at_k(n, c, k) = 1 − C(n−c, k)/C(n, k) 与 pass_hat_k(n, c, k) = C(c, k)/C(n, k)（τ-bench 的 pass^k）。',
+    reference: `from math import comb
+
+def pass_at_k(n, c, k):
+    return 1.0 - comb(n - c, k) / comb(n, k)
+
+def pass_hat_k(n, c, k):
+    return comb(c, k) / comb(n, k)`,
+    tests: `assert abs(pass_at_k(10, 3, 1) - 0.3) < 1e-12 and abs(pass_hat_k(10, 3, 1) - 0.3) < 1e-12   # k=1 时都是成功率
+assert pass_at_k(10, 3, 8) == 1.0 and pass_hat_k(10, 3, 8) == 0.0
+assert pass_at_k(10, 3, 5) > 0.3 > pass_hat_k(10, 3, 5)
+print('ok')`,
+    explanation: 'pass@k 估计式见 Codex 论文；pass^k 由 τ-bench 提出，用于衡量多次试验下行为的可靠性。',
+    source: CODEX, extraSources: [TAUBENCH] },
+  { id: 'q-11-m1-3-c', pointId: '11-M1.3', type: 'short',
+    question: '定义一个评测指标时，需要把哪些“口径”写清楚？',
+    keyPoints: ['评分方式：代码判定、模型评审还是人工；多评分器时是加权、全部通过还是混合', '评的是结果（环境最终状态）还是过程（transcript）', '试验次数与汇总方式（pass@k / pass^k / 平均）', '样本集与版本、采样参数，确保前后可比', '报告置信区间或方差，而非单个数字'],
+    explanation: 'Anthropic 文章区分了 transcript 与 outcome、三类评分器以及加权 / 二元 / 混合计分。',
+    source: DEVALS },
+
+  // ---------- 11-M1.4 评测集构建与标注 ----------
+  { id: 'q-11-m1-4-a', pointId: '11-M1.4', type: 'choice',
+    question: 'Anthropic 认为早期开始做 agent 评测，需要多少任务？',
+    options: ['至少上万条', '20–50 个取自真实失败的简单任务就是很好的开始', '必须先有公开基准', '1 个就够'],
+    answer: 1,
+    explanation: '原文：早期每次改动影响明显、效应量大，小样本即可；更成熟的 agent 才需要更大的集合。',
+    source: DEVALS },
+  { id: 'q-11-m1-4-b', pointId: '11-M1.4', type: 'choice',
+    question: '判断一个评测任务“写得好”的标准是？',
+    options: ['越难越好', '两位领域专家独立判断会得出相同的通过 / 不通过结论；并且有参考解，按指令正确执行的 agent 能通过', '描述越简短越好', '只要模型都失败'],
+    answer: 1,
+    explanation: '文中举例：Terminal-Bench 审计发现任务没写脚本路径、测试却假设特定路径，agent 会无辜失败。任务描述的歧义会变成指标噪声。',
+    source: DEVALS },
+  { id: 'q-11-m1-4-c', pointId: '11-M1.4', type: 'short',
+    question: '构建评测集时有哪些要点？',
+    keyPoints: ['从真实失败与真实使用中取样', '任务描述无歧义，并附参考解，验证任务可解', '平衡：既测“应该做”的情况，也测“不应该做”的情况，避免类别失衡', '标注规范明确，多人标注并对齐分歧', '版本管理，防止泄漏到训练数据'],
+    explanation: '前三点对应文中 Step 1–3；“平衡问题集”即同时测试行为应当发生与不应发生的情况。',
+    source: DEVALS },
+
+  // ---------- 11-M3.1 Agent 基准 ----------
+  { id: 'q-11-m3-1-a', pointId: '11-M3.1', type: 'choice',
+    question: 'SWE-bench 的任务来源是？',
+    options: ['人工编写的算法题', '12 个流行 Python 仓库中真实 GitHub issue 及对应 PR，共 2294 个问题', '竞赛编程题', '合成 bug'],
+    answer: 1,
+    explanation: 'SWE-bench 摘要：给定代码库与 issue 描述，模型需修改代码解决问题；发布时最好的 Claude 2 仅解决 1.96%。',
+    source: SWEBENCH },
+  { id: 'q-11-m3-1-b', pointId: '11-M3.1', type: 'choice',
+    question: 'GAIA 基准的设计理念是？',
+    options: ['题目对人类越难越好', '题目对人类概念上简单，但对 AI 很难（人类 92% vs 带插件 GPT-4 15%）', '只考多模态', '只考代码'],
+    answer: 1,
+    explanation: 'GAIA 摘要：与“越来越难的专业题”趋势相反，强调像普通人一样稳健；共 466 题，保留其中 300 题答案用于排行榜。',
+    source: GAIA },
+  { id: 'q-11-m3-1-c', pointId: '11-M3.1', type: 'choice',
+    question: 'τ-bench 如何判定任务成功？',
+    options: ['人工打分', '对比对话结束时的数据库状态与标注的目标状态', '只看最后一句回复', '统计 token 数'],
+    answer: 1,
+    explanation: 'τ-bench 摘要：用 LM 模拟用户，agent 带领域 API 工具与政策规则；对比最终数据库状态与目标状态，并提出 pass^k；gpt-4o 成功率不足 50%，零售域 pass^8 不足 25%。',
+    source: TAUBENCH },
+
+  // ---------- 11-M3.2 轨迹与过程评测 ----------
+  { id: 'q-11-m3-2-a', pointId: '11-M3.2', type: 'choice',
+    question: '订机票 agent 在对话末尾说“已为您订好航班”，评测时应以什么为准？',
+    options: ['agent 的这句话', '环境中的最终结果：如 SQL 数据库里是否真的存在该预订', '对话轮数', '用户是否说谢谢'],
+    answer: 1,
+    explanation: 'Anthropic 文章原例：outcome 是试验结束时环境的最终状态，而不是 transcript 中的声明。',
+    source: DEVALS },
+  { id: 'q-11-m3-2-b', pointId: '11-M3.2', type: 'short',
+    question: '为什么除了结果还要评估轨迹（transcript）？可以评估哪些方面？',
+    keyPoints: ['结果正确不代表过程合理（可能碰巧对、走了危险操作或浪费大量 token）', '可评：轮数、token 用量、工具调用是否恰当、是否遵守政策 / 规则', '用代码检查（如步数上限）、LLM rubric（如沟通质量）和人工审阅组合', '人工阅读 transcript 能建立对失败模式的直觉'],
+    explanation: 'Anthropic 文章：每个评分器评估 transcript 或 outcome 的某个部分；transcript 分析包括轮数与 token 用量等。',
+    source: DEVALS },
+  { id: 'q-11-m3-2-c', pointId: '11-M3.2', type: 'code',
+    question: '实现 check_trajectory(steps, max_steps, forbidden)：steps 是 [{\'tool\': 名称, \'ok\': 布尔}] 列表。返回一个 dict：within_budget（步数 ≤ max_steps）、no_forbidden（未调用 forbidden 集合中的工具）、error_rate（ok 为 False 的步数占比，空轨迹为 0.0）。',
+    reference: `def check_trajectory(steps, max_steps, forbidden):
+    n = len(steps)
+    return {
+        'within_budget': n <= max_steps,
+        'no_forbidden': all(s['tool'] not in forbidden for s in steps),
+        'error_rate': (sum(not s['ok'] for s in steps) / n) if n else 0.0,
+    }`,
+    tests: `t = [{'tool': 'search', 'ok': True}, {'tool': 'search', 'ok': False}, {'tool': 'delete_db', 'ok': True}]
+r = check_trajectory(t, 5, {'delete_db'})
+assert r == {'within_budget': True, 'no_forbidden': False, 'error_rate': 1 / 3}
+assert check_trajectory([], 3, set())['error_rate'] == 0.0
+print('ok')`,
+    explanation: '这类确定性的过程检查成本低、可复现，可与结果检查、LLM rubric 组合成多评分器任务。',
+    source: DEVALS },
+
+  // ---------- 11-M3.4 RAG 评测 ----------
+  { id: 'q-11-m3-4-a', pointId: '11-M3.4', type: 'choice',
+    question: 'Ragas 框架的主要特点是？',
+    options: ['必须有人工标注的标准答案', '无参考（reference-free）评估 RAG：不依赖人工标注的 ground truth', '只评估检索器', '只评估生成速度'],
+    answer: 1,
+    explanation: 'Ragas 摘要：提出一套无需人工标注 ground truth 的指标，用于评估检索与生成的多个维度。',
+    source: RAGAS },
+  { id: 'q-11-m3-4-b', pointId: '11-M3.4', type: 'code',
+    question: 'Ragas 的忠实度（faithfulness）= 答案中能被检索上下文支持的陈述数 / 答案陈述总数。给定 LLM 已抽取的陈述及其判定 verdicts（布尔列表），实现 faithfulness(verdicts)；无陈述时返回 None。',
+    reference: `def faithfulness(verdicts):
+    if not verdicts:
+        return None
+    return sum(bool(v) for v in verdicts) / len(verdicts)`,
+    tests: `assert faithfulness([True, True, False, True]) == 0.75
+assert faithfulness([]) is None
+print('ok')`,
+    explanation: 'Ragas 论文：先用 LLM 把答案拆成陈述，再逐条判断能否从上下文推出，比例即忠实度分数。',
+    source: RAGAS },
+  { id: 'q-11-m3-4-c', pointId: '11-M3.4', type: 'short',
+    question: 'RAG 系统要从哪些维度评测？',
+    keyPoints: ['检索：能否找到相关且聚焦的上下文（上下文相关性 / 召回）', '忠实度：答案是否忠于检索到的上下文、不编造', '答案相关性：是否切题回答问题', '端到端：最终答案正确性，以及延迟与成本'],
+    explanation: 'Ragas 摘要列出的三个维度：检索系统找相关聚焦段落的能力、LLM 忠实利用段落的能力、生成本身的质量。',
+    source: RAGAS },
+
+  // ---------- 11-M4.1 Tracing 与链路观测 ----------
+  { id: 'q-11-m4-1-a', pointId: '11-M4.1', type: 'choice',
+    question: '在 Langfuse 的数据模型中，trace 与 observation 的关系是？',
+    options: ['两者相同', 'observation 是应用中的单个步骤（LLM 调用、工具调用、检索等），可嵌套；trace 是一次请求，由共享同一 trace_id 的所有 observation 组成', 'trace 是 observation 的一部分', 'observation 只记录错误'],
+    answer: 1,
+    explanation: 'Langfuse 文档；多个 trace 还可组成 session（如一个聊天线程）。Langfuse 基于 OpenTelemetry 构建。',
+    source: LF_MODEL },
+  { id: 'q-11-m4-1-b', pointId: '11-M4.1', type: 'code',
+    question: '给定 observation 列表（dict 含 trace_id、type、input_tokens、output_tokens），实现 per_trace(obs)：按 trace_id 汇总 LLM 调用次数（type == \'generation\'）与总 token 数，返回 {trace_id: {\'llm_calls\': n, \'tokens\': t}}。',
+    reference: `from collections import defaultdict
+
+def per_trace(obs):
+    out = defaultdict(lambda: {'llm_calls': 0, 'tokens': 0})
+    for o in obs:
+        agg = out[o['trace_id']]
+        if o['type'] == 'generation':
+            agg['llm_calls'] += 1
+        agg['tokens'] += o.get('input_tokens', 0) + o.get('output_tokens', 0)
+    return dict(out)`,
+    tests: `obs = [
+    {'trace_id': 't1', 'type': 'generation', 'input_tokens': 100, 'output_tokens': 20},
+    {'trace_id': 't1', 'type': 'span'},
+    {'trace_id': 't1', 'type': 'generation', 'input_tokens': 150, 'output_tokens': 30},
+    {'trace_id': 't2', 'type': 'generation', 'input_tokens': 10, 'output_tokens': 5},
+]
+assert per_trace(obs) == {'t1': {'llm_calls': 2, 'tokens': 300}, 't2': {'llm_calls': 1, 'tokens': 15}}
+print('ok')`,
+    explanation: 'generation 是 Langfuse 中专门表示 LLM 调用的 observation 类型；按 trace 聚合即可得到每次请求的调用次数与 token 成本。',
+    source: LF_MODEL },
+  { id: 'q-11-m4-1-c', pointId: '11-M4.1', type: 'short',
+    question: 'LLM 应用的链路追踪要记录什么？埋点时要注意什么？',
+    keyPoints: ['每个步骤一个 observation / span：LLM 调用（模型、参数、token、延迟）、工具调用、检索', '嵌套关系反映调用结构，同一请求共享 trace_id，多轮对话用 session 归组', '附加 user、环境（production / staging）、版本、标签等属性，便于筛选与对比', '异步批量上报，避免拖慢应用；短生命周期进程退出前要 flush'],
+    explanation: '均见 Langfuse Core Concepts 文档。',
+    source: LF_MODEL },
+
+  // ---------- 11-M4.2 Token 治理与成本核算 ----------
+  { id: 'q-11-m4-2-a', pointId: '11-M4.2', type: 'code',
+    question: '实现带提示缓存的单次请求成本 cost(base_in, out_price, uncached_in, cache_write, cache_read, out_tokens, write_mult=1.25, read_mult=0.1)：价格单位为 美元 / 百万 token；缓存写入按 base_in × write_mult 计价，缓存读取按 base_in × read_mult 计价。',
+    reference: `def cost(base_in, out_price, uncached_in, cache_write, cache_read, out_tokens, write_mult=1.25, read_mult=0.1):
+    return (uncached_in * base_in
+            + cache_write * base_in * write_mult
+            + cache_read * base_in * read_mult
+            + out_tokens * out_price) / 1e6`,
+    tests: `first = cost(3, 15, 1000, 100000, 0, 500)
+later = cost(3, 15, 1000, 0, 100000, 500)
+assert abs(first - (3000 + 375000 + 7500) / 1e6) < 1e-12
+assert abs(later - (3000 + 30000 + 7500) / 1e6) < 1e-12
+assert later < first
+print('ok')`,
+    explanation: 'Claude 文档写明的基本规则：5 分钟缓存写入为基础输入价的 1.25 倍（1 小时缓存为 2 倍），缓存读取为 0.1 倍，个别模型另有例外，故倍率做成参数。',
+    source: CLAUDE_CACHE },
+  { id: 'q-11-m4-2-b', pointId: '11-M4.2', type: 'choice',
+    question: '按 Claude 提示缓存文档的基本规则，命中缓存的输入 token 按基础输入价的多少计费？',
+    options: ['2 倍', '1.25 倍', '0.1 倍（个别模型有例外）', '免费'],
+    answer: 2,
+    explanation: '文档：cache read tokens are 0.1 times the base input tokens price（表格脚注列出个别模型例外）；1.25 倍是 5 分钟缓存写入的价格。',
+    source: CLAUDE_CACHE },
+  { id: 'q-11-m4-2-c', pointId: '11-M4.2', type: 'short',
+    question: '如何做 LLM 应用的 token 治理与成本核算？',
+    keyPoints: ['按 trace / 用户 / 功能 / 版本记录输入、输出、缓存 token，做成本归因', '把稳定的前缀（系统提示、工具定义、长文档）放在前面以利用提示缓存', '控制上下文：截断、摘要、按需检索，限制 agent 最大步数', '按任务难度路由到不同价位的模型，设预算告警与配额', '评估降本措施时同时看效果指标'],
+    explanation: '成本归因依赖 tracing（Langfuse 按 trace 聚合）；缓存定价见 Claude 文档。',
+    source: CLAUDE_CACHE, extraSources: [LF_MODEL] },
+
+  // ---------- 11-M4.4 线上事故定位与失败归因 ----------
+  { id: 'q-11-m4-4-a', pointId: '11-M4.4', type: 'choice',
+    question: 'Who&When 数据集上，最好的自动失败归因方法表现如何？',
+    options: ['已接近完美', '找出责任 agent 的准确率 53.5%，定位决定性错误步骤只有 14.2%', '两项都超过 90%', '无法评估'],
+    answer: 1,
+    explanation: '论文摘要：数据集来自 127 个 LLM 多智能体系统的失败日志；即使 o1、DeepSeek R1 等推理模型也达不到实用水平。',
+    source: WHOWHEN },
+  { id: 'q-11-m4-4-b', pointId: '11-M4.4', type: 'short',
+    question: '线上 agent 出现一批失败案例，你如何定位原因？',
+    keyPoints: ['按 trace 拉取失败样本，对比成功样本，按版本 / 模型 / 工具 / 用户群切片', '定位第一个出错的步骤：检索没召回、工具报错、模型理解错还是执行越权', '区分系统问题（超时、限流、依赖变更）与模型行为问题', '复现并写成离线回归用例，修复后回归验证', '自动归因准确率有限，关键步骤仍需人工阅读轨迹'],
+    explanation: 'Who&When 将失败归因定义为找出“哪个 agent、哪一步”导致失败，并表明自动方法仍远未实用。',
+    source: WHOWHEN, extraSources: [DEVALS] },
+  { id: 'q-11-m4-4-c', pointId: '11-M4.4', type: 'choice',
+    question: 'Who&When 中“失败归因”要识别的是？',
+    options: ['用户是谁', '导致任务失败的 agent 以及决定性的错误步骤', '使用的 GPU 型号', '模型参数量'],
+    answer: 1,
+    explanation: '论文摘要原文：identifying the agent and step responsible for task failures。',
+    source: WHOWHEN },
+
+  // ---------- 11-M5.2 提示注入 / 越狱评测 ----------
+  { id: 'q-11-m5-2-a', pointId: '11-M5.2', type: 'choice',
+    question: 'AgentDojo 评测的是什么？',
+    options: ['模型的数学能力', '在不可信数据上执行工具的 agent 对提示注入的对抗鲁棒性', '图像生成质量', '推理速度'],
+    answer: 1,
+    explanation: 'AgentDojo 摘要：可扩展环境而非静态测试集，包含 97 个真实任务、629 个安全测试用例；发现即使无攻击时 SOTA 模型也在很多任务上失败。',
+    source: AGENTDOJO },
+  { id: 'q-11-m5-2-b', pointId: '11-M5.2', type: 'choice',
+    question: 'HarmBench 是什么？',
+    options: ['一个越狱攻击方法', '自动化红队的标准化评测框架，比较了 18 种红队方法与 33 个目标模型 / 防御', '一个内容审核模型', '一个代码基准'],
+    answer: 1,
+    explanation: 'HarmBench 摘要；并提出一种高效的对抗训练方法，提升模型对多种攻击的鲁棒性。',
+    source: HARMBENCH },
+  { id: 'q-11-m5-2-c', pointId: '11-M5.2', type: 'short',
+    question: '如何评测一个 agent 的提示注入鲁棒性？要报告哪些指标？',
+    keyPoints: ['构造在工具返回的不可信数据中嵌入攻击指令的用例', '同时测无攻击时的任务成功率（效用）与有攻击时的成功率', '攻击成功率：agent 执行了攻击者目标的比例', '评测防御时要看效用下降多少，并考虑自适应攻击', '用可扩展环境而非一次性静态题集，跟上攻防演进'],
+    explanation: 'AgentDojo 的设计正是同时衡量任务效用与安全性，并支持新的任务、防御与自适应攻击。',
+    source: AGENTDOJO },
+
+  // ---------- 11-M5.3 Guardrails 与输出校验 ----------
+  { id: 'q-11-m5-3-a', pointId: '11-M5.3', type: 'choice',
+    question: 'Llama Guard 对什么做分类？',
+    options: ['只分类用户输入', '基于安全风险分类体系，同时对用户提示（prompt classification）与模型回复（response classification）分类', '只检查语法', '只识别语言'],
+    answer: 1,
+    explanation: 'Llama Guard 摘要：基于 Llama2-7b 指令微调的输入-输出防护模型；可通过指令调整分类体系与输出格式，支持零样本 / 少样本使用不同分类体系。',
+    source: LLAMAGUARD },
+  { id: 'q-11-m5-3-b', pointId: '11-M5.3', type: 'code',
+    question: '实现输出校验 validate(raw)：raw 应是 JSON 对象，含 action（取值 \'refund\' / \'escalate\' / \'reply\'）与 amount（非负数，仅 action 为 refund 时必填且 ≤ 500）。合法时返回 (True, obj)，否则返回 (False, 错误信息字符串)。',
+    reference: `import json
+
+ACTIONS = {'refund', 'escalate', 'reply'}
+
+def validate(raw):
+    try:
+        obj = json.loads(raw)
+    except json.JSONDecodeError as e:
+        return False, f'不是合法 JSON：{e.msg}'
+    if not isinstance(obj, dict):
+        return False, '顶层必须是对象'
+    if obj.get('action') not in ACTIONS:
+        return False, 'action 必须是 refund / escalate / reply 之一'
+    if obj['action'] == 'refund':
+        amt = obj.get('amount')
+        if not isinstance(amt, (int, float)) or isinstance(amt, bool) or amt < 0:
+            return False, 'refund 需要非负数 amount'
+        if amt > 500:
+            return False, '退款超过 500，需转人工'
+    return True, obj`,
+    tests: `assert validate('{"action": "reply"}')[0]
+assert validate('{"action": "refund", "amount": 20}') == (True, {'action': 'refund', 'amount': 20})
+assert not validate('{"action": "refund", "amount": 900}')[0]
+assert not validate('{"action": "drop_table"}')[0]
+assert not validate('not json')[0]
+print('ok')`,
+    explanation: '能用结构化输出就让模型直接遵守 schema；业务规则（金额上限、转人工）仍需在代码里校验，并把可操作的错误信息反馈给模型重试。',
+    source: OAI_SO },
+  { id: 'q-11-m5-3-c', pointId: '11-M5.3', type: 'short',
+    question: '一个面向用户的 LLM 应用应该在哪些位置加 guardrail？',
+    keyPoints: ['输入侧：安全分类（如 Llama Guard 的 prompt classification）、注入检测、PII 处理', '输出侧：回复安全分类、格式 / schema 校验、业务规则校验', '工具侧：权限最小化、高风险操作人工确认', '记录拦截日志并评测 guardrail 自身的误拦与漏拦'],
+    explanation: 'Llama Guard 同时覆盖 prompt 与 response 分类；结构化输出见 OpenAI 文档。',
+    source: LLAMAGUARD, extraSources: [OAI_SO] },
 ]
