@@ -161,6 +161,8 @@ const QWEN2VL: QuizSource = { title: 'Qwen2-VL（arXiv 2409.12191）', url: 'htt
 const INTERNVL: QuizSource = { title: 'InternVL（arXiv 2312.14238）', url: 'https://arxiv.org/abs/2312.14238' }
 const DDPM: QuizSource = { title: 'Denoising Diffusion Probabilistic Models（arXiv 2006.11239）', url: 'https://arxiv.org/abs/2006.11239' }
 const DDIM: QuizSource = { title: 'Denoising Diffusion Implicit Models（arXiv 2010.02502）', url: 'https://arxiv.org/abs/2010.02502' }
+const BPE: QuizSource = { title: 'Neural Machine Translation of Rare Words with Subword Units（BPE，arXiv 1508.07909）', url: 'https://arxiv.org/abs/1508.07909' }
+const SDPA_DOC: QuizSource = { title: 'PyTorch 文档：torch.nn.functional.scaled_dot_product_attention', url: 'https://pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html' }
 
 export const QUIZ: QuizQuestion[] = [
   // ---------- 02-M1.1 自注意力机制 ----------
@@ -2131,4 +2133,334 @@ assert torch.allclose(xt[1], eps[1], atol=0.05)         # t=T-1 几乎是纯噪�
 print('ok')`,
     explanation: '线性 β 从 1e-4 到 0.02、T=1000 是 DDPM 原论文设置；ᾱ_T 接近 0，故末步近似纯高斯噪声。',
     source: DDPM },
+  // ---------- 08-M1.1 Self-Attention ----------
+  { id: 'q-08-m1-1-a', pointId: '08-M1.1', type: 'code',
+    question: '用 PyTorch 手写缩放点积注意力 attention(q, k, v, mask=None)：q/k/v 形状 (..., L, d)；mask 为布尔张量，True 表示可见；返回 softmax(QKᵀ/√d)V。',
+    reference: `import math
+import torch
+import torch.nn.functional as F
+
+def attention(q, k, v, mask=None):
+    scores = q @ k.transpose(-2, -1) / math.sqrt(q.size(-1))
+    if mask is not None:
+        scores = scores.masked_fill(~mask, float('-inf'))
+    return torch.softmax(scores, dim=-1) @ v`,
+    tests: `torch.manual_seed(0)
+q, k, v = torch.randn(2, 5, 8), torch.randn(2, 5, 8), torch.randn(2, 5, 8)
+assert torch.allclose(attention(q, k, v), F.scaled_dot_product_attention(q, k, v), atol=1e-5)
+m = torch.ones(5, 5, dtype=torch.bool).tril()
+assert torch.allclose(attention(q, k, v, m), F.scaled_dot_product_attention(q, k, v, is_causal=True), atol=1e-5)
+print('ok')`,
+    explanation: '结果应与 PyTorch 内置 scaled_dot_product_attention 一致；其布尔 attn_mask 同样以 True 表示参与注意力。',
+    source: AIAYN, extraSources: [SDPA_DOC] },
+  { id: 'q-08-m1-1-b', pointId: '08-M1.1', type: 'choice',
+    question: '为什么点积要除以 √d_k？',
+    options: ['为了让输出维度变小', 'd_k 较大时点积量级变大，把 softmax 推到梯度极小的区域', '为了满足概率归一化', '为了减少参数量'],
+    answer: 1,
+    explanation: '原论文 3.2.1：若 q、k 分量独立、均值 0 方差 1，点积方差为 d_k；量级过大使 softmax 饱和、梯度极小，故缩放 1/√d_k。',
+    source: AIAYN },
+  { id: 'q-08-m1-1-c', pointId: '08-M1.1', type: 'short',
+    question: '手写 masked_fill 时为什么用 -inf（或很大的负数）而不是 0？整行都被遮住时会怎样？',
+    keyPoints: ['softmax 中 0 分数仍得到正权重，-inf 经 exp 后才是 0 权重', '整行全为 -inf 时 softmax 为 0/0，得到 NaN', '实践中保证每个 query 至少能看到一个位置，或用有限大负数 / 事后把该行置零', '半精度下“大负数”要在该 dtype 可表示范围内'],
+    explanation: '这是手写注意力最常见的 bug 来源之一；内置 SDPA 的文档也说明了布尔 mask 的语义。',
+    source: SDPA_DOC },
+
+  // ---------- 08-M1.2 Multi-Head Attention ----------
+  { id: 'q-08-m1-2-a', pointId: '08-M1.2', type: 'code',
+    question: '手写 MultiHeadAttention(d_model, n_heads)：QKV 投影 → 拆成多头 (B, h, L, d_k) → 缩放点积注意力（可选因果）→ 合并头 → 输出投影。forward(x, causal=False)。',
+    reference: `import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class MultiHeadAttention(nn.Module):
+    def __init__(self, d_model, n_heads):
+        super().__init__()
+        assert d_model % n_heads == 0
+        self.h, self.dk = n_heads, d_model // n_heads
+        self.qkv = nn.Linear(d_model, 3 * d_model)
+        self.out = nn.Linear(d_model, d_model)
+
+    def forward(self, x, causal=False):
+        B, L, D = x.shape
+        q, k, v = self.qkv(x).split(D, dim=-1)
+        q, k, v = (t.view(B, L, self.h, self.dk).transpose(1, 2) for t in (q, k, v))
+        s = q @ k.transpose(-2, -1) / self.dk ** 0.5
+        if causal:
+            s = s.masked_fill(torch.ones(L, L, dtype=torch.bool).triu(1), float('-inf'))
+        y = (s.softmax(-1) @ v).transpose(1, 2).reshape(B, L, D)
+        return self.out(y)`,
+    tests: `torch.manual_seed(0)
+m = MultiHeadAttention(16, 4)
+x = torch.randn(2, 6, 16)
+assert m(x).shape == (2, 6, 16)
+ref = nn.MultiheadAttention(16, 4, batch_first=True)
+ref.in_proj_weight.data = m.qkv.weight.data.clone(); ref.in_proj_bias.data = m.qkv.bias.data.clone()
+ref.out_proj.weight.data = m.out.weight.data.clone(); ref.out_proj.bias.data = m.out.bias.data.clone()
+assert torch.allclose(m(x), ref(x, x, x, need_weights=False)[0], atol=1e-5)
+y = m(x, causal=True); x2 = x.clone(); x2[:, -1] += 1
+assert torch.allclose(y[:, :-1], m(x2, causal=True)[:, :-1], atol=1e-6)   # 改最后一个 token 不影响前面
+print('ok')`,
+    explanation: '与 nn.MultiheadAttention 权重对齐后输出应一致；拆头用 view + transpose，合并时先 transpose 回来再 reshape。',
+    source: AIAYN },
+  { id: 'q-08-m1-2-b', pointId: '08-M1.2', type: 'choice',
+    question: 'MHA 合并多头时写成 y.transpose(1, 2).view(B, L, D) 报错，最可能的原因是？',
+    options: ['头数不能整除 d_model', 'transpose 后张量不连续，view 需要连续内存；应改用 reshape 或先 .contiguous()', 'softmax 维度写错', '缺少 dropout'],
+    answer: 1,
+    explanation: 'transpose 只改步长不拷贝数据，结果非连续；view 要求兼容的内存布局，reshape 会在必要时拷贝。',
+    source: AIAYN },
+  { id: 'q-08-m1-2-c', pointId: '08-M1.2', type: 'short',
+    question: '写 MHA 时需要说清哪些形状与参数量？',
+    keyPoints: ['输入 (B, L, d_model)，拆头后 (B, h, L, d_k)，d_k = d_model / h', '注意力分数 (B, h, L, L)', 'QKV 与输出投影共 4·d_model² 个权重（不计偏置）', '多头总计算量与单头全维度注意力相近'],
+    explanation: '原论文：每头维度降为 d_model/h，总计算量与全维度单头相近。',
+    source: AIAYN },
+
+  // ---------- 08-M1.3 KV Cache Attention ----------
+  { id: 'q-08-m1-3-a', pointId: '08-M1.3', type: 'code',
+    question: '实现带 KV Cache 的单步解码注意力 step(q, k_new, v_new, cache)：q/k_new/v_new 形状 (B, h, 1, d)；cache 为 None 或 (K, V)；把新 k/v 拼到缓存末尾，用当前 q 对全部缓存做注意力，返回 (out, (K, V))。',
+    reference: `import torch
+
+def step(q, k_new, v_new, cache=None):
+    if cache is None:
+        K, V = k_new, v_new
+    else:
+        K = torch.cat([cache[0], k_new], dim=2)
+        V = torch.cat([cache[1], v_new], dim=2)
+    s = q @ K.transpose(-2, -1) / q.size(-1) ** 0.5
+    return s.softmax(-1) @ V, (K, V)`,
+    tests: `import torch.nn.functional as F
+torch.manual_seed(0)
+q, k, v = torch.randn(1, 2, 5, 8), torch.randn(1, 2, 5, 8), torch.randn(1, 2, 5, 8)
+full = F.scaled_dot_product_attention(q, k, v, is_causal=True)
+cache = None
+for t in range(5):
+    o, cache = step(q[:, :, t:t+1], k[:, :, t:t+1], v[:, :, t:t+1], cache)
+    assert torch.allclose(o, full[:, :, t:t+1], atol=1e-5)   # 逐步结果 = 全序列因果注意力
+assert cache[0].shape == (1, 2, 5, 8)
+print('ok')`,
+    explanation: '解码第 t 步只能看到 ≤t 的位置，缓存天然满足因果性，因此单步无需额外 mask；逐步输出应与整段因果注意力一致。',
+    source: AIAYN },
+  { id: 'q-08-m1-3-b', pointId: '08-M1.3', type: 'choice',
+    question: '为什么只缓存 K 和 V，而不缓存 Q？',
+    options: ['Q 太大放不下', '之后的步骤只用新 token 的 query，但要用所有历史 token 的 key / value', 'Q 不参与注意力计算', 'Q 每步都相同'],
+    answer: 1,
+    explanation: '自回归解码第 t 步只需第 t 个位置的输出，故只需当前 q；历史 k、v 在每一步都会被重复使用。',
+    source: AIAYN },
+  { id: 'q-08-m1-3-c', pointId: '08-M1.3', type: 'short',
+    question: '加 KV Cache 后，解码一步的计算与显存开销如何变化？瓶颈在哪？',
+    keyPoints: ['不缓存时每步要重算整段前缀的 K/V；缓存后每步只算新 token 的投影', '每步注意力仍要读取全部历史 K/V，计算 O(t·d)', '缓存随序列长度与 batch 线性增长，显存成为瓶颈', '解码阶段通常受显存带宽限制，这也是 MQA / GQA / MLA、PagedAttention 的出发点'],
+    explanation: 'vLLM 论文指出 KV cache 大且动态增减，管理不善会浪费显存、限制 batch 大小。',
+    source: VLLM },
+
+  // ---------- 08-M1.4 RoPE ----------
+  { id: 'q-08-m1-4-a', pointId: '08-M1.4', type: 'code',
+    question: '实现 RoPE：apply_rope(x, pos, base=10000)，x 形状 (L, d)（d 为偶数），pos 形状 (L,)。把相邻两维 (x[2i], x[2i+1]) 按角度 pos·θ_i 旋转，θ_i = base^(-2i/d)。',
+    reference: `import torch
+
+def apply_rope(x, pos, base=10000.0):
+    d = x.size(-1)
+    theta = base ** (-torch.arange(0, d, 2, dtype=torch.float32) / d)
+    ang = pos[:, None].float() * theta[None, :]
+    cos, sin = ang.cos(), ang.sin()
+    x1, x2 = x[..., 0::2], x[..., 1::2]
+    out = torch.empty_like(x)
+    out[..., 0::2] = x1 * cos - x2 * sin
+    out[..., 1::2] = x1 * sin + x2 * cos
+    return out`,
+    tests: `torch.manual_seed(0)
+q, k = torch.randn(1, 8), torch.randn(1, 8)
+def dot(m, n):
+    return (apply_rope(q, torch.tensor([m])) * apply_rope(k, torch.tensor([n]))).sum()
+assert torch.allclose(dot(3, 1), dot(12, 10), atol=1e-4)      # 只依赖相对位置 m-n
+x = torch.randn(4, 8)
+assert torch.allclose(apply_rope(x, torch.arange(4)).norm(dim=-1), x.norm(dim=-1), atol=1e-5)   # 旋转保范数
+assert torch.allclose(apply_rope(x, torch.zeros(4)), x)
+print('ok')`,
+    explanation: 'RoFormer：用旋转矩阵编码绝对位置，同时在注意力中显式带出相对位置依赖；因此 q_m·k_n 只取决于 m−n，且旋转不改变向量长度。',
+    source: ROPE },
+  { id: 'q-08-m1-4-b', pointId: '08-M1.4', type: 'choice',
+    question: 'RoPE 加在哪里？',
+    options: ['加到输入词向量上（和正弦位置编码一样）', '作用在每层注意力的 Q 和 K 上（不作用于 V）', '只作用在 V 上', '加到最终 logits 上'],
+    answer: 1,
+    explanation: 'RoPE 在注意力内部旋转 query 与 key，使点积带上相对位置信息；value 不旋转。',
+    source: ROPE },
+  { id: 'q-08-m1-4-c', pointId: '08-M1.4', type: 'short',
+    question: 'RoFormer 论文列出 RoPE 的哪些性质？',
+    keyPoints: ['用旋转矩阵编码绝对位置，同时在自注意力中显式包含相对位置依赖', '序列长度灵活', 'token 间依赖随相对距离增大而衰减', '可以为线性自注意力配备相对位置编码'],
+    explanation: '均出自 RoFormer 摘要。',
+    source: ROPE },
+
+  // ---------- 08-M2.1 LoRA 层 ----------
+  { id: 'q-08-m2-1-a', pointId: '08-M2.1', type: 'code',
+    question: '手写 LoRALinear(base: nn.Linear, r, alpha)：冻结 base；新增 A（r×in，随机初始化）与 B（out×r，零初始化）；输出 base(x) + (alpha/r)·x Aᵀ Bᵀ；再实现 merge() 返回合并后权重。',
+    reference: `import torch
+import torch.nn as nn
+
+class LoRALinear(nn.Module):
+    def __init__(self, base, r=4, alpha=8):
+        super().__init__()
+        self.base = base
+        for p in self.base.parameters():
+            p.requires_grad_(False)
+        self.A = nn.Parameter(torch.randn(r, base.in_features) * 0.01)
+        self.B = nn.Parameter(torch.zeros(base.out_features, r))
+        self.scale = alpha / r
+
+    def forward(self, x):
+        return self.base(x) + (x @ self.A.T @ self.B.T) * self.scale
+
+    def merge(self):
+        return self.base.weight + self.scale * self.B @ self.A`,
+    tests: `torch.manual_seed(0)
+base = nn.Linear(10, 6); m = LoRALinear(base, r=2, alpha=4)
+x = torch.randn(3, 10)
+assert torch.allclose(m(x), base(x))                       # B=0：初始时等价于原层
+nn.init.normal_(m.B)
+assert torch.allclose(m(x), x @ m.merge().T + base.bias, atol=1e-5)   # 可合并，推理无额外延迟
+m(x).sum().backward()
+assert base.weight.grad is None and m.A.grad is not None
+assert sum(p.numel() for p in m.parameters() if p.requires_grad) == 2 * 10 + 6 * 2
+print('ok')`,
+    explanation: 'LoRA 论文：冻结预训练权重，注入可训练低秩分解矩阵；B 零初始化使训练开始时 ΔW = 0；可合并进原权重，因此不增加推理延迟。',
+    source: LORA },
+  { id: 'q-08-m2-1-b', pointId: '08-M2.1', type: 'choice',
+    question: 'LoRA 的 A、B 为什么不能都初始化为 0？',
+    options: ['会让参数量翻倍', '两者都为 0 时彼此梯度都为 0，训练无法启动', '会导致推理延迟', '会让 ΔW 初始不为 0'],
+    answer: 1,
+    explanation: 'ΔW = BA：∂L/∂B ∝ A、∂L/∂A ∝ B，两者都为 0 则梯度恒为 0。论文做法是 A 随机高斯、B 为 0，使初始 ΔW = 0 又能学习。',
+    source: LORA },
+  { id: 'q-08-m2-1-c', pointId: '08-M2.1', type: 'short',
+    question: 'LoRA 中 alpha / r 缩放有什么作用？LoRA 层一般加在哪些模块？',
+    keyPoints: ['ΔWx 按 α/r 缩放，调 r 时不必重新调学习率', '原论文主要把 LoRA 加在注意力的投影矩阵（如 W_q、W_v）上', '可训练参数量 r·(d_in + d_out)，远小于全参', '推理时可把 BA 合并进 W，无额外延迟'],
+    explanation: '均见 LoRA 论文：α/r 缩放、主要适配注意力权重、可合并因而不引入推理延迟。',
+    source: LORA },
+
+  // ---------- 08-M3.1 BPE ----------
+  { id: 'q-08-m3-1-a', pointId: '08-M3.1', type: 'code',
+    question: '实现 BPE 训练 learn_bpe(words, num_merges)：words 为 {词: 频次}，每个词拆成字符并在末尾加 「</w>」；每轮统计相邻符号对的加权频次，合并最高频的一对（频次相同时取字典序最小的一对），返回合并规则列表。',
+    reference: `from collections import Counter
+
+def learn_bpe(words, num_merges):
+    vocab = {tuple(w) + ('</w>',): c for w, c in words.items()}
+    merges = []
+    for _ in range(num_merges):
+        pairs = Counter()
+        for sym, c in vocab.items():
+            for a, b in zip(sym, sym[1:]):
+                pairs[(a, b)] += c
+        if not pairs:
+            break
+        best = min(pairs, key=lambda p: (-pairs[p], p))
+        merges.append(best)
+        new = {}
+        for sym, c in vocab.items():
+            out, i = [], 0
+            while i < len(sym):
+                if i + 1 < len(sym) and (sym[i], sym[i + 1]) == best:
+                    out.append(sym[i] + sym[i + 1]); i += 2
+                else:
+                    out.append(sym[i]); i += 1
+            new[tuple(out)] = c
+        vocab = new
+    return merges`,
+    tests: `m = learn_bpe({'low': 5, 'lower': 2, 'newest': 6, 'widest': 3}, 4)
+assert m == [('e', 's'), ('es', 't'), ('est', '</w>'), ('l', 'o')], m
+print('ok')`,
+    explanation: '示例词表来自 BPE 论文的经典例子：es、est、est</w> 依次被合并。合并时要从左到右、不重叠地替换。',
+    source: BPE },
+  { id: 'q-08-m3-1-b', pointId: '08-M3.1', type: 'choice',
+    question: 'BPE 论文要解决的核心问题是？',
+    options: ['加速注意力计算', '神经机器翻译词表固定而翻译是开放词表问题：把罕见 / 未登录词编码成子词单元序列', '压缩模型权重', '对齐图文表示'],
+    answer: 1,
+    explanation: '论文摘要：NMT 通常用固定词表，而翻译是开放词表问题；作者把罕见词与未知词编码为子词单元序列，并基于 byte pair encoding 压缩算法做分词。',
+    source: BPE },
+  { id: 'q-08-m3-1-c', pointId: '08-M3.1', type: 'short',
+    question: 'BPE 训练好后如何给新词分词？与训练过程有什么关系？',
+    keyPoints: ['把新词拆成字符（加词尾标记）', '按训练时学到的合并规则顺序（优先级）依次应用合并', '分词结果只依赖合并规则表，不需要重新统计频次', '任何词最坏退化为字符序列，因此没有 OOV'],
+    explanation: 'BPE 论文：学到的合并操作按顺序应用到测试文本；字符级兜底使模型可处理开放词表。',
+    source: BPE },
+
+  // ---------- 08-M4.1 余弦相似度检索 ----------
+  { id: 'q-08-m4-1-a', pointId: '08-M4.1', type: 'code',
+    question: '用 NumPy 实现 cosine_topk(query, docs, k)：query 形状 (d,)，docs 形状 (N, d)；返回余弦相似度最高的 k 个文档下标（按相似度降序）及其相似度。要求用 argpartition 避免全量排序。',
+    reference: `import numpy as np
+
+def cosine_topk(query, docs, k):
+    q = query / (np.linalg.norm(query) + 1e-12)
+    d = docs / (np.linalg.norm(docs, axis=1, keepdims=True) + 1e-12)
+    sims = d @ q
+    k = min(k, len(sims))
+    idx = np.argpartition(-sims, k - 1)[:k]
+    idx = idx[np.argsort(-sims[idx])]
+    return idx, sims[idx]`,
+    tests: `rng = np.random.default_rng(0)
+docs = rng.normal(size=(1000, 32)); q = rng.normal(size=32)
+idx, s = cosine_topk(q, docs, 5)
+full = (docs @ q) / (np.linalg.norm(docs, axis=1) * np.linalg.norm(q))
+assert list(idx) == list(np.argsort(-full)[:5]) and np.allclose(s, full[idx])
+idx2, _ = cosine_topk(q, docs * 7.0, 5)
+assert list(idx2) == list(idx)                         # 与向量长度无关
+print('ok')`,
+    explanation: 'argpartition 是 O(N) 选出前 k，再只对 k 个排序；向量预先归一化后余弦相似度就等于内积（Faiss 中常用 IndexFlatIP + 归一化实现）。',
+    source: FAISS },
+  { id: 'q-08-m4-1-b', pointId: '08-M4.1', type: 'choice',
+    question: '向量都已 L2 归一化时，下列哪个说法正确？',
+    options: ['余弦相似度与内积不同', '按内积排序与按余弦相似度排序相同，且与按欧氏距离升序排序也相同', '欧氏距离排序会与余弦相反', '必须用 HNSW 才能检索'],
+    answer: 1,
+    explanation: '单位向量下 ‖a−b‖² = 2 − 2·a·b，三者单调对应，排序一致。',
+    source: FAISS },
+  { id: 'q-08-m4-1-c', pointId: '08-M4.1', type: 'short',
+    question: '暴力余弦检索在百万 / 亿级数据上怎么扩展？',
+    keyPoints: ['暴力检索是 O(N·d)，可用矩阵乘批量计算并用 GPU 加速', '更大规模用近似最近邻（ANN）索引：如 IVF 倒排聚类、HNSW 图索引', '用量化（如 PQ）压缩向量，以精度换内存与速度', '需在召回率、延迟、内存之间权衡'],
+    explanation: 'Faiss 论文系统介绍了向量检索中精度、速度与内存的权衡，以及 IVF、PQ、图索引等方法。',
+    source: FAISS },
+
+  // ---------- 08-M5.1 Attention 复杂度推导 ----------
+  { id: 'q-08-m5-1-a', pointId: '08-M5.1', type: 'choice',
+    question: '序列长 n、维度 d 时，一层自注意力（不含投影）计算 QKᵀ 与 (softmax)·V 的时间复杂度是？',
+    options: ['O(n·d)', 'O(n²·d)', 'O(n·d²)', 'O(n³)'],
+    answer: 1,
+    explanation: 'QKᵀ 是 (n×d)(d×n)，得到 n×n，开销 O(n²d)；再乘 V 同为 O(n²d)。原论文 Table 1 也列为 O(n²·d)。',
+    source: AIAYN },
+  { id: 'q-08-m5-1-b', pointId: '08-M5.1', type: 'code',
+    question: '写函数 attn_flops(n, d_model, n_layers) 估算前向 FLOPs（乘加记 2 FLOPs）：每层 QKV+输出投影 4 个 d×d 矩阵乘、QKᵀ 与 PV 两个 n×n×d 矩阵乘，忽略 softmax / 偏置 / FFN。返回 (proj, attn) 两部分 FLOPs。',
+    reference: `def attn_flops(n, d_model, n_layers):
+    proj = n_layers * 4 * 2 * n * d_model * d_model
+    attn = n_layers * 2 * 2 * n * n * d_model
+    return proj, attn`,
+    tests: `p, a = attn_flops(1024, 1024, 1)
+assert p == 8 * 1024 ** 3 and a == 4 * 1024 ** 3
+p, a = attn_flops(8192, 1024, 1)
+assert a > p                                     # n > 2d 时注意力项超过投影项
+print('ok')`,
+    explanation: '投影项 8nd²，注意力项 4n²d，两者之比为 n/(2d)：序列长度超过约 2 倍隐维度时，n² 项开始主导。',
+    source: AIAYN },
+  { id: 'q-08-m5-1-c', pointId: '08-M5.1', type: 'short',
+    question: '自注意力的显存复杂度是多少？FlashAttention 改变了什么、没改变什么？',
+    keyPoints: ['朴素实现要物化 n×n 的注意力矩阵，显存 O(n²)', 'FlashAttention 用分块（tiling）减少 HBM 与 SRAM 之间的读写，不物化完整注意力矩阵', '它是精确注意力，计算量仍是 O(n²d)', '收益主要来自 IO 感知，额外显存降为与 n 线性'],
+    explanation: 'FlashAttention 论文：IO 感知的精确注意力算法，用 tiling 减少 HBM 读写；显存随序列长度线性增长。',
+    source: FLASH },
+
+  // ---------- 08-M5.2 KV Cache 显存公式 ----------
+  { id: 'q-08-m5-2-a', pointId: '08-M5.2', type: 'code',
+    question: '写 kv_cache_bytes(layers, kv_heads, head_dim, seq_len, batch, bytes_per=2)，返回 MHA / GQA 的 KV Cache 字节数。',
+    reference: `def kv_cache_bytes(layers, kv_heads, head_dim, seq_len, batch, bytes_per=2):
+    return 2 * layers * kv_heads * head_dim * seq_len * batch * bytes_per`,
+    tests: `# Llama-2-7B 形状：32 层、32 头、head_dim 128，FP16，4096 token，batch 1
+assert kv_cache_bytes(32, 32, 128, 4096, 1) == 2 * 1024 ** 3      # 2 GiB
+# 换成 8 个 KV 头的 GQA，缓存降为 1/4
+assert kv_cache_bytes(32, 8, 128, 4096, 1) * 4 == kv_cache_bytes(32, 32, 128, 4096, 1)
+print('ok')`,
+    explanation: '系数 2 来自 K 和 V 各一份；每 token 每层缓存 2·kv_heads·head_dim 个元素。GQA 把 KV 头数降到分组数，缓存按比例缩小。',
+    source: GQA },
+  { id: 'q-08-m5-2-b', pointId: '08-M5.2', type: 'choice',
+    question: 'DeepSeek-V2 的 MLA 每 token 每层缓存什么？',
+    options: ['完整的每头 K 和 V', '压缩后的 KV 隐向量 c（维度 d_c）加上解耦的 RoPE key（维度 d_h^R）', '只缓存 Q', '不需要任何缓存'],
+    answer: 1,
+    explanation: 'DeepSeek-V2 论文：MLA 缓存 (d_c + d_h^R)·l 个元素；取 d_c = 4d_h、d_h^R = d_h/2 时约为 4.5·d_h·l，相当于只有 2.25 组的 GQA。',
+    source: DSV2 },
+  { id: 'q-08-m5-2-c', pointId: '08-M5.2', type: 'short',
+    question: '比较 MHA、MQA、GQA、MLA 每 token 每层的 KV 缓存元素数（n_h 头，每头 d_h，GQA 分 g 组）。',
+    keyPoints: ['MHA：2·n_h·d_h', 'MQA：2·d_h（所有头共享一组 K/V）', 'GQA：2·g·d_h，介于 MHA 与 MQA 之间', 'MLA：d_c + d_h^R（DeepSeek-V2 中约 4.5·d_h）'],
+    explanation: 'DeepSeek-V2 论文 Table 1 给出了四种注意力的 KV cache 对比；MQA、GQA 定义见各自论文。',
+    source: DSV2, extraSources: [MQA, GQA] },
 ]
