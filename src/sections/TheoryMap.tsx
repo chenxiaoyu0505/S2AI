@@ -13,6 +13,7 @@ import { CARDS } from '@/data/cards'
 import { jumpTo } from '@/lib/jump'
 import HL from '@/components/HL'
 import IndexNote from '@/components/IndexNote'
+import { ChapterQuizBadge, QuizEntry } from '@/sections/Quiz'
 
 const STORE_KEY = 'ai-study-theory-v1'
 // 展开的篇章也持久化：不再写死默认展开，切 tab / 刷新后保持用户自己的选择
@@ -247,6 +248,7 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
                     <span className="basis-full pl-7 text-xs font-normal leading-relaxed text-muted-foreground line-clamp-2 md:hidden">{ch.summary.replace(/\*\*/g, '')}</span>
                   )}
                   <span className="ml-auto flex flex-none items-center gap-3">
+                    <ChapterQuizBadge chapterId={ch.id} />
                     {/* 没有笔记也标 0 篇：每个篇章的信息位置保持一致，扫读时不会串行 */}
                     <Badge variant="secondary" className={`text-xs gap-1 ${noted > 0 ? '' : 'text-muted-foreground/70'}`}>
                       <BookOpenCheck className="h-3 w-3" />{noted} 篇笔记
@@ -266,6 +268,7 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
                     <div key={mo.name}>
                       <p className="text-xs font-medium text-muted-foreground mb-1">{mo.name}
                         <span className="ml-2 font-normal text-muted-foreground/80">{points.length} 学习点</span>
+                        <QuizEntry chapterId={ch.id} moduleName={mo.name} />
                       </p>
                       <div className="grid gap-1 md:grid-cols-2">
                         {points.map(p => {

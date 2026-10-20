@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # check-tree.py —— 学习树完整性校验
 # 校验内容：叶子 id 唯一、anchor 挂得上树（树根/枝干/枝节/野生）、叶子标签里的理论点编号可解析、
+#           自测题 pointId / id / 题型字段；
 #           卡片 id 唯一、卡片有链接、target/next 无断链、收集箱 url 唯一、cat 挂得上模块、
 #           毕业条目挂回树上（卡片或叶子）；
 #           另加元校验：任务手册条数与 AGENTS.md 一致、源码不重复拼接 card- 前缀。
@@ -157,6 +158,62 @@ for url in graduated_urls:
         errors.append(f'收集箱条目已毕业但没挂回树上：{url}'
                       '（应有卡片 target 指向它，或已在叶子清单里长成同 url 的叶子）')
 
+# ---------- 5b. 闯关自测题库：pointId 挂得上树 / id 唯一 / 题型字段齐全 ----------
+quiz_file = DATA / 'quiz.ts'
+quiz_count = 0
+if quiz_file.exists():
+    quiz_slice = slice_export(quiz_file.read_text(encoding='utf-8'), 'QUIZ')
+    quiz_ids = []
+    for block in quiz_slice.split('\n  {')[1:]:
+        qid = re.search(r"\bid: '([^']+)'", block)
+        qid = qid.group(1) if qid else None
+        if not qid:
+            errors.append(f'题目缺少 id：{block.strip()[:40]!r}')
+            continue
+        quiz_ids.append(qid)
+        quiz_count += 1
+        pid = re.search(r"pointId: '([^']+)'", block)
+        if not pid:
+            errors.append(f'题目 {qid} 缺少 pointId')
+        elif pid.group(1) not in point_ids:
+            errors.append(f'题目 {qid} 的 pointId 断链：{pid.group(1)} 不是理论地图里的学习点')
+        qtype = re.search(r"type: '([^']+)'", block)
+        qtype = qtype.group(1) if qtype else None
+        if qtype not in ('choice', 'short', 'code'):
+            errors.append(f'题目 {qid} 的 type 不合法：{qtype!r}（应为 choice / short / code）')
+        for field in ('question', 'explanation'):
+            if not re.search(rf"{field}: ['`]", block):
+                errors.append(f'题目 {qid} 缺少 {field}')
+        if qtype == 'choice':
+            opts = re.search(r"options: \[(.*?)\],\n", block, re.S)
+            n_opts = len(re.findall(r"'[^']*'", opts.group(1))) if opts else 0
+            ans = re.search(r"answer: (\d+)", block)
+            if n_opts < 2:
+                errors.append(f'题目 {qid} 是选择题但选项少于 2 个')
+            if not ans:
+                errors.append(f'题目 {qid} 是选择题但缺少 answer')
+            elif int(ans.group(1)) >= n_opts:
+                errors.append(f'题目 {qid} 的 answer 越界：{ans.group(1)}（共 {n_opts} 个选项）')
+        elif qtype == 'short':
+            kp = re.search(r"keyPoints: \[(.*?)\],\n", block, re.S)
+            if not kp or not re.findall(r"'[^']+'", kp.group(1)):
+                errors.append(f'题目 {qid} 是简答题但缺少 keyPoints')
+        elif qtype == 'code':
+            for field in ('reference', 'tests'):
+                if not re.search(rf"{field}: [`']", block):
+                    errors.append(f'题目 {qid} 是手撕题但缺少 {field}')
+        src = re.search(r"source: \{[^}]*url: '([^']*)'", block)
+        if not re.search(r"source: [A-Z_]+|source: \{", block):
+            errors.append(f'题目 {qid} 缺少 source（出处必填，优先原始论文 / 官方文档）')
+        extra = re.search(r"extraSources: \[([^\]]*)\]", block)
+        if extra and not re.findall(r"[A-Z_][A-Z0-9_]*", extra.group(1)):
+            errors.append(f'题目 {qid} 的 extraSources 为空')
+        if src and not src.group(1).startswith('https://'):
+            errors.append(f'题目 {qid} 的 source 链接不合法：{src.group(1)}')
+    dup_quiz = sorted({x for x in quiz_ids if quiz_ids.count(x) > 1})
+    if dup_quiz:
+        errors.append(f'题目 id 重复：{"、".join(dup_quiz)}')
+
 # ---------- 6. 元校验：协议与代码的一致性（断了不会白屏，但会让跳转 / 文案悄悄错） ----------
 # 6a. 任务手册条数：AGENTS.md 的「### N. 」小节数必须与 content.ts 里的常量一致
 agents_file = ROOT / 'AGENTS.md'
@@ -184,7 +241,7 @@ for path in sorted((ROOT / 'src').rglob('*.tsx')):
 
 # ---------- 结果 ----------
 print(f'理论点 {len(point_ids)} ｜ 模块 {len(module_ids)} ｜ 枝干 {len(chapter_ids)} ｜ '
-      f'叶子 {len(leaf_ids)} ｜ 收集箱 {len(inbox_urls)}（毕业 {len(graduated_urls)}）｜ 卡片 {len(card_ids)}')
+      f'叶子 {len(leaf_ids)} ｜ 收集箱 {len(inbox_urls)}（毕业 {len(graduated_urls)}）｜ 卡片 {len(card_ids)} ｜ 自测题 {quiz_count}')
 if errors:
     print(f'\n✗ 发现 {len(errors)} 处断链：')
     for e in errors:
