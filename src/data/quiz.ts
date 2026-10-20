@@ -163,6 +163,9 @@ const DDPM: QuizSource = { title: 'Denoising Diffusion Probabilistic Models（ar
 const DDIM: QuizSource = { title: 'Denoising Diffusion Implicit Models（arXiv 2010.02502）', url: 'https://arxiv.org/abs/2010.02502' }
 const BPE: QuizSource = { title: 'Neural Machine Translation of Rare Words with Subword Units（BPE，arXiv 1508.07909）', url: 'https://arxiv.org/abs/1508.07909' }
 const SDPA_DOC: QuizSource = { title: 'PyTorch 文档：torch.nn.functional.scaled_dot_product_attention', url: 'https://pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html' }
+const ORCA: QuizSource = { title: 'Orca: A Distributed Serving System for Transformer-Based Generative Models（OSDI 2022）', url: 'https://www.usenix.org/conference/osdi22/presentation/yu' }
+const SARATHI: QuizSource = { title: 'Sarathi-Serve（arXiv 2403.02310）', url: 'https://arxiv.org/abs/2403.02310' }
+const FAISS_OPS: QuizSource = { title: 'Faiss wiki：Special operations on indexes', url: 'https://github.com/facebookresearch/faiss/wiki/Special-operations-on-indexes' }
 
 export const QUIZ: QuizQuestion[] = [
   // ---------- 02-M1.1 自注意力机制 ----------
@@ -2463,4 +2466,256 @@ print('ok')`,
     keyPoints: ['MHA：2·n_h·d_h', 'MQA：2·d_h（所有头共享一组 K/V）', 'GQA：2·g·d_h，介于 MHA 与 MQA 之间', 'MLA：d_c + d_h^R（DeepSeek-V2 中约 4.5·d_h）'],
     explanation: 'DeepSeek-V2 论文 Table 1 给出了四种注意力的 KV cache 对比；MQA、GQA 定义见各自论文。',
     source: DSV2, extraSources: [MQA, GQA] },
+  // ---------- 09-M1.1 推理服务整体设计 ----------
+  { id: 'q-09-m1-1-a', pointId: '09-M1.1', type: 'choice',
+    question: 'LLM 请求的 prefill 与 decode 两个阶段，计算特性分别是？',
+    options: ['两者都受计算限制', 'prefill 并行处理整段 prompt、能占满算力但延迟高；decode 每步每请求只处理一个 token、算力利用率低', 'prefill 利用率低，decode 占满算力', '两者完全相同'],
+    answer: 1,
+    explanation: 'Sarathi-Serve 摘要原文：prefill 迭代延迟高但因并行处理 prompt 而占满 GPU 算力；decode 迭代延迟低但算力利用率低，因此批处理对 decode 特别有效。',
+    source: SARATHI },
+  { id: 'q-09-m1-1-b', pointId: '09-M1.1', type: 'short',
+    question: '设计一个 LLM 在线推理服务，需要哪些核心组件？',
+    keyPoints: ['接入层：鉴权、限流、请求排队与流式返回', '调度器：迭代级调度 / 连续批处理，按 SLO 控制 prefill 与 decode 混排', 'KV Cache 管理：分页分配、前缀复用、显存不足时抢占', '执行引擎：模型并行（TP / PP）、量化与高效 kernel', '可观测与扩缩容：TTFT、TPOT、吞吐、排队长度等指标驱动'],
+    explanation: '调度见 Orca（迭代级调度）与 Sarathi-Serve；KV Cache 分页管理见 vLLM。',
+    source: VLLM, extraSources: [ORCA, SARATHI] },
+  { id: 'q-09-m1-1-c', pointId: '09-M1.1', type: 'choice',
+    question: 'vLLM 的 PagedAttention 主要解决什么问题？',
+    options: ['注意力的 n² 计算量', 'KV cache 大且动态增减，按连续块管理会产生碎片与冗余，浪费显存并限制 batch 大小', '模型权重太大', 'tokenizer 太慢'],
+    answer: 1,
+    explanation: 'vLLM 论文：受操作系统虚拟内存与分页启发，以块为单位管理 KV cache，几乎消除浪费，并支持请求间共享。',
+    source: VLLM },
+
+  // ---------- 09-M1.2 调度与批处理 ----------
+  { id: 'q-09-m1-2-a', pointId: '09-M1.2', type: 'choice',
+    question: 'Orca 提出的迭代级调度（iteration-level scheduling）是什么？',
+    options: ['按请求整体调度，等一批全部完成再换下一批', '调度粒度是一次模型迭代：每次只让执行引擎在当前批上跑一步', '按 token 随机丢弃请求', '只在 prefill 阶段批处理'],
+    answer: 1,
+    explanation: 'Orca 摘要：以迭代而非请求为粒度调度；并提出 selective batching，只对部分算子做批处理，使迭代级调度可用于 Transformer。',
+    source: ORCA },
+  { id: 'q-09-m1-2-b', pointId: '09-M1.2', type: 'code',
+    question: '写一个连续批处理的模拟器 simulate(lengths, max_batch)：lengths[i] 是请求 i 需要的 decode 步数，所有请求一开始都在队列中；每一步批内每个请求生成 1 个 token，完成的请求立即离开，空位马上由队列补上。返回总步数。再写 static_steps(lengths, max_batch)：静态批处理每批要等最长的请求完成才换下一批。',
+    reference: `from collections import deque
+
+def simulate(lengths, max_batch):
+    queue, running, steps = deque(lengths), [], 0
+    while queue or running:
+        while queue and len(running) < max_batch:
+            running.append(queue.popleft())
+        running = [r - 1 for r in running]
+        running = [r for r in running if r > 0]
+        steps += 1
+    return steps
+
+def static_steps(lengths, max_batch):
+    return sum(max(lengths[i:i + max_batch]) for i in range(0, len(lengths), max_batch))`,
+    tests: `L = [100, 2, 2, 2, 2, 2, 2, 2]
+assert static_steps(L, 2) == 106
+assert simulate(L, 2) == 100            # 短请求在长请求运行期间陆续补位完成
+assert simulate([5, 5], 4) == static_steps([5, 5], 4) == 5
+print('ok')`,
+    explanation: '静态批里短请求做完也得陪长请求等待；迭代级调度让完成的请求立即离开、新请求随时加入，这正是 Orca 提升吞吐的原因。',
+    source: ORCA },
+  { id: 'q-09-m1-2-c', pointId: '09-M1.2', type: 'short',
+    question: 'Sarathi-Serve 的 chunked prefill 解决了连续批处理中的什么问题？',
+    keyPoints: ['新请求的 prefill 与正在进行的 decode 交错，长 prefill 会让 decode 停顿，拉高延迟', '把 prefill 切成近似等大的块（chunked-prefills）', '构造 stall-free 调度：加入新请求时不暂停正在进行的 decode', '均匀的批也减少了迭代间不平衡与流水线气泡'],
+    explanation: '均出自 Sarathi-Serve 摘要。',
+    source: SARATHI },
+
+  // ---------- 09-M2.1 分布式训练系统设计 ----------
+  { id: 'q-09-m2-1-a', pointId: '09-M2.1', type: 'code',
+    question: '按 ZeRO 论文的混合精度 Adam 口径（每参数 fp16 参数 2B + fp16 梯度 2B + fp32 参数 / 动量 / 方差 共 12B），写 model_state_gb(params, n_gpus, stage)：stage 0 不切分；1 切分优化器状态；2 再切梯度；3 再切参数。返回每卡模型状态显存（GB，按 1e9 字节）。',
+    reference: `def model_state_gb(params, n_gpus, stage):
+    p, g, o = 2.0, 2.0, 12.0
+    if stage >= 1:
+        o /= n_gpus
+    if stage >= 2:
+        g /= n_gpus
+    if stage >= 3:
+        p /= n_gpus
+    return params * (p + g + o) / 1e9`,
+    tests: `assert model_state_gb(7.5e9, 64, 0) == 120.0          # 论文示例：7.5B 模型 16Ψ = 120GB
+assert abs(model_state_gb(7.5e9, 64, 1) - 31.40625) < 1e-9
+assert abs(model_state_gb(7.5e9, 64, 2) - 16.640625) < 1e-9
+assert abs(model_state_gb(7.5e9, 64, 3) - 1.875) < 1e-9
+print('ok')`,
+    explanation: 'ZeRO 论文 Figure 1 以 Ψ=7.5B、N_d=64 为例：基线 120GB，P_os 31.4GB，P_os+g 16.6GB，P_os+g+p 1.9GB。',
+    source: ZERO },
+  { id: 'q-09-m2-1-b', pointId: '09-M2.1', type: 'short',
+    question: '设计千卡级大模型训练系统时，如何组合并行策略？',
+    keyPoints: ['TP（层内切分）通信量大、频繁，放在节点内高带宽互联上', 'PP（按层切分）跨节点，用 micro-batch 流水减少气泡', 'DP 放最外层，可配合 ZeRO / FSDP 切分模型状态', '再加激活重计算、混合精度、序列并行等降显存', '还需考虑容错、检查点与数据管线'],
+    explanation: 'Megatron 层内切分、GPipe 微批流水、ZeRO 切分模型状态分别见各论文。',
+    source: MEGATRON, extraSources: [GPIPE, ZERO] },
+  { id: 'q-09-m2-1-c', pointId: '09-M2.1', type: 'choice',
+    question: 'GPipe 如何减少流水并行的空闲？',
+    options: ['把每层复制到所有设备', '把一个 mini-batch 拆成多个 micro-batch 在各阶段间流水执行', '取消反向传播', '只用一个设备'],
+    answer: 1,
+    explanation: 'GPipe：按层切分模型到不同加速器，并用 micro-batch 流水执行；配合重计算降低激活显存。',
+    source: GPIPE },
+
+  // ---------- 09-M3.1 企业级 RAG 系统设计 ----------
+  { id: 'q-09-m3-1-a', pointId: '09-M3.1', type: 'short',
+    question: '设计一个企业级 RAG 知识库系统，离线与在线链路各包括什么？',
+    keyPoints: ['离线：文档接入与解析 → 清洗 → 切块 → 向量化 + 关键词索引 → 带元数据入库', '在线：查询改写 → 混合检索（向量 + BM25）→ 融合 / 重排 → 拼上下文生成 → 引用溯源', '权限：按元数据在检索阶段过滤', '运维：增量更新、评测（检索召回、忠实度）、监控与反馈回流'],
+    explanation: 'RAG 综述把演进概括为 Naive / Advanced / Modular RAG，涵盖检索前（改写）、检索、检索后（重排 / 压缩）等环节。',
+    source: RAGSURVEY },
+  { id: 'q-09-m3-1-b', pointId: '09-M3.1', type: 'choice',
+    question: '原始 RAG（Lewis 等 2020）的“非参数记忆”是什么？',
+    options: ['模型权重', '用稠密向量检索器访问的维基百科稠密向量索引', '对话历史', 'KV Cache'],
+    answer: 1,
+    explanation: 'RAG 论文：参数记忆是预训练 seq2seq 模型，非参数记忆是用预训练神经检索器访问的维基百科稠密向量索引。',
+    source: RAGP },
+  { id: 'q-09-m3-1-c', pointId: '09-M3.1', type: 'choice',
+    question: 'RAG 综述把 RAG 范式的演进分为哪三类？',
+    options: ['Dense / Sparse / Hybrid', 'Naive RAG / Advanced RAG / Modular RAG', 'Online / Offline / Batch', 'Zero-shot / Few-shot / Fine-tuned'],
+    answer: 1,
+    explanation: '见 Gao 等 RAG 综述摘要。',
+    source: RAGSURVEY },
+
+  // ---------- 09-M3.2 混合检索与向量库选型 ----------
+  { id: 'q-09-m3-2-a', pointId: '09-M3.2', type: 'code',
+    question: '实现倒数排名融合 rrf(rank_lists, k=60)：rank_lists 是若干个按相关度排好的文档 id 列表；文档得分 = Σ 1/(k + rank)，rank 从 1 开始；返回按得分降序的 id 列表（同分按 id 升序）。',
+    reference: `from collections import defaultdict
+
+def rrf(rank_lists, k=60):
+    score = defaultdict(float)
+    for lst in rank_lists:
+        for rank, doc in enumerate(lst, start=1):
+            score[doc] += 1.0 / (k + rank)
+    return sorted(score, key=lambda d: (-score[d], d))`,
+    tests: `bm25 = ['a', 'b', 'c']; dense = ['c', 'a', 'd']
+assert rrf([bm25, dense]) == ['a', 'c', 'b', 'd']
+assert rrf([['x', 'y']]) == ['x', 'y']
+print('ok')`,
+    explanation: 'RRF 只用名次，不需要把 BM25 分数与向量相似度归一化到同一尺度；Elasticsearch 的 rank_constant 默认值为 60。',
+    source: RRF },
+  { id: 'q-09-m3-2-b', pointId: '09-M3.2', type: 'choice',
+    question: 'HNSW 的分层结构中，一个元素出现的最高层如何确定？',
+    options: ['按插入顺序固定', '随机选取，概率随层数指数衰减', '由向量范数决定', '所有元素都在每一层'],
+    answer: 1,
+    explanation: 'HNSW 摘要：元素所在的最高层以指数衰减的概率分布随机选取；从顶层开始搜索并利用尺度分离，复杂度呈对数级。',
+    source: HNSW },
+  { id: 'q-09-m3-2-c', pointId: '09-M3.2', type: 'short',
+    question: '为什么要做混合检索？向量库选型要看哪些方面？',
+    keyPoints: ['稠密检索擅长语义相似，关键词检索（BM25）擅长精确匹配专有名词、编号、代码', '两路结果可用 RRF 等按名次融合，再交给重排模型', '选型看规模与索引类型（Flat / IVF / HNSW / PQ）、召回-延迟-内存权衡', '是否支持增删改、元数据过滤、多租户、混合检索与运维成本'],
+    explanation: 'Faiss 论文讨论了向量检索的精度 / 速度 / 内存权衡空间；RRF 见 Elasticsearch 文档。',
+    source: FAISS, extraSources: [RRF] },
+
+  // ---------- 09-M3.3 增量更新与索引管理 ----------
+  { id: 'q-09-m3-3-a', pointId: '09-M3.3', type: 'code',
+    question: '写 diff_chunks(old, new)：old / new 都是 {chunk_id: 文本}；用内容哈希（sha256）判断变化，返回 (to_add, to_update, to_delete) 三个排好序的 id 列表，未变化的块不需重新向量化。',
+    reference: `import hashlib
+
+def _h(text):
+    return hashlib.sha256(text.encode('utf-8')).hexdigest()
+
+def diff_chunks(old, new):
+    oh = {k: _h(v) for k, v in old.items()}
+    nh = {k: _h(v) for k, v in new.items()}
+    add = sorted(k for k in nh if k not in oh)
+    upd = sorted(k for k in nh if k in oh and nh[k] != oh[k])
+    dele = sorted(k for k in oh if k not in nh)
+    return add, upd, dele`,
+    tests: `old = {'d1#0': 'a', 'd1#1': 'b', 'd2#0': 'c'}
+new = {'d1#0': 'a', 'd1#1': 'B', 'd3#0': 'e'}
+assert diff_chunks(old, new) == (['d3#0'], ['d1#1'], ['d2#0'])
+assert diff_chunks(old, old) == ([], [], [])
+print('ok')`,
+    explanation: '只对新增 / 变化的块重新向量化，删除的块要从索引中移除；用稳定的 chunk id 做主键，才能按 id 更新与删除。',
+    source: FAISS_OPS },
+  { id: 'q-09-m3-3-b', pointId: '09-M3.3', type: 'choice',
+    question: '在 Faiss 中从 IndexFlat 这类“顺序索引”里 remove_ids 后会发生什么？',
+    options: ['其他向量的 id 不变', '被删向量之后的向量 id 会前移；IndexIVF 与 IndexIDMap2 显式存 id，其他向量 id 不变', '索引会被清空', '不支持任何删除'],
+    answer: 1,
+    explanation: 'Faiss wiki：顺序索引（IndexFlat、IndexPQ、IndexLSH）删除会让后续 id 移位；IndexIVF 与 IndexIDMap2 显式存储 id。且 remove_ids 要遍历整个库，大批量删除时才高效。',
+    source: FAISS_OPS },
+  { id: 'q-09-m3-3-c', pointId: '09-M3.3', type: 'short',
+    question: '知识库频繁更新时，索引如何管理？',
+    keyPoints: ['用稳定的文档 / 块 id 与内容哈希做增量：只处理新增、修改、删除', '删除可先打标记 / 过滤，再定期批量清理或重建', '换 embedding 模型或切块策略时需全量重建：新旧索引并行（双写 / 别名切换）后再切流', '记录索引版本与数据血缘，支持回滚与评测对比'],
+    explanation: 'Faiss wiki 说明了不同索引对删除与 id 映射的支持差异（如 IVF 需 DirectMap 才能按 id 更新），这决定了增量策略。',
+    source: FAISS_OPS },
+
+  // ---------- 09-M4.1 可靠的 Agent 系统设计 ----------
+  { id: 'q-09-m4-1-a', pointId: '09-M4.1', type: 'choice',
+    question: 'Anthropic《Building effective agents》对“workflow”与“agent”的区分是？',
+    options: ['两者相同', 'workflow 由预定义代码路径编排 LLM 与工具；agent 由 LLM 动态决定自己的流程与工具使用', 'workflow 只用于多模态', 'agent 不能调用工具'],
+    answer: 1,
+    explanation: '文中定义：workflows 通过预定义代码路径编排；agents 由 LLM 动态指挥自身流程和工具使用。并建议先找最简单的方案，必要时才增加复杂度。',
+    source: BEA },
+  { id: 'q-09-m4-1-b', pointId: '09-M4.1', type: 'short',
+    question: '设计一个生产可用的 Agent 系统，如何保证可靠性？',
+    keyPoints: ['能用 workflow 解决就不用自主 agent，从最简单方案起步', '工具设计清晰、参数有校验，输出用结构化格式', '设置最大步数 / 预算等停止条件，关键操作加人工审批', '状态持久化以便中断恢复，副作用操作要幂等', '全链路 tracing 与评测，持续回归'],
+    explanation: '“从简单开始”、停止条件、人工检查点等建议见 Anthropic 文章；中断与人工介入见 LangGraph 文档。',
+    source: BEA, extraSources: [LG_HITL] },
+  { id: 'q-09-m4-1-c', pointId: '09-M4.1', type: 'choice',
+    question: 'ReAct 的核心做法是？',
+    options: ['只生成推理链不调用工具', '交替生成推理轨迹与动作，推理用于制定 / 更新计划，动作与外部环境交互获取信息', '只调用工具不推理', '用强化学习训练检索器'],
+    answer: 1,
+    explanation: 'ReAct 论文：以交错方式生成 reasoning traces 与 task-specific actions，二者相互促进。',
+    source: REACT },
+
+  // ---------- 09-M4.2 工具调用与错误恢复 ----------
+  { id: 'q-09-m4-2-a', pointId: '09-M4.2', type: 'code',
+    question: '实现 call_with_retry(fn, max_tries=4, base=0.1, sleep=time.sleep)：fn(key) 接收一个幂等键；遇到 RetryableError 时按指数退避（base·2^i）重试，且每次重试使用同一个幂等键；遇到其他异常立即抛出；超过次数后抛出最后的异常。',
+    reference: `import time
+import uuid
+
+class RetryableError(Exception):
+    pass
+
+def call_with_retry(fn, max_tries=4, base=0.1, sleep=time.sleep):
+    key = str(uuid.uuid4())
+    for i in range(max_tries):
+        try:
+            return fn(key)
+        except RetryableError:
+            if i == max_tries - 1:
+                raise
+            sleep(base * 2 ** i)`,
+    tests: `keys, waits = [], []
+def flaky(k):
+    keys.append(k)
+    if len(keys) < 3:
+        raise RetryableError()
+    return 'done'
+assert call_with_retry(flaky, sleep=waits.append) == 'done'
+assert len(set(keys)) == 1 and waits == [0.1, 0.2]
+def bad(k):
+    raise ValueError('参数错误')
+try:
+    call_with_retry(bad, sleep=waits.append); assert False
+except ValueError:
+    pass
+print('ok')`,
+    explanation: 'Stripe 文档：用同一个幂等键重试，服务端会返回首次请求的结果，避免重复执行副作用；对参数错误这类不可重试的失败应直接返回给调用方（或模型）。',
+    source: STRIPE_IDEM },
+  { id: 'q-09-m4-2-b', pointId: '09-M4.2', type: 'choice',
+    question: '工具调用失败时，把错误返回给模型应该怎样写？',
+    options: ['只返回“error”', '返回清晰、可操作的错误信息（哪里错、怎么改），让模型能自我纠正', '静默忽略', '直接终止整个会话'],
+    answer: 1,
+    explanation: 'Anthropic《Writing effective tools for agents》建议错误响应要具体、可操作，引导 agent 改用正确的调用方式，而不是返回晦涩的错误码。',
+    source: TOOLS_A },
+  { id: 'q-09-m4-2-c', pointId: '09-M4.2', type: 'short',
+    question: 'Agent 的工具调用有哪些失败类型？分别如何恢复？',
+    keyPoints: ['参数 / 格式错误：用结构化输出或 schema 校验，把具体错误反馈给模型重试', '瞬时错误（超时、限流）：指数退避重试，副作用操作带幂等键', '业务错误（权限、资源不存在）：返回可操作信息，让模型换方案或求助人类', '死循环 / 反复失败：步数与预算上限、熔断、人工接管'],
+    explanation: '幂等重试见 Stripe 文档；错误信息写法见 Anthropic 工具文章。',
+    source: TOOLS_A, extraSources: [STRIPE_IDEM] },
+
+  // ---------- 09-M4.3 记忆系统设计 ----------
+  { id: 'q-09-m4-3-a', pointId: '09-M4.3', type: 'choice',
+    question: 'MemGPT 借鉴了什么思想来管理有限上下文？',
+    options: ['数据库事务', '操作系统的分层内存管理：在快 / 慢存储之间换入换出，营造“大内存”的假象', '编译器优化', 'CDN 缓存'],
+    answer: 1,
+    explanation: 'MemGPT 论文：受传统操作系统分层内存启发，提出 virtual context management，在不同存储层之间移动数据。',
+    source: MEMGPT },
+  { id: 'q-09-m4-3-b', pointId: '09-M4.3', type: 'choice',
+    question: 'Generative Agents 检索记忆时综合哪三个因素打分？',
+    options: ['长度、语言、来源', '近因性（recency）、重要性（importance）、相关性（relevance）', '频次、作者、时间戳', '只看向量相似度'],
+    answer: 1,
+    explanation: 'Generative Agents 论文的记忆检索函数对 recency、importance、relevance 三项加权求和。',
+    source: GENAGENTS },
+  { id: 'q-09-m4-3-c', pointId: '09-M4.3', type: 'short',
+    question: '为一个长期陪伴型助手设计记忆系统，要考虑哪些方面？',
+    keyPoints: ['分层：短期（当前上下文 / 会话摘要）与长期（向量库 / 结构化画像）', '写入：从对话中抽取要点，去重与冲突消解（新增、更新、删除）', '读取：按相关性、时间、重要性检索后注入上下文', '治理：用户可查看 / 删除，隐私与过期策略', '评测：记忆召回准确率、对回答质量与延迟 / 成本的影响'],
+    explanation: 'Mem0 的流程是从对话中抽取、整合、检索要点信息；Generative Agents 的检索综合近因、重要性与相关性。',
+    source: MEM0, extraSources: [GENAGENTS] },
 ]
