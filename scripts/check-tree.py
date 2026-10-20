@@ -203,6 +203,8 @@ if quiz_file.exists():
                 if not re.search(rf"{field}: [`']", block):
                     errors.append(f'题目 {qid} 是手撕题但缺少 {field}')
         src = re.search(r"source: \{[^}]*url: '([^']*)'", block)
+        if not re.search(r"source: [A-Z_]+|source: \{", block):
+            errors.append(f'题目 {qid} 缺少 source（出处必填，优先原始论文 / 官方文档）')
         if src and not src.group(1).startswith('https://'):
             errors.append(f'题目 {qid} 的 source 链接不合法：{src.group(1)}')
     dup_quiz = sorted({x for x in quiz_ids if quiz_ids.count(x) > 1})

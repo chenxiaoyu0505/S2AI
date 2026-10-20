@@ -13,7 +13,7 @@ import { CARDS } from '@/data/cards'
 import { jumpTo } from '@/lib/jump'
 import HL from '@/components/HL'
 import IndexNote from '@/components/IndexNote'
-import { QuizEntry } from '@/sections/Quiz'
+import { ChapterQuizBadge, QuizEntry } from '@/sections/Quiz'
 
 const STORE_KEY = 'ai-study-theory-v1'
 // 展开的篇章也持久化：不再写死默认展开，切 tab / 刷新后保持用户自己的选择
@@ -240,6 +240,7 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
                   <span className={`flex-none text-xs ${ch.weight >= 3 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground/80'}`}>{'★'.repeat(ch.weight)}</span>
                   <span className="hidden md:block flex-1 min-w-0 text-xs text-muted-foreground truncate">{ch.summary}</span>
                   <span className="ml-auto flex flex-none items-center gap-3">
+                    <ChapterQuizBadge chapterId={ch.id} />
                     {/* 没有笔记也标 0 篇：每个篇章的信息位置保持一致，扫读时不会串行 */}
                     <Badge variant="secondary" className={`text-xs gap-1 ${noted > 0 ? '' : 'text-muted-foreground/70'}`}>
                       <BookOpenCheck className="h-3 w-3" />{noted} 篇笔记

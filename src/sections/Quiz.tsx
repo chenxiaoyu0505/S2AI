@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState, type SyntheticEvent } from 'react'
 import { ArrowRight, BookX, CheckCircle2, Crown, Download, Lock, RotateCcw, Swords, Upload, XCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -67,7 +67,22 @@ type View =
   | { kind: 'result'; title: string; levelId: string | null; qs: QuizQuestion[]; scores: number[] }
   | { kind: 'wrong' }
 
-/** 理论地图模块标题旁的「自测」入口：模块有题才渲染 */
+function QuizDialog({ open, setOpen, chapterId, startLevel, onChange }: { open: boolean; setOpen: (o: boolean) => void; chapterId: string; startLevel: string; onChange: (p: QuizProgress) => void }) {
+  // 弹窗经 portal 渲染，但 React 事件仍沿组件树冒泡：入口位于手风琴触发器内时，
+  // 不拦截的话在弹窗里点击会顺带收起 / 展开篇章
+  const stop = (e: SyntheticEvent) => e.stopPropagation()
+  return (
+    <span onClick={stop} onKeyDown={stop} onPointerDown={stop} className="contents">
+      <Dialog open={open} onOpenChange={o => { setOpen(o); if (!o) onChange(loadQuiz()) }}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          {open && <QuizHub chapterId={chapterId} startLevel={startLevel} onChange={onChange} />}
+        </DialogContent>
+      </Dialog>
+    </span>
+  )
+}
+
+/** 理论地图模块标题旁的「闯关」按钮：模块有题才渲染，显示题数与已获星级 */
 export function QuizEntry({ chapterId, moduleName }: { chapterId: string; moduleName: string }) {
   const mod = moduleName.match(/^(M\d+)/)?.[1]
   const levelId = `${chapterId}-${mod}`
@@ -81,17 +96,37 @@ export function QuizEntry({ chapterId, moduleName }: { chapterId: string; module
       <button
         type="button"
         onClick={() => { setProgress(loadQuiz()); setOpen(true) }}
-        className="ml-2 inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-2 py-0 text-[11px] font-normal text-primary hover:bg-primary/10 transition-colors align-middle"
+        className="ml-2 inline-flex h-6 items-center gap-1.5 rounded-md border border-amber-500/50 bg-amber-500/15 px-2.5 text-xs font-medium text-amber-800 shadow-xs hover:bg-amber-500/25 dark:text-amber-300 transition-colors align-middle"
         title={`闯关自测：${count} 题，≥80% 通关`}
       >
-        <Swords className="h-3 w-3" />自测 {count} 题
-        {rec ? <Stars n={rec.stars} className="text-[10px]" /> : null}
+        <Swords className="h-3.5 w-3.5" />闯关自测 · {count} 题
+        <Stars n={rec?.stars ?? 0} className="text-[11px]" />
       </button>
-      <Dialog open={open} onOpenChange={o => { setOpen(o); if (!o) setProgress(loadQuiz()) }}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          {open && <QuizHub chapterId={chapterId} startLevel={levelId} onChange={setProgress} />}
-        </DialogContent>
-      </Dialog>
+      <QuizDialog open={open} setOpen={setOpen} chapterId={chapterId} startLevel={levelId} onChange={setProgress} />
+    </>
+  )
+}
+
+/** 篇章标题上的「本章可闯关」小标识（位于手风琴触发器内，故用 span 而非 button） */
+export function ChapterQuizBadge({ chapterId }: { chapterId: string }) {
+  const count = useMemo(() => QUIZ.filter(q => q.pointId.startsWith(chapterId + '-')).length, [chapterId])
+  const [open, setOpen] = useState(false)
+  const [, setProgress] = useState<QuizProgress>(loadQuiz)
+  if (count === 0) return null
+  const openHub = (e: SyntheticEvent) => { e.stopPropagation(); e.preventDefault(); setOpen(true) }
+  return (
+    <>
+      <span
+        role="button"
+        tabIndex={0}
+        onClick={openHub}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') openHub(e) }}
+        className="inline-flex flex-none items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-800 hover:bg-amber-500/20 dark:text-amber-300 transition-colors"
+        title={`本章共 ${count} 道自测题，点击打开关卡列表`}
+      >
+        <Swords className="h-3 w-3" />本章可闯关
+      </span>
+      <QuizDialog open={open} setOpen={setOpen} chapterId={chapterId} startLevel="" onChange={setProgress} />
     </>
   )
 }

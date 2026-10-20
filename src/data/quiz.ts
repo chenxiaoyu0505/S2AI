@@ -17,7 +17,7 @@ export interface QuizQuestion {
   reference?: string       // code：参考实现
   tests?: string           // code：测试用例 / 自检方法（文本）
   explanation: string      // 解析（所有题型必填）
-  source?: QuizSource      // 出处（优先原始论文）
+  source: QuizSource       // 出处（必填，优先原始论文 / 官方文档）
 }
 
 const AIAYN: QuizSource = { title: 'Attention Is All You Need（arXiv 1706.03762）', url: 'https://arxiv.org/abs/1706.03762' }
@@ -29,6 +29,18 @@ const RMSN: QuizSource = { title: 'Root Mean Square Layer Normalization（arXiv 
 const LN: QuizSource = { title: 'Layer Normalization（arXiv 1607.06450）', url: 'https://arxiv.org/abs/1607.06450' }
 const ROPE: QuizSource = { title: 'RoFormer（arXiv 2104.09864）', url: 'https://arxiv.org/abs/2104.09864' }
 const ALIBI: QuizSource = { title: 'ALiBi: Train Short, Test Long（arXiv 2108.12409）', url: 'https://arxiv.org/abs/2108.12409' }
+const ADAM: QuizSource = { title: 'Adam（arXiv 1412.6980）', url: 'https://arxiv.org/abs/1412.6980' }
+const ADAMW: QuizSource = { title: 'Decoupled Weight Decay Regularization（arXiv 1711.05101）', url: 'https://arxiv.org/abs/1711.05101' }
+const RNNDIFF: QuizSource = { title: 'On the difficulty of training RNNs（arXiv 1211.5063）', url: 'https://arxiv.org/abs/1211.5063' }
+const CLIPDOC: QuizSource = { title: 'PyTorch 文档：clip_grad_norm_', url: 'https://docs.pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html' }
+const GLOROT: QuizSource = { title: 'Understanding the difficulty of training deep feedforward neural networks（AISTATS 2010）', url: 'https://proceedings.mlr.press/v9/glorot10a.html' }
+const DLBOOK_NUM: QuizSource = { title: 'Deep Learning（Goodfellow 等）第 4 章 数值计算', url: 'https://www.deeplearningbook.org/contents/numerical.html' }
+const LLAMA: QuizSource = { title: 'LLaMA（arXiv 2302.13971）', url: 'https://arxiv.org/abs/2302.13971' }
+const BN: QuizSource = { title: 'Batch Normalization（arXiv 1502.03167）', url: 'https://arxiv.org/abs/1502.03167' }
+const GN: QuizSource = { title: 'Group Normalization（arXiv 1803.08494）', url: 'https://arxiv.org/abs/1803.08494' }
+const DROPOUT: QuizSource = { title: 'Dropout（JMLR 2014, Srivastava et al.）', url: 'https://jmlr.org/papers/v15/srivastava14a.html' }
+const DROPDOC: QuizSource = { title: 'PyTorch 文档：nn.Dropout', url: 'https://docs.pytorch.org/docs/stable/generated/torch.nn.Dropout.html' }
+const MODDOC: QuizSource = { title: 'PyTorch 文档：nn.Module（train / eval）', url: 'https://docs.pytorch.org/docs/stable/generated/torch.nn.Module.html' }
 
 export const QUIZ: QuizQuestion[] = [
   // ---------- 02-M1.1 自注意力机制 ----------
@@ -182,7 +194,8 @@ assert torch.allclose(y.pow(2).mean(-1), torch.ones(2, 3), atol=1e-4)
   { id: 'q-02-m1-9-a', pointId: '02-M1.9', type: 'short',
     question: '按顺序描述一个 LLaMA 式 Decoder-only 模型从输入 token id 到下一个 token 概率的完整前向流程。',
     keyPoints: ['token id → 词嵌入（Embedding 查表）', '重复 N 层：RMSNorm → 因果掩码多头注意力（q、k 施加 RoPE，推理时读写 KV Cache）→ 残差相加', '每层第二个子层：RMSNorm → FFN（SwiGLU）→ 残差相加', '最后一层后接最终 RMSNorm', 'LM Head 线性投影到词表得到 logits（可与词嵌入权重共享）→ softmax 得到概率 / 采样'],
-    explanation: '这是 Pre-Norm 结构。位置信息在每层注意力内部通过 RoPE 注入，而不是在输入层相加。' },
+    explanation: '这是 Pre-Norm 结构。位置信息在每层注意力内部通过 RoPE 注入，而不是在输入层相加。',
+    source: LLAMA },
   { id: 'q-02-m1-9-b', pointId: '02-M1.9', type: 'choice',
     question: 'Decoder 的因果掩码通常怎么实现？',
     options: ['softmax 之后把上三角权重乘 0', 'softmax 之前把 j > i（未来位置）的分数置为 −∞', '把输入序列反转', '对 V 做下三角截断'],
@@ -204,5 +217,106 @@ assert np.allclose(p.sum(-1), 1.0)
 assert np.allclose(p[0], p[1])   # 平移不变性：两行只差一个常数
 # 朴素实现 np.exp(1000.0) 会溢出成 inf，得到 nan`,
     explanation: 'softmax(x) = softmax(x − c)，取 c = max(x) 后最大指数为 e⁰ = 1，不会上溢，分母至少为 1 也不会下溢成 0。求 log-softmax 时同理用 log-sum-exp 技巧。',
-  },
+    source: DLBOOK_NUM },
+  // ---------- 01-M2.1 优化器 ----------
+  { id: 'q-01-m2-1-a', pointId: '01-M2.1', type: 'choice',
+    question: 'Adam 为什么要对一阶、二阶矩估计做偏差修正（除以 1 − β^t）？',
+    options: ['为了让学习率随步数衰减', '矩估计以 0 初始化，训练初期会偏向 0，修正后才是无偏估计', '为了防止梯度爆炸', '为了实现权重衰减'],
+    answer: 1,
+    explanation: 'm、v 初始化为 0，前几步的指数滑动平均明显偏小（β 接近 1 时尤甚）。论文第 3 节推导：除以 1 − β1^t、1 − β2^t 即可修正这一初始化偏差。',
+    source: ADAM },
+  { id: 'q-01-m2-1-b', pointId: '01-M2.1', type: 'choice',
+    question: 'AdamW 与「Adam + L2 正则」的关键区别是什么？',
+    options: ['AdamW 不使用二阶矩', 'AdamW 把权重衰减从梯度里解耦出来，直接作用在参数上，不被自适应分母缩放', 'AdamW 去掉了动量', '两者完全等价'],
+    answer: 1,
+    explanation: '对 SGD 而言 L2 正则与权重衰减等价，但对 Adam 不等价：L2 项进入梯度后会被 √v 缩放，梯度大的参数反而衰减得少。AdamW 把衰减项单独施加在参数更新上。',
+    source: ADAMW },
+  { id: 'q-01-m2-1-c', pointId: '01-M2.1', type: 'code',
+    question: '用 NumPy 写 AdamW 的单步更新：输入参数 w、梯度 g、状态 m, v、步数 t（从 1 开始），超参 lr, β1, β2, eps, wd；返回新的 w, m, v。',
+    reference: `import numpy as np
+
+def adamw_step(w, g, m, v, t, lr=1e-3, b1=0.9, b2=0.999, eps=1e-8, wd=0.01):
+    m = b1 * m + (1 - b1) * g
+    v = b2 * v + (1 - b2) * g * g
+    m_hat = m / (1 - b1 ** t)
+    v_hat = v / (1 - b2 ** t)
+    w = w - lr * (m_hat / (np.sqrt(v_hat) + eps) + wd * w)   # 衰减项与自适应项解耦
+    return w, m, v`,
+    tests: `w = np.array([1.0, -2.0]); g = np.array([0.5, 0.5])
+w1, m, v = adamw_step(w, g, np.zeros(2), np.zeros(2), t=1, wd=0.0)
+# 第 1 步偏差修正后 m_hat = g，v_hat = g²，更新量约等于 lr·sign(g)
+assert np.allclose(w - w1, 1e-3, atol=1e-6)
+# 与 torch.optim.AdamW 对照（可选）：同样的初值和超参，结果应一致`,
+    explanation: '要点：m、v 先更新再修正；eps 加在开根之后；权重衰减项 wd·w 不进入 m、v。第 1 步更新幅度约为 lr，这是 Adam 步长有界的性质。',
+    source: ADAMW },
+
+  // ---------- 01-M2.3 梯度消失与爆炸 ----------
+  { id: 'q-01-m2-3-a', pointId: '01-M2.3', type: 'choice',
+    question: 'sigmoid 函数导数的最大值是多少？这为什么会导致深层网络梯度消失？',
+    options: ['1，不会导致梯度消失', '0.25，连乘多层后梯度按指数缩小', '0.5，只影响第一层', '无上界，会导致梯度爆炸'],
+    answer: 1,
+    explanation: 'σ′(x) = σ(x)(1 − σ(x))，在 x = 0 处取最大值 0.25。反向传播时每层都乘上一个 ≤0.25 的因子（再乘权重），层数一多梯度就指数级衰减。Glorot 与 Bengio 的实验也观察到 sigmoid 网络深层易饱和、训练困难。',
+    source: GLOROT },
+  { id: 'q-01-m2-3-b', pointId: '01-M2.3', type: 'choice',
+    question: '按范数裁剪梯度（如 PyTorch 的 clip_grad_norm_）做了什么？',
+    options: ['把每个梯度元素截断到 [−c, c]', '若所有梯度拼接后的总范数超过阈值，就整体等比例缩放，使总范数等于阈值，方向不变', '把梯度置零', '把学习率减半'],
+    answer: 1,
+    explanation: 'Pascanu 等提出按范数裁剪应对梯度爆炸：‖g‖ > c 时令 g ← c·g/‖g‖。与逐元素截断不同，它保持梯度方向。PyTorch 的 clip_grad_norm_ 计算的是所有参数梯度拼接后的总范数。',
+    source: CLIPDOC },
+  { id: 'q-01-m2-3-c', pointId: '01-M2.3', type: 'short',
+    question: '说明梯度消失 / 爆炸的成因，并列举常见的缓解手段。',
+    keyPoints: ['成因：反向传播是各层雅可比矩阵的连乘，因子持续 <1 则消失、>1 则爆炸（RNN 沿时间展开尤甚）', '激活函数：用 ReLU 类替代饱和的 sigmoid / tanh', '合理初始化：Xavier / He 初始化保持各层方差稳定', '残差连接：提供恒等通路，梯度可直接回传（ResNet）', '归一化层（BN / LN）与梯度裁剪（针对爆炸）'],
+    explanation: 'Pascanu 等从动力系统角度分析了 RNN 中的梯度消失与爆炸并提出梯度裁剪；ResNet 用残差学习让很深的网络也能训练。',
+    source: RNNDIFF },
+
+  // ---------- 01-M2.4 归一化族 ----------
+  { id: 'q-01-m2-4-a', pointId: '01-M2.4', type: 'choice',
+    question: '对形状为 (N, C, H, W) 的特征，Group Normalization 在 G = 1 和 G = C 时分别退化为什么？',
+    options: ['BN 和 LN', 'LN 和 IN', 'IN 和 BN', 'LN 和 BN'],
+    answer: 1,
+    explanation: 'GN 对每个样本把通道分成 G 组，在组内 (C/G, H, W) 上求统计量。G = 1 时在整个 (C, H, W) 上归一化，即 LN；G = C 时每个通道单独在 (H, W) 上归一化，即 IN。BN 则是跨 batch 在 (N, H, W) 上求统计量。',
+    source: GN },
+  { id: 'q-01-m2-4-b', pointId: '01-M2.4', type: 'choice',
+    question: 'BatchNorm 在推理（eval）阶段用什么统计量做归一化？',
+    options: ['当前测试 batch 的均值和方差', '训练期间累积的滑动平均均值和方差（running mean / var）', '固定为均值 0、方差 1', '每个样本自己的均值方差'],
+    answer: 1,
+    explanation: 'BN 论文 3.1 节：推理时用总体统计量代替 mini-batch 统计量，使输出只依赖输入本身；实现上通常是训练时维护的滑动平均。这也是 train / eval 模式必须切换的原因之一。',
+    source: BN },
+  { id: 'q-01-m2-4-c', pointId: '01-M2.4', type: 'short',
+    question: '比较 BatchNorm 与 LayerNorm：统计维度、对 batch 的依赖、适用场景。',
+    keyPoints: ['BN 对每个通道跨 batch 统计（N, H, W），LN 对每个样本跨特征维统计', 'BN 依赖 batch 大小，小 batch 时统计量噪声大；LN 与 batch 无关', 'BN 训练 / 推理行为不同（需 running 统计量），LN 训练推理一致', 'BN 常用于 CNN；LN 常用于 RNN / Transformer 等变长序列模型', '两者都带可学习的缩放 γ 和平移 β'],
+    explanation: 'GN 论文第 1 节指出 BN 的误差在 batch 变小时迅速上升，这也是 GN / LN 这类与 batch 无关的方法的出发点。',
+    source: GN },
+
+  // ---------- 01-M2.6 train / eval 模式与 dropout ----------
+  { id: 'q-01-m2-6-a', pointId: '01-M2.6', type: 'choice',
+    question: 'PyTorch 的 nn.Dropout(p) 在训练模式下，对保留下来的元素做了什么？',
+    options: ['不做处理', '乘以 1/(1 − p)，这样推理时直接恒等输出即可', '乘以 p', '乘以 1 − p'],
+    answer: 1,
+    explanation: 'PyTorch 文档：训练时以概率 p 置零，并把输出缩放 1/(1 − p)；eval 模式下 Dropout 只是恒等函数（inverted dropout）。原论文的做法是测试时把权重乘以保留概率，两者期望一致。',
+    source: DROPDOC },
+  { id: 'q-01-m2-6-b', pointId: '01-M2.6', type: 'choice',
+    question: '关于 model.eval()，下列说法正确的是？',
+    options: ['它会关闭自动求导，不再记录计算图', '它只影响 Dropout、BatchNorm 等在训练 / 推理中行为不同的模块，不关闭梯度计算；推理时还应配合 torch.no_grad()', '它会冻结所有参数，使其不能再被优化', '它会把模型转成半精度'],
+    answer: 1,
+    explanation: 'PyTorch 文档说明 eval() 等价于 train(False)，只对 Dropout、BatchNorm 等特定模块有影响；它与 torch.no_grad() / requires_grad 无关。',
+    source: MODDOC },
+  { id: 'q-01-m2-6-c', pointId: '01-M2.6', type: 'code',
+    question: '用 PyTorch 张量运算手写 inverted dropout 的前向：dropout(x, p, training)。',
+    reference: `import torch
+
+def dropout(x, p=0.5, training=True):
+    if not training or p == 0.0:
+        return x
+    if p == 1.0:
+        return torch.zeros_like(x)
+    mask = (torch.rand_like(x) > p).to(x.dtype)
+    return x * mask / (1.0 - p)`,
+    tests: `x = torch.ones(100000)
+y = dropout(x, 0.3)
+assert abs(y.mean().item() - 1.0) < 0.02        # 期望不变
+assert abs((y == 0).float().mean().item() - 0.3) < 0.02
+assert torch.equal(dropout(x, 0.3, training=False), x)`,
+    explanation: '训练时随机置零并除以保留概率 1 − p，保持期望不变；推理时直接返回输入。注意 p = 1 的边界情况。',
+    source: DROPOUT },
 ]
