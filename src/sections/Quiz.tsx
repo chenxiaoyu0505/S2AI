@@ -121,7 +121,7 @@ export function ChapterQuizBadge({ chapterId }: { chapterId: string }) {
         tabIndex={0}
         onClick={openHub}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') openHub(e) }}
-        className="inline-flex flex-none items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-800 hover:bg-amber-500/20 dark:text-amber-300 transition-colors"
+        className="inline-flex flex-none items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0 h-5 leading-none text-[11px] font-medium text-amber-800 hover:bg-amber-500/20 dark:text-amber-300 transition-colors"
         title={`本章共 ${count} 道自测题，点击打开关卡列表`}
       >
         <Swords className="h-3 w-3" />本章可闯关
