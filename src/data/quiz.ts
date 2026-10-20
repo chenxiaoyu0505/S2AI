@@ -41,6 +41,30 @@ const GN: QuizSource = { title: 'Group Normalization（arXiv 1803.08494）', url
 const DROPOUT: QuizSource = { title: 'Dropout（JMLR 2014, Srivastava et al.）', url: 'https://jmlr.org/papers/v15/srivastava14a.html' }
 const DROPDOC: QuizSource = { title: 'PyTorch 文档：nn.Dropout', url: 'https://docs.pytorch.org/docs/stable/generated/torch.nn.Dropout.html' }
 const MODDOC: QuizSource = { title: 'PyTorch 文档：nn.Module（train / eval）', url: 'https://docs.pytorch.org/docs/stable/generated/torch.nn.Module.html' }
+const GLU: QuizSource = { title: 'GLU Variants Improve Transformer（arXiv 2002.05202）', url: 'https://arxiv.org/abs/2002.05202' }
+const SWITCH: QuizSource = { title: 'Switch Transformers（arXiv 2101.03961）', url: 'https://arxiv.org/abs/2101.03961' }
+const SGMOE: QuizSource = { title: 'Sparsely-Gated Mixture-of-Experts（arXiv 1701.06538）', url: 'https://arxiv.org/abs/1701.06538' }
+const DSV3: QuizSource = { title: 'DeepSeek-V3 Technical Report（arXiv 2412.19437）', url: 'https://arxiv.org/abs/2412.19437' }
+const KAPLAN: QuizSource = { title: 'Scaling Laws for Neural Language Models（arXiv 2001.08361）', url: 'https://arxiv.org/abs/2001.08361' }
+const CHINCHILLA: QuizSource = { title: 'Training Compute-Optimal LLMs / Chinchilla（arXiv 2203.15556）', url: 'https://arxiv.org/abs/2203.15556' }
+const MIXPREC: QuizSource = { title: 'Mixed Precision Training（arXiv 1710.03740）', url: 'https://arxiv.org/abs/1710.03740' }
+const GOYAL: QuizSource = { title: 'Accurate, Large Minibatch SGD（arXiv 1706.02677）', url: 'https://arxiv.org/abs/1706.02677' }
+const PALM: QuizSource = { title: 'PaLM（arXiv 2204.02311）', url: 'https://arxiv.org/abs/2204.02311' }
+const MMLU: QuizSource = { title: 'MMLU（arXiv 2009.03300）', url: 'https://arxiv.org/abs/2009.03300' }
+const JUDGE: QuizSource = { title: 'Judging LLM-as-a-Judge（arXiv 2306.05685）', url: 'https://arxiv.org/abs/2306.05685' }
+const GPT3: QuizSource = { title: 'Language Models are Few-Shot Learners（arXiv 2005.14165）', url: 'https://arxiv.org/abs/2005.14165' }
+const LORA: QuizSource = { title: 'LoRA（arXiv 2106.09685）', url: 'https://arxiv.org/abs/2106.09685' }
+const QLORA: QuizSource = { title: 'QLoRA（arXiv 2305.14314）', url: 'https://arxiv.org/abs/2305.14314' }
+const EWC: QuizSource = { title: 'Overcoming catastrophic forgetting（arXiv 1612.00796）', url: 'https://arxiv.org/abs/1612.00796' }
+const LORALESS: QuizSource = { title: 'LoRA Learns Less and Forgets Less（arXiv 2405.09673）', url: 'https://arxiv.org/abs/2405.09673' }
+const NUCLEUS: QuizSource = { title: 'The Curious Case of Neural Text Degeneration（arXiv 1904.09751）', url: 'https://arxiv.org/abs/1904.09751' }
+const HALLU: QuizSource = { title: 'A Survey on Hallucination in LLMs（arXiv 2311.05232）', url: 'https://arxiv.org/abs/2311.05232' }
+const AMPDOC: QuizSource = { title: 'PyTorch 文档：Automatic Mixed Precision', url: 'https://docs.pytorch.org/docs/stable/amp.html' }
+const BF16: QuizSource = { title: 'Google Cloud 文档：bfloat16 数值格式', url: 'https://cloud.google.com/tpu/docs/bfloat16' }
+const RECIPE: QuizSource = { title: 'A Recipe for Training Neural Networks（Karpathy, 2019）', url: 'https://karpathy.github.io/2019/04/25/recipe/' }
+const DLBOOK_PRAC: QuizSource = { title: 'Deep Learning（Goodfellow 等）第 11 章 实践方法论', url: 'https://www.deeplearningbook.org/contents/guidelines.html' }
+const CODEX: QuizSource = { title: 'Evaluating LLMs Trained on Code / HumanEval（arXiv 2107.03374）', url: 'https://arxiv.org/abs/2107.03374' }
+const SWEAGENT: QuizSource = { title: 'SWE-agent（arXiv 2405.15793）', url: 'https://arxiv.org/abs/2405.15793' }
 
 export const QUIZ: QuizQuestion[] = [
   // ---------- 02-M1.1 自注意力机制 ----------
@@ -280,7 +304,7 @@ assert np.allclose(w - w1, 1e-3, atol=1e-6)
     question: 'BatchNorm 在推理（eval）阶段用什么统计量做归一化？',
     options: ['当前测试 batch 的均值和方差', '训练期间累积的滑动平均均值和方差（running mean / var）', '固定为均值 0、方差 1', '每个样本自己的均值方差'],
     answer: 1,
-    explanation: 'BN 论文 3.1 节：推理时用总体统计量代替 mini-batch 统计量，使输出只依赖输入本身；实现上通常是训练时维护的滑动平均。这也是 train / eval 模式必须切换的原因之一。',
+    explanation: 'BN 论文：推理时用总体统计量代替 mini-batch 统计量，使输出只依赖输入本身；实现上通常是训练时维护的滑动平均。这也是 train / eval 模式必须切换的原因之一。',
     source: BN },
   { id: 'q-01-m2-4-c', pointId: '01-M2.4', type: 'short',
     question: '比较 BatchNorm 与 LayerNorm：统计维度、对 batch 的依赖、适用场景。',
@@ -319,4 +343,376 @@ assert abs((y == 0).float().mean().item() - 0.3) < 0.02
 assert torch.equal(dropout(x, 0.3, training=False), x)`,
     explanation: '训练时随机置零并除以保留概率 1 − p，保持期望不变；推理时直接返回输入。注意 p = 1 的边界情况。',
     source: DROPOUT },
+  // ---------- 02-M2.1 LLaMA 结构选择 ----------
+  { id: 'q-02-m2-1-a', pointId: '02-M2.1', type: 'choice',
+    question: 'LLaMA（第一代）相对原始 Transformer 的三处主要结构改动，不包括下列哪一项？',
+    options: ['Pre-normalization（用 RMSNorm 归一化每个子层的输入）', 'SwiGLU 激活函数', '旋转位置编码 RoPE', '可学习的绝对位置嵌入'],
+    answer: 3,
+    explanation: 'LLaMA 论文 2.2 节列出三处改动：受 GPT-3 启发的 Pre-normalization（RMSNorm）、受 PaLM 启发的 SwiGLU、受 GPT-Neo 启发的 RoPE，并去掉了绝对位置嵌入。',
+    source: LLAMA },
+  { id: 'q-02-m2-1-b', pointId: '02-M2.1', type: 'code',
+    question: '用 PyTorch 实现 LLaMA 式 SwiGLU FFN：FFN(x) = W2(SiLU(W1 x) ⊙ W3 x)，三个线性层均无偏置。',
+    reference: `import torch, torch.nn as nn, torch.nn.functional as F
+
+class SwiGLU(nn.Module):
+    def __init__(self, dim, hidden):
+        super().__init__()
+        self.w1 = nn.Linear(dim, hidden, bias=False)   # 门控分支
+        self.w3 = nn.Linear(dim, hidden, bias=False)   # 值分支
+        self.w2 = nn.Linear(hidden, dim, bias=False)   # 输出投影
+
+    def forward(self, x):
+        return self.w2(F.silu(self.w1(x)) * self.w3(x))`,
+    tests: `m = SwiGLU(64, 172)
+x = torch.randn(2, 5, 64)
+assert m(x).shape == (2, 5, 64)
+# 参数量 = 3 · dim · hidden
+assert sum(p.numel() for p in m.parameters()) == 3 * 64 * 172`,
+    explanation: 'SwiGLU 有三个矩阵，为保持与普通 FFN（两个矩阵、隐藏层 4d）参数量相当，LLaMA 把隐藏维取为 2/3·4d。SiLU(x) = x·σ(x)，即 β = 1 的 Swish。',
+    source: GLU },
+  { id: 'q-02-m2-1-c', pointId: '02-M2.1', type: 'short',
+    question: '说明 LLaMA 选择 Pre-Norm + RMSNorm、SwiGLU、RoPE 各自的动机。',
+    keyPoints: ['Pre-Norm：归一化子层输入，提升训练稳定性', 'RMSNorm：去掉减均值，计算更省', 'SwiGLU：门控 FFN，在同等参数量下效果更好（GLU Variants 论文的实验）', 'SwiGLU 隐藏维取 2/3·4d 以保持参数量', 'RoPE：在每层对 q、k 施加相对位置信息，替代绝对位置嵌入'],
+    explanation: 'LLaMA 论文明确说明三处改动分别借鉴自 GPT-3、PaLM 与 GPT-Neo。',
+    source: LLAMA },
+
+  // ---------- 02-M2.3 MoE 混合专家 ----------
+  { id: 'q-02-m2-3-a', pointId: '02-M2.3', type: 'choice',
+    question: 'Switch Transformer 的路由与此前 MoE（如 Shazeer 2017 的 top-k，k > 1）相比，最大的简化是什么？',
+    options: ['每个 token 只路由到 1 个专家（top-1）', '去掉了门控网络', '所有专家共享参数', '每个 token 路由到全部专家'],
+    answer: 0,
+    explanation: 'Switch Transformer 把路由简化为 k = 1，减少路由计算和通信，并配合专家容量（capacity factor）与负载均衡辅助损失。',
+    source: SWITCH },
+  { id: 'q-02-m2-3-b', pointId: '02-M2.3', type: 'short',
+    question: 'MoE 为什么需要负载均衡？Switch Transformer 的辅助损失是怎么设计的？',
+    keyPoints: ['不加约束时门控容易塌缩到少数专家，其他专家得不到训练、计算资源浪费', '专家有容量上限（capacity factor），超出的 token 会被丢弃（溢出）', 'Switch 辅助损失 = α · N · Σ_i f_i · P_i', 'f_i 是被路由到专家 i 的 token 比例，P_i 是路由器分给专家 i 的平均概率', '均匀分布时该损失最小；α 取较小值（论文用 10⁻²）'],
+    explanation: 'f_i 本身不可导，乘上可导的 P_i 使损失能反传到路由器。',
+    source: SWITCH },
+  { id: 'q-02-m2-3-c', pointId: '02-M2.3', type: 'code',
+    question: '用 PyTorch 写一个 top-k 路由：输入 token 表示 x (T, d) 与路由权重 W (d, E)，返回每个 token 选中的 k 个专家下标及归一化后的门控权重。',
+    reference: `import torch
+
+def topk_route(x, W, k=2):
+    logits = x @ W                                   # (T, E)
+    top_val, top_idx = logits.topk(k, dim=-1)        # (T, k)
+    gates = torch.softmax(top_val, dim=-1)           # 只在选中的 k 个专家上归一化
+    return top_idx, gates`,
+    tests: `x, W = torch.randn(6, 16), torch.randn(16, 8)
+idx, g = topk_route(x, W, k=2)
+assert idx.shape == (6, 2) and g.shape == (6, 2)
+assert torch.allclose(g.sum(-1), torch.ones(6))
+# 选中的确实是 logits 最大的两个
+assert torch.equal(idx[:, 0], (x @ W).argmax(-1))`,
+    explanation: '对应 Shazeer 2017 的 Softmax(KeepTopK(H(x), k))：先取 top-k，未选中的置为 −∞ 再 softmax，等价于只在 k 个值上做 softmax。论文还在 logits 上加可调噪声帮助均衡。',
+    source: SGMOE },
+
+  // ---------- 02-M2.4 DeepSeek 架构专题 ----------
+  { id: 'q-02-m2-4-a', pointId: '02-M2.4', type: 'choice',
+    question: '根据 DeepSeek-V3 技术报告，模型的总参数量与每个 token 激活的参数量分别是多少？',
+    options: ['671B / 37B', '236B / 21B', '671B / 671B', '405B / 37B'],
+    answer: 0,
+    explanation: '报告摘要：671B total parameters with 37B activated for each token。236B / 21B 是 DeepSeek-V2 的数字。',
+    source: DSV3 },
+  { id: 'q-02-m2-4-b', pointId: '02-M2.4', type: 'choice',
+    question: 'DeepSeek-V3 的「无辅助损失负载均衡」是怎么做的？',
+    options: ['完全不做负载均衡', '为每个专家维护一个偏置项，只在选 top-k 时加到亲和度分数上，并按专家负载动态调整（过载调低、欠载调高）', '每个 token 随机分配专家', '把所有专家合并成一个'],
+    answer: 1,
+    explanation: '报告 2.1.2 节：偏置只用于路由选择，门控权重仍由原始亲和度计算；训练中按负载调整偏置，以减少辅助损失对模型效果的干扰（报告另保留了一个很小的序列级平衡损失）。',
+    source: DSV3 },
+  { id: 'q-02-m2-4-c', pointId: '02-M2.4', type: 'short',
+    question: '简述 DeepSeek-V3 的多 token 预测（MTP）目标与 FP8 训练。',
+    keyPoints: ['MTP：用依次串联的 MTP 模块在每个位置额外预测后续 token，保持完整的因果链', 'MTP 模块与主模型共享嵌入层和输出头', 'MTP 提供更密的训练信号；推理时可丢弃，也可用于投机解码', 'FP8 混合精度：大部分 GEMM 用 FP8 计算，对精度敏感的部分保留 BF16 / FP32', '使用细粒度（分块 / 分 tile）量化缓解 FP8 动态范围不足的问题'],
+    explanation: '以上均出自 DeepSeek-V3 技术报告 2.2 节（MTP）与 3.3 节（FP8 训练）。',
+    source: DSV3 },
+
+  // ---------- 02-M4.3 Scaling Law ----------
+  { id: 'q-02-m4-3-a', pointId: '02-M4.3', type: 'choice',
+    question: 'Chinchilla 论文关于计算最优训练的核心结论是什么？',
+    options: ['算力增加时应主要增大模型，数据量基本不变', '模型参数量与训练 token 数应等比例扩展：模型翻倍，token 数也翻倍', '应主要增加训练 token，模型不变', '模型越小越好'],
+    answer: 1,
+    explanation: '论文摘要：for every doubling of model size the number of training tokens should also be doubled。据此训练的 Chinchilla（70B，1.4T token）用与 Gopher（280B）相同的算力取得更好效果。',
+    source: CHINCHILLA },
+  { id: 'q-02-m4-3-b', pointId: '02-M4.3', type: 'code',
+    question: '用近似 C ≈ 6·N·D（N 参数量，D 训练 token 数）和「每参数约 20 个 token」的经验比例，写函数根据算力预算 C（FLOPs）估算计算最优的 N 与 D。',
+    reference: `import math
+
+def chinchilla_optimal(C, tokens_per_param=20):
+    # C = 6 N D,  D = r N  =>  N = sqrt(C / (6 r))
+    N = math.sqrt(C / (6 * tokens_per_param))
+    D = tokens_per_param * N
+    return N, D`,
+    tests: `N, D = chinchilla_optimal(6 * 70e9 * 1.4e12)
+assert abs(N / 70e9 - 1) < 0.01 and abs(D / 1.4e12 - 1) < 0.01   # 还原 Chinchilla 70B / 1.4T
+assert abs(6 * N * D - 6 * 70e9 * 1.4e12) / (6 * 70e9 * 1.4e12) < 1e-9`,
+    explanation: '6ND 是 Kaplan 论文中训练算力的常用近似（前向约 2N、反向约 4N FLOPs/token）；20 token/参数由 Chinchilla 70B / 1.4T 推出，是粗略经验值。',
+    source: CHINCHILLA },
+  { id: 'q-02-m4-3-c', pointId: '02-M4.3', type: 'short',
+    question: '对比 Kaplan（2020）与 Chinchilla（2022）两篇 Scaling Law 工作的结论差异。',
+    keyPoints: ['Kaplan：损失与模型大小、数据量、算力分别呈幂律关系', 'Kaplan：大模型样本效率更高，计算最优是训练很大的模型、用相对少的数据、在收敛前停止', 'Chinchilla：模型和数据应等比例扩展，当时的大模型普遍训练不足（token 太少）', 'Chinchilla 用三种方法拟合（固定模型族改变 token、IsoFLOP 曲线、参数化损失拟合）得到一致结论', '实践影响：同等算力下更小的模型训练更多 token，推理也更便宜'],
+    explanation: 'Kaplan 摘要原话：optimally compute-efficient training involves training very large models on a relatively modest amount of data and stopping significantly before convergence。',
+    source: KAPLAN },
+
+  // ---------- 02-M4.5 训练稳定性 ----------
+  { id: 'q-02-m4-5-a', pointId: '02-M4.5', type: 'choice',
+    question: 'FP16 混合精度训练中，loss scaling 的作用是什么？',
+    options: ['加快前向计算', '把损失放大后再反传，让很小的梯度值不在 FP16 中下溢为 0，更新前再缩回', '降低显存占用', '代替学习率 warmup'],
+    answer: 1,
+    explanation: 'Micikevicius 等指出很多激活梯度小于 FP16 可表示的最小值，会下溢为 0。放大损失使梯度整体平移进可表示范围，更新 FP32 主权重前再除以同一系数。',
+    source: MIXPREC },
+  { id: 'q-02-m4-5-b', pointId: '02-M4.5', type: 'choice',
+    question: 'Goyal 等的大 batch 训练中，batch 扩大 k 倍时学习率如何调整？为什么需要 warmup？',
+    options: ['学习率不变；warmup 用于节省显存', '学习率也乘以 k（线性缩放规则）；训练初期网络变化剧烈，直接用大学习率会不稳定，所以先逐步升高', '学习率除以 k；warmup 用于防止过拟合', '学习率乘以 √k；不需要 warmup'],
+    answer: 1,
+    explanation: '论文提出 Linear Scaling Rule，并用 gradual warmup（前若干 epoch 从小学习率线性升到目标值）解决训练初期的优化困难。',
+    source: GOYAL },
+  { id: 'q-02-m4-5-c', pointId: '02-M4.5', type: 'short',
+    question: '大模型预训练中出现 loss spike，PaLM 是怎么处理的？还有哪些常见的预防手段？',
+    keyPoints: ['PaLM：从 spike 前约 100 步的检查点重启，并跳过约 200–500 个数据 batch', 'PaLM 观察到 spike 不是由单个坏 batch 引起，而是特定数据与参数状态的组合', '预防：学习率 warmup 与合适的峰值学习率', '预防：梯度裁剪、用 BF16 替代 FP16、监控梯度范数', '预防：Pre-Norm 等更稳定的结构'],
+    explanation: 'PaLM 论文 Training Instability 一节 描述了上述「回滚 + 跳过数据」的做法。',
+    source: PALM },
+
+  // ---------- 02-M4.6 评测体系 ----------
+  { id: 'q-02-m4-6-a', pointId: '02-M4.6', type: 'choice',
+    question: 'MMLU 基准由什么构成？',
+    options: ['57 个学科的多项选择题，覆盖 STEM、人文、社科等', '164 道 Python 编程题', '多轮对话的人工偏好打分', '数学竞赛证明题'],
+    answer: 0,
+    explanation: 'MMLU 包含 57 个任务（初等数学、美国历史、计算机科学、法律等），以零样本 / 少样本多选题形式评测知识与问题求解能力。164 道 Python 题是 HumanEval。',
+    source: MMLU },
+  { id: 'q-02-m4-6-b', pointId: '02-M4.6', type: 'short',
+    question: 'LLM-as-a-Judge 有哪些已知偏差？如何缓解？',
+    keyPoints: ['位置偏差：倾向于某个位置（如第一个）的回答', '冗长偏差：倾向于更长的回答', '自我增强偏差：倾向于自己（或同源模型）生成的回答', '缓解：交换两个回答的位置各评一次，不一致则判平局或丢弃', '缓解：给参考答案 / 思维链引导评分，并与人工标注做一致性校准'],
+    explanation: '论文发现 GPT-4 作为评委与人类偏好的一致率超过 80%，与人类之间的一致率相当，但需注意上述偏差。',
+    source: JUDGE },
+  { id: 'q-02-m4-6-c', pointId: '02-M4.6', type: 'choice',
+    question: 'GPT-3 论文是用什么方法检测评测集与训练数据的重叠（数据污染）的？',
+    options: ['人工逐条比对', '统计 13-gram 重叠，把与训练集有重叠的样本标为可能污染，再比较干净子集上的效果', '比较困惑度', '不做检测'],
+    answer: 1,
+    explanation: 'GPT-3 论文第 4 节与附录 C 用 13-gram 重叠过滤，并在去除重叠后的「干净」子集上重新评测，以估计污染的影响。',
+    source: GPT3 },
+
+  // ---------- 02-M5.1 全参 vs PEFT ----------
+  { id: 'q-02-m5-1-a', pointId: '02-M5.1', type: 'choice',
+    question: 'LoRA 论文报告，与用 Adam 全参微调 GPT-3 175B 相比，LoRA 能把可训练参数和显存需求分别降低多少？',
+    options: ['10 倍 / 10 倍', '10,000 倍 / 3 倍', '100 倍 / 100 倍', '3 倍 / 10,000 倍'],
+    answer: 1,
+    explanation: '摘要原文：reduce the number of trainable parameters by 10,000 times and the GPU memory requirement by 3 times。显存只降 3 倍，是因为冻结的基座权重仍要放在显存里。',
+    source: LORA },
+  { id: 'q-02-m5-1-b', pointId: '02-M5.1', type: 'choice',
+    question: 'QLoRA 的三项关键技术是？',
+    options: ['4-bit NormalFloat（NF4）、双重量化、分页优化器', 'FP8 训练、MoE、MTP', '知识蒸馏、剪枝、早停', 'Adapter、Prefix Tuning、Prompt Tuning'],
+    answer: 0,
+    explanation: 'QLoRA 把冻结基座量化为 4-bit NF4，对量化常数再量化（double quantization），用 paged optimizers 应对显存峰值，梯度经量化基座反传到 LoRA 适配器，能在单张 48GB GPU 上微调 65B 模型。',
+    source: QLORA },
+  { id: 'q-02-m5-1-c', pointId: '02-M5.1', type: 'short',
+    question: '什么时候选全参微调，什么时候选 PEFT（如 LoRA）？',
+    keyPoints: ['PEFT 只训练少量参数，显存与存储开销小，一个基座可挂多个任务适配器', 'LoRA 合并后无额外推理延迟', '全参微调可塑性最强，适合数据量大、与预训练分布差异大的任务（如继续预训练、新领域 / 新语言）', 'PEFT 改动小，对原有能力的遗忘通常更少', '资源受限可结合量化（QLoRA）'],
+    explanation: 'LoRA Learns Less and Forgets Less 的实验发现：在代码、数学等目标领域 LoRA 通常不及全参微调，但更好地保留了基座在原任务上的能力。',
+    source: LORALESS },
+
+  // ---------- 02-M5.2 LoRA ----------
+  { id: 'q-02-m5-2-a', pointId: '02-M5.2', type: 'choice',
+    question: 'LoRA 中 ΔW = BA，A 与 B 是如何初始化的？为什么？',
+    options: ['A、B 都初始化为 0', 'A 随机高斯初始化、B 初始化为 0，使训练开始时 ΔW = 0，模型输出与原模型一致', 'A 为 0、B 随机，使梯度为 0', '都用预训练权重的奇异向量初始化'],
+    answer: 1,
+    explanation: 'LoRA 论文：A 用随机高斯初始化，B 初始化为 0，所以开始时 ΔW = BA = 0；ΔW 再按 α/r 缩放。若两者都为 0 则梯度也为 0，无法训练。',
+    source: LORA },
+  { id: 'q-02-m5-2-b', pointId: '02-M5.2', type: 'code',
+    question: '用 PyTorch 实现 LoRALinear：包住一个冻结的 nn.Linear，加上秩为 r 的旁路 BA，输出 = base(x) + (α/r)·x Aᵀ Bᵀ。',
+    reference: `import math, torch, torch.nn as nn
+
+class LoRALinear(nn.Module):
+    def __init__(self, base: nn.Linear, r=8, alpha=16):
+        super().__init__()
+        self.base = base
+        for p in self.base.parameters():
+            p.requires_grad_(False)
+        self.A = nn.Parameter(torch.randn(r, base.in_features) / math.sqrt(r))
+        self.B = nn.Parameter(torch.zeros(base.out_features, r))
+        self.scale = alpha / r
+
+    def forward(self, x):
+        return self.base(x) + (x @ self.A.T @ self.B.T) * self.scale
+
+    @torch.no_grad()
+    def merge(self):   # 推理前合并，无额外延迟
+        self.base.weight += self.scale * self.B @ self.A`,
+    tests: `base = nn.Linear(32, 16)
+m = LoRALinear(base, r=4)
+x = torch.randn(3, 32)
+assert torch.allclose(m(x), base(x))                  # 初始 ΔW = 0
+assert sum(p.numel() for p in m.parameters() if p.requires_grad) == 4 * (32 + 16)
+m.B.data.normal_(); y = m(x); m.merge()
+assert torch.allclose(base(x), y, atol=1e-5)          # 合并后结果一致`,
+    explanation: '要点：基座冻结；B 零初始化；缩放系数 α/r；合并后 W = W0 + (α/r)BA，推理不增加计算。',
+    source: LORA },
+  { id: 'q-02-m5-2-c', pointId: '02-M5.2', type: 'choice',
+    question: 'LoRA 为什么不会引入额外的推理延迟（相比 Adapter 层）？',
+    options: ['因为 LoRA 只在训练时使用', '训练完可把 BA 直接加到 W0 上合并成一个矩阵，推理结构与原模型完全相同', '因为 LoRA 用了更快的 kernel', '因为 LoRA 减少了层数'],
+    answer: 1,
+    explanation: 'LoRA 论文强调：部署时显式计算 W = W0 + BA 并照常推理，没有额外延迟；Adapter 则在网络中串行插入新层，会增加推理延迟。',
+    source: LORA },
+
+  // ---------- 02-M5.5 微调实践 ----------
+  { id: 'q-02-m5-5-a', pointId: '02-M5.5', type: 'choice',
+    question: 'EWC（Elastic Weight Consolidation）缓解灾难性遗忘的思路是？',
+    options: ['回放全部旧数据', '在新任务损失上加一个二次惩罚，按 Fisher 信息衡量各参数对旧任务的重要性，限制重要参数偏离旧值', '为每个任务训练独立模型', '冻结所有层'],
+    answer: 1,
+    explanation: 'EWC 论文：对旧任务重要的权重（Fisher 信息大）学习得更慢，像被弹簧拉回旧值。',
+    source: EWC },
+  { id: 'q-02-m5-5-b', pointId: '02-M5.5', type: 'short',
+    question: '小样本微调大模型容易过拟合，有哪些实用手段？',
+    keyPoints: ['用 PEFT（LoRA 等）减少可训练参数', '降低学习率、减少 epoch，按验证集早停', '保证数据质量与多样性，必要时做数据增强 / 改写', '混入通用数据，兼顾防遗忘', '加正则（weight decay、dropout），并留出独立验证集监控'],
+    explanation: 'DL 书第 11 章的实践方法论：先确定指标与验证集，再据训练 / 验证误差判断是过拟合还是欠拟合并对症调整。',
+    source: DLBOOK_PRAC },
+  { id: 'q-02-m5-5-c', pointId: '02-M5.5', type: 'choice',
+    question: '根据 LoRA Learns Less and Forgets Less 的实验，LoRA 与全参微调相比：',
+    options: ['在目标领域学得更多、遗忘也更多', '在目标领域通常不及全参微调，但对基座原有能力的遗忘更少', '两者完全一样', 'LoRA 无法用于代码和数学'],
+    answer: 1,
+    explanation: '论文在代码和数学上对比两者：LoRA 目标领域效果多数情况下不如全参，但更好地保持了基座在目标领域之外任务上的表现，且比 weight decay、dropout 等正则更能缓解遗忘。',
+    source: LORALESS },
+
+  // ---------- 02-M6.1 解码策略 ----------
+  { id: 'q-02-m6-1-a', pointId: '02-M6.1', type: 'choice',
+    question: 'Nucleus（top-p）采样是怎么选候选集的？',
+    options: ['固定取概率最高的 k 个 token', '取累计概率刚好达到 p 的最小 token 集合，在其中重新归一化后采样', '只取概率最高的 1 个', '从整个词表均匀采样'],
+    answer: 1,
+    explanation: 'Holtzman 等提出 top-p：候选集大小随分布形状动态变化——分布尖时集合小，分布平时集合大，而 top-k 的 k 是固定的。',
+    source: NUCLEUS },
+  { id: 'q-02-m6-1-b', pointId: '02-M6.1', type: 'code',
+    question: '用 PyTorch 实现带 temperature 的 top-p 采样：输入一维 logits，返回采样到的 token id。',
+    reference: `import torch
+
+def sample_top_p(logits, p=0.9, temperature=1.0):
+    probs = torch.softmax(logits / temperature, dim=-1)
+    sorted_p, sorted_idx = probs.sort(descending=True)
+    cum = sorted_p.cumsum(-1)
+    keep = cum - sorted_p < p            # 保留到累计概率首次 ≥ p 的那个 token
+    sorted_p = sorted_p * keep
+    sorted_p = sorted_p / sorted_p.sum()
+    choice = torch.multinomial(sorted_p, 1)
+    return sorted_idx[choice].item()`,
+    tests: `logits = torch.tensor([5.0, 4.0, 0.0, -1.0])
+# p 很小时退化为贪心
+assert all(sample_top_p(logits, p=0.01) == 0 for _ in range(50))
+# 概率 0 附近的长尾 token 不应被采到
+ids = {sample_top_p(logits, p=0.9) for _ in range(500)}
+assert ids <= {0, 1}`,
+    explanation: '要点：先除以 temperature 再 softmax；排序后用「累计概率减去自身 < p」保证至少保留一个 token；截断后重新归一化。',
+    source: NUCLEUS },
+  { id: 'q-02-m6-1-c', pointId: '02-M6.1', type: 'short',
+    question: '比较 greedy、beam search、top-k、top-p 和 temperature 的特点与适用场景。',
+    keyPoints: ['greedy：每步取最大概率，确定性强，开放式生成易重复', 'beam search：保留多条候选求近似最大似然，适合翻译等有标准答案的任务；开放式生成易平淡重复', 'top-k：固定截断 k 个候选，k 不随分布自适应', 'top-p：按累计概率动态截断，兼顾多样性与质量', 'temperature：缩放 logits，T < 1 更尖锐保守，T > 1 更平坦多样，T → 0 趋近 greedy'],
+    explanation: 'Holtzman 等发现以最大似然为目标的解码（含 beam search）在开放式生成中会产生乏味、重复的文本（degeneration）。',
+    source: NUCLEUS },
+
+  // ---------- 02-M6.3 幻觉 ----------
+  { id: 'q-02-m6-3-a', pointId: '02-M6.3', type: 'choice',
+    question: 'Huang 等的幻觉综述把 LLM 幻觉分为哪两大类？',
+    options: ['事实性幻觉与忠实性幻觉', '语法幻觉与语义幻觉', '训练幻觉与推理幻觉', '视觉幻觉与文本幻觉'],
+    answer: 0,
+    explanation: '事实性幻觉（factuality）指输出与可验证的真实世界事实不符或捏造；忠实性幻觉（faithfulness）指输出偏离用户指令、给定上下文或自身逻辑。',
+    source: HALLU },
+  { id: 'q-02-m6-3-b', pointId: '02-M6.3', type: 'choice',
+    question: '按该综述的分类，「用户要求把一段话翻译成英文，模型却回答了其中的问题」属于哪类幻觉？',
+    options: ['事实捏造', '忠实性幻觉中的指令不一致', '事实不一致', '不属于幻觉'],
+    answer: 1,
+    explanation: '综述把忠实性幻觉细分为指令不一致（instruction inconsistency）、上下文不一致和逻辑不一致；偏离用户指令属于第一种。',
+    source: HALLU },
+  { id: 'q-02-m6-3-c', pointId: '02-M6.3', type: 'short',
+    question: '幻觉从哪些环节产生？分别有什么缓解手段？',
+    keyPoints: ['数据：预训练数据中的错误、过时信息与知识长尾', '训练：预训练 / 对齐阶段的目标与能力不匹配（如迎合用户、超出知识边界作答）', '推理：解码随机性、注意力对长上下文的利用不足', '缓解：数据清洗与去重、检索增强（RAG）引入外部知识', '缓解：对齐阶段鼓励承认不知道、事实性解码与事后校验 / 引用'],
+    explanation: '综述按数据、训练、推理三阶段归纳成因，并对应整理了缓解方法。',
+    source: HALLU },
+
+  // ---------- 02-M7.3 训练稳定性调试 ----------
+  { id: 'q-02-m7-3-a', pointId: '02-M7.3', type: 'choice',
+    question: '为什么用 BF16 训练通常比 FP16 更不容易溢出？',
+    options: ['BF16 尾数位更多，精度更高', 'BF16 有 8 位指数，动态范围与 FP32 相同；代价是尾数只有 7 位、精度较低', 'BF16 占用 32 位', 'BF16 不参与反向传播'],
+    answer: 1,
+    explanation: 'Google 文档：bfloat16 为 1 位符号、8 位指数、7 位尾数，指数位与 FP32 一致；FP16 只有 5 位指数，容易上溢 / 下溢。',
+    source: BF16 },
+  { id: 'q-02-m7-3-b', pointId: '02-M7.3', type: 'choice',
+    question: 'PyTorch 的 GradScaler（动态 loss scaling）检测到梯度中出现 inf / NaN 时会怎么做？',
+    options: ['终止训练', '跳过这一步的 optimizer.step()，并调小缩放系数', '把 inf 替换成 0 继续更新', '把学习率调大'],
+    answer: 1,
+    explanation: 'PyTorch AMP 文档：scaler.step() 会先反缩放梯度，若含 inf / NaN 则跳过本次参数更新；scaler.update() 随后降低 scale，连续若干步正常后再逐步增大。',
+    source: AMPDOC },
+  { id: 'q-02-m7-3-c', pointId: '02-M7.3', type: 'short',
+    question: '训练中 loss 突然变成 NaN，给出一套排查思路。',
+    keyPoints: ['定位首次出现 NaN 的步，检查该步的数据（空样本、异常长度、标签越界）', '监控梯度范数 / 各层激活与权重范数，找到最先异常的层', '检查数值操作：log(0)、除以 0、softmax / exp 溢出、eps 设置', '混合精度：确认 loss scaling 是否生效，考虑切到 BF16 或让敏感算子用 FP32', '降低学习率、加 / 收紧梯度裁剪、延长 warmup，从最近的健康检查点恢复'],
+    explanation: '思路与 Karpathy 的训练 recipe 一致：先保证可复现、逐步加复杂度，并对每个环节做可视化 / 监控。',
+    source: RECIPE },
+
+  // ---------- 02-M8.1 复杂度手推 ----------
+  { id: 'q-02-m8-1-a', pointId: '02-M8.1', type: 'choice',
+    question: '序列长 n、模型维度 d 时，一层自注意力中 QKᵀ 与「注意力权重 × V」两次矩阵乘的总 FLOPs 约为多少（一次乘加记 2 FLOPs）？',
+    options: ['2·n·d', '4·n²·d', 'n²', '8·n·d²'],
+    answer: 1,
+    explanation: 'QKᵀ：(n×d)·(d×n) 约 2n²d FLOPs；权重 (n×n) 乘 V (n×d) 也约 2n²d，合计约 4n²d。Q/K/V/O 四个投影另需约 8nd² FLOPs，与 n 成线性。',
+    source: AIAYN },
+  { id: 'q-02-m8-1-b', pointId: '02-M8.1', type: 'code',
+    question: '写函数计算 KV Cache 显存（字节）：参数为层数 L、KV 头数 n_kv、每头维度 d_h、序列长度 s、batch 大小 b、每元素字节数 bytes。',
+    reference: `def kv_cache_bytes(L, n_kv, d_h, s, b=1, bytes_per=2):
+    # 2 = K 和 V 各一份
+    return 2 * L * n_kv * d_h * s * b * bytes_per`,
+    tests: `# 32 层、32 个 KV 头、每头 128 维、FP16、4096 token、batch 1
+assert kv_cache_bytes(32, 32, 128, 4096) == 2 * 1024**3        # 2 GiB
+# 改为 GQA 8 个 KV 头：变为 1/4
+assert kv_cache_bytes(32, 8, 128, 4096) == 512 * 1024**2`,
+    explanation: '每 token 每层要存 K、V 各 n_kv·d_h 个元素。MHA 下 n_kv = 头数，GQA 下为组数，MQA 下为 1——这正是 GQA 论文降低显存带宽的出发点。',
+    source: GQA },
+  { id: 'q-02-m8-1-c', pointId: '02-M8.1', type: 'choice',
+    question: '自回归解码时使用 KV Cache，生成第 t 个 token 的注意力计算量与 t 的关系是？',
+    options: ['与 t 无关', '与 t 成线性：新 query 只需与已缓存的 t 个 key / value 交互', '与 t² 成正比', '与 t³ 成正比'],
+    answer: 1,
+    explanation: '有 KV Cache 时每步只算新 token 的 q、k、v，注意力是 1×t 的打分，约 O(t·d)；不缓存则每步都要对整个前缀重算，单步约 O(t²·d)。',
+    source: MQA },
+
+  // ---------- 02-M8.2 Loss 不降系统排查 ----------
+  { id: 'q-02-m8-2-a', pointId: '02-M8.2', type: 'choice',
+    question: 'Karpathy 的训练 recipe 中，排查训练管线正确性时推荐的一个关键步骤是？',
+    options: ['直接上最大模型训练', '先在一个很小的 batch 上过拟合，确认能把 loss 压到接近 0', '先调 dropout', '先换优化器'],
+    answer: 1,
+    explanation: 'Recipe 的「overfit one batch」：用少量样本把 loss 训到极低，做不到说明代码、标签或损失有 bug，而不是模型容量问题。',
+    source: RECIPE },
+  { id: 'q-02-m8-2-b', pointId: '02-M8.2', type: 'short',
+    question: '训练 loss 一直不下降，给出系统的排查顺序。',
+    keyPoints: ['检查数据：输入与标签是否对齐、预处理 / tokenizer 是否正确，可视化送进模型前的样本', '检查初始 loss 是否符合预期（如分类约为 ln(类别数)）', '在小 batch 上过拟合，验证管线与损失实现', '学习率：过大发散 / 震荡，过小几乎不动；做学习率扫描', '检查梯度：是否为 0 / 被 detach、参数是否被冻结、优化器是否拿到了正确的参数组'],
+    explanation: 'Karpathy recipe 建议从简单可验证的基线开始、逐步加复杂度，并检查初始化时的 loss。',
+    source: RECIPE },
+  { id: 'q-02-m8-2-c', pointId: '02-M8.2', type: 'choice',
+    question: '一个 10 分类模型刚初始化（输出近似均匀）时，交叉熵 loss 大约应是多少？',
+    options: ['0', 'ln 10 ≈ 2.30', '10', '1'],
+    answer: 1,
+    explanation: '均匀预测下每个样本 −log(1/10) = ln 10 ≈ 2.303。Recipe 建议核对初始 loss，明显偏离通常说明初始化或损失实现有问题。',
+    source: RECIPE },
+
+  // ---------- 02-M9.4 代码 Agent 与执行反馈 ----------
+  { id: 'q-02-m9-4-a', pointId: '02-M9.4', type: 'code',
+    question: 'HumanEval 用无偏估计计算 pass@k：每题生成 n 个样本、其中 c 个通过，pass@k = 1 − C(n−c, k)/C(n, k)。写一个数值稳定的实现。',
+    reference: `import numpy as np
+
+def pass_at_k(n, c, k):
+    if n - c < k:
+        return 1.0
+    # 1 - prod_{i=n-c+1}^{n} (1 - k/i)，避免直接算大组合数
+    return 1.0 - np.prod(1.0 - k / np.arange(n - c + 1, n + 1))`,
+    tests: `from math import comb
+for n, c, k in [(10, 3, 1), (20, 5, 5), (200, 13, 10)]:
+    assert abs(pass_at_k(n, c, k) - (1 - comb(n - c, k) / comb(n, k))) < 1e-12
+assert abs(pass_at_k(10, 3, 1) - 0.3) < 1e-12   # k = 1 时就是通过率
+assert pass_at_k(5, 3, 3) == 1.0`,
+    explanation: 'Codex 论文指出直接用 1 − (1 − p̂)^k 有偏，并给出与上面相同的数值稳定实现。',
+    source: CODEX },
+  { id: 'q-02-m9-4-b', pointId: '02-M9.4', type: 'choice',
+    question: 'SWE-agent 论文的核心概念「Agent-Computer Interface（ACI）」指什么？',
+    options: ['一种新的模型结构', '为 LM Agent 专门设计的命令与反馈界面（如文件查看、搜索、编辑命令及其输出格式），而不是直接给它人类用的 shell', '一种硬件接口', '一个代码基准'],
+    answer: 1,
+    explanation: '论文指出 LM Agent 是一类新的终端用户，为它定制的 ACI 能显著提升其创建、编辑代码文件、浏览仓库和运行测试的能力。',
+    source: SWEAGENT },
+  { id: 'q-02-m9-4-c', pointId: '02-M9.4', type: 'short',
+    question: '代码 Agent 如何利用执行反馈来改进结果？',
+    keyPoints: ['循环：生成 / 修改代码 → 运行（测试、编译、复现脚本）→ 读取报错与输出 → 再修改', '先写复现问题的脚本或测试，用它判断是否修好', '界面设计：简洁、结构化的命令反馈（如编辑后立即做语法检查）减少无效步骤', '控制上下文：只展示相关文件片段与截断后的日志，避免淹没关键信息', '多次采样 + 用测试筛选（pass@k 思想）'],
+    explanation: 'SWE-agent 的 ACI 设计（如编辑命令附带 linter、搜索结果摘要）就是围绕高质量执行反馈展开的。',
+    source: SWEAGENT },
 ]
