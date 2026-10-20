@@ -78,6 +78,50 @@ const RECOMP: QuizSource = { title: 'Reducing Activation Recomputation（arXiv 2
 const MEGATRON: QuizSource = { title: 'Megatron-LM（arXiv 1909.08053）', url: 'https://arxiv.org/abs/1909.08053' }
 const GPIPE: QuizSource = { title: 'GPipe（arXiv 1811.06965）', url: 'https://arxiv.org/abs/1811.06965' }
 const FSDP: QuizSource = { title: 'PyTorch FSDP（arXiv 2304.11277）', url: 'https://arxiv.org/abs/2304.11277' }
+const AGSURVEY: QuizSource = { title: 'The Rise and Potential of LLM Based Agents（arXiv 2309.07864）', url: 'https://arxiv.org/abs/2309.07864' }
+const WENG: QuizSource = { title: 'LLM Powered Autonomous Agents（Lilian Weng, 2023）', url: 'https://lilianweng.github.io/posts/2023-06-23-agent/' }
+const BEA: QuizSource = { title: 'Building effective agents（Anthropic）', url: 'https://www.anthropic.com/engineering/building-effective-agents' }
+const SC: QuizSource = { title: 'Self-Consistency（arXiv 2203.11171）', url: 'https://arxiv.org/abs/2203.11171' }
+const ZSCOT: QuizSource = { title: 'Large Language Models are Zero-Shot Reasoners（arXiv 2205.11916）', url: 'https://arxiv.org/abs/2205.11916' }
+const REACT: QuizSource = { title: 'ReAct（arXiv 2210.03629）', url: 'https://arxiv.org/abs/2210.03629' }
+const REFLEXION: QuizSource = { title: 'Reflexion（arXiv 2303.11366）', url: 'https://arxiv.org/abs/2303.11366' }
+const METR: QuizSource = { title: 'Measuring AI Ability to Complete Long Software Tasks（arXiv 2503.14499）', url: 'https://arxiv.org/abs/2503.14499' }
+const OSWORLD: QuizSource = { title: 'OSWorld（arXiv 2404.07972）', url: 'https://arxiv.org/abs/2404.07972' }
+const WEBARENA: QuizSource = { title: 'WebArena（arXiv 2307.13854）', url: 'https://arxiv.org/abs/2307.13854' }
+const OAI_FC: QuizSource = { title: 'OpenAI 文档：Function calling', url: 'https://developers.openai.com/api/docs/guides/function-calling' }
+const TOOLFORMER: QuizSource = { title: 'Toolformer（arXiv 2302.04761）', url: 'https://arxiv.org/abs/2302.04761' }
+const MCP_ARCH: QuizSource = { title: 'MCP 官方文档：Architecture overview', url: 'https://modelcontextprotocol.io/docs/learn/architecture' }
+const CTXENG: QuizSource = { title: 'Effective context engineering for AI agents（Anthropic）', url: 'https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents' }
+const MEMGPT: QuizSource = { title: 'MemGPT（arXiv 2310.08560）', url: 'https://arxiv.org/abs/2310.08560' }
+const GENAGENTS: QuizSource = { title: 'Generative Agents（arXiv 2304.03442）', url: 'https://arxiv.org/abs/2304.03442' }
+const MEM0: QuizSource = { title: 'Mem0（arXiv 2504.19413）', url: 'https://arxiv.org/abs/2504.19413' }
+const MEMOS: QuizSource = { title: 'MemOS（arXiv 2507.03724）', url: 'https://arxiv.org/abs/2507.03724' }
+const RAGP: QuizSource = { title: 'Retrieval-Augmented Generation（arXiv 2005.11401）', url: 'https://arxiv.org/abs/2005.11401' }
+const RAGSURVEY: QuizSource = { title: 'RAG for LLMs: A Survey（arXiv 2312.10997）', url: 'https://arxiv.org/abs/2312.10997' }
+const DPR: QuizSource = { title: 'Dense Passage Retrieval（arXiv 2004.04906）', url: 'https://arxiv.org/abs/2004.04906' }
+const HNSW: QuizSource = { title: 'HNSW（arXiv 1603.09320）', url: 'https://arxiv.org/abs/1603.09320' }
+const FAISS: QuizSource = { title: 'The Faiss library（arXiv 2401.08281）', url: 'https://arxiv.org/abs/2401.08281' }
+const BM25: QuizSource = { title: 'Elastic：Practical BM25 Part 2', url: 'https://www.elastic.co/blog/practical-bm25-part-2-the-bm25-algorithm-and-its-variables' }
+const RRF: QuizSource = { title: 'Elasticsearch 文档：Reciprocal rank fusion', url: 'https://www.elastic.co/docs/reference/elasticsearch/rest-apis/reciprocal-rank-fusion' }
+const COLBERT: QuizSource = { title: 'ColBERT（arXiv 2004.12832）', url: 'https://arxiv.org/abs/2004.12832' }
+const MONOBERT: QuizSource = { title: 'Passage Re-ranking with BERT（arXiv 1901.04085）', url: 'https://arxiv.org/abs/1901.04085' }
+const HYDE: QuizSource = { title: 'HyDE（arXiv 2212.10496）', url: 'https://arxiv.org/abs/2212.10496' }
+const SELFRAG: QuizSource = { title: 'Self-RAG（arXiv 2310.11511）', url: 'https://arxiv.org/abs/2310.11511' }
+const GRAPHRAG: QuizSource = { title: 'GraphRAG（arXiv 2404.16130）', url: 'https://arxiv.org/abs/2404.16130' }
+const RAGFUSION: QuizSource = { title: 'RAG-Fusion（arXiv 2402.03367）', url: 'https://arxiv.org/abs/2402.03367' }
+const REWRITE: QuizSource = { title: 'Query Rewriting for RAG（arXiv 2305.14283）', url: 'https://arxiv.org/abs/2305.14283' }
+const INJECT: QuizSource = { title: 'Not what you have signed up for: 间接提示注入（arXiv 2302.12173）', url: 'https://arxiv.org/abs/2302.12173' }
+const OWASP: QuizSource = { title: 'OWASP Top 10 for LLM Applications', url: 'https://genai.owasp.org/llm-top-10/' }
+const DUALLLM: QuizSource = { title: 'The Dual LLM pattern（Simon Willison, 2023）', url: 'https://simonwillison.net/2023/Apr/25/dual-llm-pattern/' }
+const LOSTMID: QuizSource = { title: 'Lost in the Middle（arXiv 2307.03172）', url: 'https://arxiv.org/abs/2307.03172' }
+const TOOLS_A: QuizSource = { title: 'Writing effective tools for AI agents（Anthropic）', url: 'https://www.anthropic.com/engineering/writing-tools-for-agents' }
+const SKILLS: QuizSource = { title: 'Claude 文档：Agent Skills overview', url: 'https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview' }
+const HARNESS: QuizSource = { title: 'Effective harnesses for long-running agents（Anthropic）', url: 'https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents' }
+const CC_BP: QuizSource = { title: 'Claude Code 文档：Best practices', url: 'https://code.claude.com/docs/en/best-practices' }
+const CC_PERM: QuizSource = { title: 'Claude Code 文档：Permissions', url: 'https://code.claude.com/docs/en/permissions' }
+const LG_HITL: QuizSource = { title: 'LangGraph 文档：Interrupts（human-in-the-loop）', url: 'https://langchain-ai.github.io/langgraph/concepts/human_in_the_loop/' }
+const OAI_SO: QuizSource = { title: 'OpenAI 文档：Structured outputs', url: 'https://developers.openai.com/api/docs/guides/structured-outputs' }
+const STRIPE_IDEM: QuizSource = { title: 'Stripe 文档：Idempotent requests', url: 'https://docs.stripe.com/api/idempotent_requests' }
 
 export const QUIZ: QuizQuestion[] = [
   // ---------- 02-M1.1 自注意力机制 ----------
@@ -958,4 +1002,646 @@ assert round(zero_model_state_gb(psi, 64, 3), 2) == 1.88    # 16Ψ/Nd`,
     answer: 1,
     explanation: 'PyTorch AMP 文档：autocast 为每个算子自动选择精度（如 linear、matmul 用 float16，softmax、各类归约与损失函数等倾向 float32）；FP16 训练通常配合 GradScaler 使用。',
     source: AMPDOC },
+  // ---------- 04-M1.1 Agent 定义与四要素 ----------
+  { id: 'q-04-m1-1-a', pointId: '04-M1.1', type: 'choice',
+    question: 'Lilian Weng 在 LLM Powered Autonomous Agents 中，把 LLM 作为大脑之外的 Agent 关键组件归纳为哪三项？',
+    options: ['规划（Planning）、记忆（Memory）、工具使用（Tool use）', '训练、推理、部署', '感知、渲染、存储', '编码器、解码器、注意力'],
+    answer: 0,
+    explanation: '文中把 LLM 作为 Agent 的大脑，配合三大组件：规划（任务分解与自我反思）、记忆（短期 / 长期）、工具使用（调用外部 API）。连同 LLM 本身，就是常说的「四要素」。',
+    source: WENG },
+  { id: 'q-04-m1-1-b', pointId: '04-M1.1', type: 'choice',
+    question: 'Anthropic 的 Building effective agents 如何区分 workflow 与 agent？',
+    options: ['两者没有区别', 'workflow 通过预先定义的代码路径编排 LLM 与工具；agent 由 LLM 动态决定自己的流程与工具使用', 'workflow 用多个模型，agent 只用一个模型', 'agent 不能调用工具'],
+    answer: 1,
+    explanation: '原文：Workflows are systems where LLMs and tools are orchestrated through predefined code paths. Agents ... dynamically direct their own processes and tool usage。文章建议优先用最简单的方案，确有需要再引入 agent。',
+    source: BEA },
+  { id: 'q-04-m1-1-c', pointId: '04-M1.1', type: 'short',
+    question: '用「大脑—感知—行动」框架说明 LLM Agent 的构成，并说明它与普通对话机器人的区别。',
+    keyPoints: ['大脑：LLM 负责理解、推理、规划与决策，并依托记忆', '感知：接收文本以及图像、网页、环境状态等多模态输入', '行动：调用工具 / API、操作环境，产生对外部世界的影响', '闭环：行动结果作为新观察反馈给大脑，循环直至完成目标', '区别：普通对话只生成回复；Agent 面向目标，多步自主决策并与环境交互'],
+    explanation: 'Xi 等的综述提出 brain、perception、action 三部分构成的 LLM Agent 通用框架。',
+    source: AGSURVEY },
+
+  // ---------- 04-M1.2 CoT 与 Self-Consistency ----------
+  { id: 'q-04-m1-2-a', pointId: '04-M1.2', type: 'choice',
+    question: 'Self-Consistency 是怎样改进思维链（CoT）推理的？',
+    options: ['用更大的模型', '采样多条不同的推理路径，再对最终答案做多数表决（边缘化推理路径），替代贪心解码', '让模型自己检查语法', '把推理过程删掉'],
+    answer: 1,
+    explanation: '摘要：先采样一组多样的推理路径，再选出最一致的答案；直觉是复杂问题通常有多种思路通向唯一正确答案。论文报告在 GSM8K 上提升 17.9%。',
+    source: SC },
+  { id: 'q-04-m1-2-b', pointId: '04-M1.2', type: 'choice',
+    question: 'Kojima 等提出的 Zero-shot-CoT 做法是？',
+    options: ['提供大量人工示例', '在问题后加上「Let us think step by step」之类的提示，不给示例即可引出逐步推理', '微调模型', '使用检索'],
+    answer: 1,
+    explanation: '论文标题为 Large Language Models are Zero-Shot Reasoners：只需在答案前加 Let’s think step by step 就能显著提升算术、符号推理等任务；Wei 等原始 CoT 则是少样本示例中带推理过程。',
+    source: ZSCOT },
+  { id: 'q-04-m1-2-c', pointId: '04-M1.2', type: 'code',
+    question: '实现 Self-Consistency 的聚合步骤：输入多条采样的完整回答文本，抽取每条最后出现的数字作为答案，返回出现次数最多的答案（并列时取最先出现的）。',
+    reference: `import re
+from collections import Counter
+
+def self_consistency(samples):
+    answers = []
+    for s in samples:
+        nums = re.findall(r'-?\\d+(?:\\.\\d+)?', s)
+        if nums:
+            answers.append(nums[-1])
+    if not answers:
+        return None
+    counts = Counter(answers)
+    best = max(counts.values())
+    return next(a for a in answers if counts[a] == best)   # 并列取最先出现`,
+    tests: `outs = ['先算 3+4=7，再乘 2 得 14', '答案是 14', '3*2+4 = 10', '所以结果为 14。']
+assert self_consistency(outs) == '14'
+assert self_consistency(['a 1', 'b 2']) == '1'
+assert self_consistency(['没有数字']) is None`,
+    explanation: '论文的聚合方式就是对最终答案做多数表决（也讨论了按概率加权，效果相近）。答案抽取规则需与任务格式匹配。',
+    source: SC },
+
+  // ---------- 04-M1.3 ReAct ----------
+  { id: 'q-04-m1-3-a', pointId: '04-M1.3', type: 'choice',
+    question: 'ReAct 的轨迹由哪几类步骤交替构成？',
+    options: ['Thought（推理）、Action（行动）、Observation（观察）', 'Plan、Code、Test', 'Encode、Decode', 'Query、Key、Value'],
+    answer: 0,
+    explanation: 'ReAct 让模型交替生成推理轨迹与具体行动：推理用来制定和更新计划、处理异常，行动（如调用 Wikipedia API）从外部获取信息作为观察。',
+    source: REACT },
+  { id: 'q-04-m1-3-b', pointId: '04-M1.3', type: 'short',
+    question: 'ReAct 相比纯 CoT 和纯行动（Act-only）各有什么优势？',
+    keyPoints: ['相比纯 CoT：能通过行动从外部获取信息，缓解只靠参数知识带来的幻觉和错误传播', '相比纯 Act：推理轨迹帮助分解目标、跟踪进度、处理异常', '轨迹可读，便于人类理解与诊断（可解释性）', '论文在 HotpotQA / FEVER 上用 Wikipedia API，在 ALFWorld / WebShop 上做交互决策', '论文也提出 ReAct 与 CoT-SC 结合，按条件切换'],
+    explanation: '以上要点均出自 ReAct 论文的摘要与实验部分。',
+    source: REACT },
+  { id: 'q-04-m1-3-c', pointId: '04-M1.3', type: 'choice',
+    question: 'Reflexion 在 ReAct 类 Agent 之上增加了什么？',
+    options: ['更新模型权重的强化学习', '用语言形式的反思：根据任务反馈生成自我反思文本，存入记忆，供后续尝试参考（不更新权重）', '更大的上下文窗口', '多模态输入'],
+    answer: 1,
+    explanation: 'Reflexion 称为 verbal reinforcement learning：不改权重，而是把对失败的语言反思保存在情节记忆缓冲区里，指导下一次尝试。',
+    source: REFLEXION },
+
+  // ---------- 04-M1.7 长程任务与错误累积 ----------
+  { id: 'q-04-m1-7-a', pointId: '04-M1.7', type: 'choice',
+    question: 'METR 的研究用什么指标衡量 AI 完成长任务的能力？发现了什么趋势？',
+    options: ['token 吞吐量；每年翻倍', '50% 时间跨度（模型有 50% 成功率能完成的任务，人类专家需花多长时间）；自 2019 年起约每 7 个月翻一番', '参数量；每月翻倍', '基准得分；停滞不前'],
+    answer: 1,
+    explanation: '论文摘要：Claude 3.7 Sonnet 等前沿模型的 50% 时间跨度约 50 分钟，且自 2019 年以来约每七个月翻倍（2024 年可能加速）。',
+    source: METR },
+  { id: 'q-04-m1-7-b', pointId: '04-M1.7', type: 'choice',
+    question: '若 Agent 每一步独立成功的概率为 0.95，一个需要 20 步全部正确的任务成功率约为？',
+    options: ['95%', '约 36%', '约 80%', '约 5%'],
+    answer: 1,
+    explanation: '0.95²⁰ ≈ 0.358。错误累积让长程任务成功率随步数指数下降；METR 也指出时间跨度的增长主要来自可靠性提升与从错误中恢复的能力。',
+    source: METR },
+  { id: 'q-04-m1-7-c', pointId: '04-M1.7', type: 'short',
+    question: '长程任务中如何减轻错误累积？',
+    keyPoints: ['任务分解与检查点：拆成可验证的子目标，每步验证后再继续', '提供可执行的校验（测试、断言、截图对比），及早发现偏差', '反思与重试：失败时分析原因并回退到最近的正确状态', '上下文管理：压缩 / 记笔记，避免关键信息被淹没或遗忘', '人类在关键节点审批，或把高风险步骤交给确定性代码'],
+    explanation: 'METR 指出时间跨度的提升主要来自更高的可靠性和适应错误的能力；Anthropic 的上下文工程文章也推荐 compaction、结构化笔记与子 Agent 来支撑长程任务。',
+    source: CTXENG },
+
+  // ---------- 04-M1.8 Computer Use / GUI / Browser Agent ----------
+  { id: 'q-04-m1-8-a', pointId: '04-M1.8', type: 'choice',
+    question: 'OSWorld 基准的特点是？',
+    options: ['只评测纯文本问答', '在真实计算机环境（Ubuntu / Windows / macOS）中执行开放式任务，用基于执行结果的脚本评测；发布时人类成功率约 72%，最好的模型约 12%', '只评测网页购物', '只评测代码补全'],
+    answer: 1,
+    explanation: 'OSWorld 含 369 个跨真实应用与操作系统的任务；论文报告人类可完成 72.36%，当时最佳模型只有 12.24%，主要困难在 GUI grounding 与操作知识。',
+    source: OSWORLD },
+  { id: 'q-04-m1-8-b', pointId: '04-M1.8', type: 'choice',
+    question: 'WebArena 提供的是什么样的评测环境？',
+    options: ['静态网页截图问答', '可自托管的真实功能网站（电商、论坛、协作开发、内容管理等），Agent 需通过浏览器操作完成任务，按功能正确性评测', '纯 API 调用环境', '离线文本分类'],
+    answer: 1,
+    explanation: 'WebArena 搭建了四类常见领域的可交互网站及地图、维基等工具，任务以功能正确性判定；论文中最佳 GPT-4 Agent 端到端成功率仅 14.41%，人类为 78.24%。',
+    source: WEBARENA },
+  { id: 'q-04-m1-8-c', pointId: '04-M1.8', type: 'short',
+    question: 'GUI / Browser Agent 获取界面状态有哪几种方式？各有什么取舍？',
+    keyPoints: ['截图（视觉）：通用、贴近人类，但需要精确的坐标定位（grounding），token 开销大', '可访问性树 / DOM：结构化、可直接引用元素，但可能冗长或缺失信息', 'Set-of-Mark 等标注截图：在截图上给可交互元素编号，结合两者优点', '动作空间：点击、输入、滚动、快捷键等底层操作，或更高层的元素操作', '安全：真实环境中的操作可能不可逆，需要沙箱与人工确认'],
+    explanation: 'OSWorld 论文对比了截图、可访问性树、截图 + 可访问性树和 Set-of-Mark 四种输入设置。',
+    source: OSWORLD },
+
+  // ---------- 04-M2.1 Function Calling 原理 ----------
+  { id: 'q-04-m2-1-a', pointId: '04-M2.1', type: 'choice',
+    question: '在 Function Calling 中，谁真正执行函数？',
+    options: ['模型在服务器端直接执行', '模型只输出要调用的函数名与参数（结构化 JSON），由应用代码执行，再把结果作为新消息回传给模型', '浏览器自动执行', '函数不会被执行'],
+    answer: 1,
+    explanation: 'OpenAI 文档描述的流程：在请求中提供工具定义 → 模型返回 tool call → 应用执行代码 → 把工具输出发回模型 → 模型给出最终回复或继续调用。',
+    source: OAI_FC },
+  { id: 'q-04-m2-1-b', pointId: '04-M2.1', type: 'code',
+    question: '写一个工具调用分发器：给定工具注册表 {name: (func, required_params)} 和模型返回的调用 {"name":..., "arguments": JSON 字符串}，校验工具存在、参数可解析且必填参数齐全，执行并返回 {"ok": bool, "result" 或 "error"}。',
+    reference: `import json
+
+def dispatch(registry, call):
+    name = call.get('name')
+    if name not in registry:
+        return {'ok': False, 'error': f'unknown tool: {name}'}
+    func, required = registry[name]
+    try:
+        args = json.loads(call.get('arguments') or '{}')
+    except json.JSONDecodeError as e:
+        return {'ok': False, 'error': f'bad arguments: {e}'}
+    missing = [p for p in required if p not in args]
+    if missing:
+        return {'ok': False, 'error': f'missing params: {missing}'}
+    try:
+        return {'ok': True, 'result': func(**args)}
+    except Exception as e:                 # 工具异常也要回传给模型，而不是让程序崩溃
+        return {'ok': False, 'error': repr(e)}`,
+    tests: `reg = {'add': (lambda a, b: a + b, ['a', 'b'])}
+assert dispatch(reg, {'name': 'add', 'arguments': '{"a": 1, "b": 2}'}) == {'ok': True, 'result': 3}
+assert not dispatch(reg, {'name': 'mul', 'arguments': '{}'})['ok']
+assert 'missing' in dispatch(reg, {'name': 'add', 'arguments': '{"a": 1}'})['error']
+assert 'bad arguments' in dispatch(reg, {'name': 'add', 'arguments': '{a:1'})['error']`,
+    explanation: '模型生成的参数可能不合法，执行侧必须校验；错误信息应作为工具结果返回给模型，让它自行修正后重试。',
+    source: OAI_FC },
+  { id: 'q-04-m2-1-c', pointId: '04-M2.1', type: 'choice',
+    question: 'Toolformer 是怎样让模型学会使用工具的？',
+    options: ['人工标注大量工具调用数据', '自监督：让模型在文本中采样候选 API 调用并执行，只保留能降低后续 token 预测损失的调用，再用这些数据微调', '强化学习加人类反馈', '规则模板'],
+    answer: 1,
+    explanation: 'Toolformer 每个 API 只需少量示范，模型自己决定调用哪个 API、何时调用、传什么参数，并以「是否帮助预测后续文本」作为筛选标准。',
+    source: TOOLFORMER },
+
+  // ---------- 04-M2.3 MCP ----------
+  { id: 'q-04-m2-3-a', pointId: '04-M2.3', type: 'choice',
+    question: '按 MCP 官方架构文档，Host、Client、Server 的关系是？',
+    options: ['一个 Client 连接多个 Host', 'Host 是 AI 应用，内部为每个 MCP Server 维护一个对应的 MCP Client（一对一连接）', 'Server 直接调用模型', '三者是同一个进程'],
+    answer: 1,
+    explanation: '文档：MCP Host 是协调管理一个或多个 MCP Client 的 AI 应用；每个 MCP Client 与一个 MCP Server 保持连接；Server 向 Client 提供上下文。',
+    source: MCP_ARCH },
+  { id: 'q-04-m2-3-b', pointId: '04-M2.3', type: 'choice',
+    question: 'MCP Server 可以暴露的三类核心原语是？',
+    options: ['Tools、Resources、Prompts', 'Models、Datasets、Metrics', 'Agents、Skills、Memories', 'Files、Sockets、Threads'],
+    answer: 0,
+    explanation: 'Tools：可执行函数（文件操作、API 调用、数据库查询）；Resources：提供上下文的数据源；Prompts：可复用的交互模板（系统提示、少样本示例）。',
+    source: MCP_ARCH },
+  { id: 'q-04-m2-3-c', pointId: '04-M2.3', type: 'short',
+    question: '说明 MCP 的分层结构（数据层 / 传输层）与常见传输方式。',
+    keyPoints: ['数据层：基于 JSON-RPC 2.0 的协议，定义消息结构、能力 / 版本发现与各类原语', '传输层：负责连接与消息传输、认证，同一 JSON-RPC 格式可跑在不同传输上', 'STDIO 传输：本地进程间通信，本地 Server 通常只服务一个 Client', 'Streamable HTTP 传输：远程 Server，通常服务多个 Client，推荐用 OAuth 获取认证令牌', '客户端也可暴露原语（如 elicitation：Server 向用户请求补充信息或确认）'],
+    explanation: '以上均出自 MCP 官方 Architecture 文档。MCP 规范迭代较快，具体原语与弃用情况以当前版本文档为准。',
+    source: MCP_ARCH },
+
+  // ---------- 04-M3.1 短期记忆与上下文管理 ----------
+  { id: 'q-04-m3-1-a', pointId: '04-M3.1', type: 'choice',
+    question: 'Anthropic 所说的「context rot」指什么？',
+    options: ['模型权重随时间退化', '上下文中的 token 越多，模型准确回忆其中信息的能力越下降', '上下文被恶意篡改', '缓存过期'],
+    answer: 1,
+    explanation: '文章引用 needle-in-a-haystack 类研究：as the number of tokens in the context window increases, the model’s ability to accurately recall information from that context decreases，因此上下文是有限且边际收益递减的资源。',
+    source: CTXENG },
+  { id: 'q-04-m3-1-b', pointId: '04-M3.1', type: 'code',
+    question: '实现对话历史裁剪：保留 system 消息与最近的消息，使总 token 数不超过预算（token 数用 len(content)//4 近似），返回裁剪后的消息列表（保持原顺序）。',
+    reference: `def trim_history(messages, budget, count=lambda m: len(m['content']) // 4):
+    system = [m for m in messages if m['role'] == 'system']
+    rest = [m for m in messages if m['role'] != 'system']
+    used = sum(count(m) for m in system)
+    kept = []
+    for m in reversed(rest):                 # 从最新往前保留
+        c = count(m)
+        if used + c > budget:
+            break
+        kept.append(m)
+        used += c
+    return system + list(reversed(kept))`,
+    tests: `msgs = [{'role': 'system', 'content': 's' * 40}] + [
+    {'role': 'user' if i % 2 == 0 else 'assistant', 'content': str(i) * 40} for i in range(6)]
+out = trim_history(msgs, budget=40)          # system 10 + 每条 10 → 保留最近 3 条
+assert out[0]['role'] == 'system'
+assert [m['content'][0] for m in out[1:]] == ['3', '4', '5']
+assert sum(len(m['content']) // 4 for m in out) <= 40`,
+    explanation: '滑动窗口是最简单的短期记忆策略；实际系统还会把被裁掉的部分摘要化（compaction），并注意不要把工具调用与其结果拆开。',
+    source: CTXENG },
+  { id: 'q-04-m3-1-c', pointId: '04-M3.1', type: 'short',
+    question: '列举 Anthropic 推荐的长程 Agent 上下文管理技术，并说明各自做法。',
+    keyPoints: ['Compaction：对接近上限的对话做摘要，用摘要开启新的上下文窗口', '清理旧工具结果：已处理过的工具调用原始输出可以安全移除', '结构化笔记（agentic memory）：定期把进度与要点写到上下文之外，需要时再读回', '子 Agent 架构：子 Agent 在干净的上下文中完成专门任务，只返回精简结果', 'Just-in-time 检索：只保存文件路径、查询等轻量引用，运行时再按需加载'],
+    explanation: '以上均出自 Effective context engineering for AI agents。',
+    source: CTXENG },
+
+  // ---------- 04-M3.2 长期记忆 ----------
+  { id: 'q-04-m3-2-a', pointId: '04-M3.2', type: 'choice',
+    question: 'Generative Agents（斯坦福小镇）检索记忆时综合了哪三个因素打分？',
+    options: ['时效性（recency）、重要性（importance）、相关性（relevance）', '长度、语言、格式', '作者、时间、地点', '频率、词性、情感'],
+    answer: 0,
+    explanation: '记忆流中的每条记录按 recency（指数衰减）、importance（LLM 打分）和 relevance（与当前情境的嵌入相似度）加权求和，取高分记忆放入上下文；此外还有 reflection 把记忆归纳成更高层的认识。',
+    source: GENAGENTS },
+  { id: 'q-04-m3-2-b', pointId: '04-M3.2', type: 'short',
+    question: '设计长期记忆时需要处理哪些环节？',
+    keyPoints: ['写入 / 抽取：从对话中提取值得长期保存的事实、偏好与事件，而不是存全部原文', '存储与索引：向量库、键值或图结构，附带时间戳与来源', '检索：按相关性、时效性、重要性综合召回', '更新与冲突消解：新信息与旧记忆矛盾时更新、合并或删除', '遗忘：衰减或淘汰过时、低价值记忆，控制规模与隐私风险'],
+    explanation: 'Mem0 把记忆管理概括为动态抽取、整合（consolidating）与检索显著信息；其更新阶段由 LLM 决定 ADD / UPDATE / DELETE / NOOP。',
+    source: MEM0 },
+  { id: 'q-04-m3-2-c', pointId: '04-M3.2', type: 'choice',
+    question: 'Generative Agents 中的「reflection」是什么？',
+    options: ['删除旧记忆', '定期把近期观察归纳成更高层、更抽象的推断，并作为新记忆写回记忆流', '把记忆翻译成英文', '人工审核记忆'],
+    answer: 1,
+    explanation: '论文中 Agent 会周期性地基于近期记忆提问并归纳出 reflection，这些高层认识同样参与检索，帮助 Agent 做出更一致的行为。',
+    source: GENAGENTS },
+
+  // ---------- 04-M3.3 记忆框架 ----------
+  { id: 'q-04-m3-3-a', pointId: '04-M3.3', type: 'choice',
+    question: 'MemGPT 借鉴了什么系统思想来突破上下文窗口限制？',
+    options: ['数据库事务', '操作系统的分层内存与虚拟内存：在快（上下文）与慢（外部存储）存储间移动数据，并用中断管理控制流', '编译器优化', '分布式共识'],
+    answer: 1,
+    explanation: '摘要：virtual context management, a technique drawing inspiration from hierarchical memory systems in traditional operating systems。Letta 是 MemGPT 团队后续的开源框架。',
+    source: MEMGPT },
+  { id: 'q-04-m3-3-b', pointId: '04-M3.3', type: 'choice',
+    question: 'Mem0 论文提出的方法在基础版之外还给出了什么增强变体？',
+    options: ['基于图的记忆表示（Mem0 with graph memory），捕捉对话要素之间的关系', '更大的模型', '纯规则记忆', '无记忆版本'],
+    answer: 0,
+    explanation: '摘要：在动态抽取、整合、检索显著信息的基础上，进一步提出利用图结构记忆捕捉复杂关系的增强版，并在 LOCOMO 基准上与六类基线比较。',
+    source: MEM0 },
+  { id: 'q-04-m3-3-c', pointId: '04-M3.3', type: 'short',
+    question: '对比 MemGPT / Letta、Mem0、MemOS 的设计思路。',
+    keyPoints: ['MemGPT / Letta：把 LLM 当作操作系统，自主通过函数调用在主上下文与外部存储（archival / recall）之间换入换出', 'Mem0：面向生产的记忆层，从对话中抽取、整合、检索显著事实，可选图记忆', 'MemOS：把记忆作为一等系统资源统一调度，覆盖参数记忆、激活记忆与明文记忆', '共同点：都在有限上下文之外提供持久记忆并按需检索', '选型看重点：Agent 自主管理（MemGPT）/ 轻量接入（Mem0）/ 系统级统一管理（MemOS）'],
+    explanation: 'MemOS 论文提出用 MemCube 统一封装明文、激活与参数三类记忆，并像操作系统一样调度。',
+    source: MEMOS },
+  // ---------- 04-M4.1 RAG 基础流程 ----------
+  { id: 'q-04-m4-1-a', pointId: '04-M4.1', type: 'choice',
+    question: 'Lewis 等 2020 年的 RAG 模型由哪两部分记忆组成？',
+    options: ['参数记忆（预训练 seq2seq 生成器）与非参数记忆（维基百科稠密向量索引，用神经检索器访问）', '两个相同的 GPT 模型', '关系数据库与规则引擎', '只有检索器，没有生成器'],
+    answer: 0,
+    explanation: '论文把预训练 seq2seq 模型（BART）作为参数记忆，把维基百科的稠密向量索引作为非参数记忆，用预训练的神经检索器（DPR）访问，并提出 RAG-Sequence 与 RAG-Token 两种形式。',
+    source: RAGP },
+  { id: 'q-04-m4-1-b', pointId: '04-M4.1', type: 'short',
+    question: '描述一个 Naive RAG 系统的完整流程，并指出各环节常见问题。',
+    keyPoints: ['索引：文档解析、清洗、切块（chunking），用 embedding 模型向量化后写入向量库', '检索：把查询向量化，按相似度召回 top-k 片段', '生成：把检索片段与问题拼成提示，交给 LLM 生成答案并附出处', '检索侧问题：召回不准 / 不全、片段冗余或噪声', '生成侧问题：幻觉、未忠实于检索内容、上下文过长导致信息被忽略'],
+    explanation: 'Gao 等的 RAG 综述把演进分为 Naive RAG、Advanced RAG、Modular RAG，并总结了 Naive RAG 在检索、生成与增强环节的不足。',
+    source: RAGSURVEY },
+  { id: 'q-04-m4-1-c', pointId: '04-M4.1', type: 'choice',
+    question: 'DPR（Dense Passage Retrieval）的检索器结构是？',
+    options: ['单个 cross-encoder 联合编码问题和段落', '双编码器：问题与段落分别用两个 BERT 编码，用向量内积衡量相关性，段落向量可离线预计算', 'BM25', '生成式检索'],
+    answer: 1,
+    explanation: 'DPR 用 dual-encoder，在问题-段落对上用 in-batch negatives 训练，在开放域问答的 top-20 召回上大幅超过 BM25。',
+    source: DPR },
+
+  // ---------- 04-M4.2 Chunking 策略 ----------
+  { id: 'q-04-m4-2-a', pointId: '04-M4.2', type: 'choice',
+    question: '切块大小对 RAG 有什么影响？',
+    options: ['越大越好', '块太大引入噪声、稀释相关信息并占用上下文；块太小语义不完整、丢失上下文，需要在两者间权衡', '越小越好', '没有影响'],
+    answer: 1,
+    explanation: 'RAG 综述讨论了 chunk 大小的权衡：大块包含更多上下文但噪声多、处理成本高，小块噪声少但可能无法完整表达语义；常见做法还有块间重叠（滑动窗口）与小块检索、大块返回。',
+    source: RAGSURVEY },
+  { id: 'q-04-m4-2-b', pointId: '04-M4.2', type: 'code',
+    question: '实现带重叠的固定长度切块：chunk(text, size, overlap) 返回字符串列表，相邻块重叠 overlap 个字符，最后一块可以更短。',
+    reference: `def chunk(text, size=500, overlap=50):
+    assert 0 <= overlap < size
+    step = size - overlap
+    out = []
+    for start in range(0, len(text), step):
+        out.append(text[start:start + size])
+        if start + size >= len(text):
+            break
+    return out`,
+    tests: `t = ''.join(chr(97 + i % 26) for i in range(1200))
+cs = chunk(t, 500, 50)
+assert len(cs) == 3 and all(len(c) <= 500 for c in cs)
+assert cs[0][-50:] == cs[1][:50]                  # 相邻块重叠
+assert cs[0] + ''.join(c[50:] for c in cs[1:]) == t  # 去重后可还原原文
+assert chunk('abc', 10, 2) == ['abc']`,
+    explanation: '重叠能避免关键句被切断在两块之间。实际系统常按段落 / 句子 / 标题等结构边界递归切分，再控制长度。',
+    source: RAGSURVEY },
+  { id: 'q-04-m4-2-c', pointId: '04-M4.2', type: 'short',
+    question: '比较几种常见的切块策略及其适用场景。',
+    keyPoints: ['固定长度 + 重叠：简单通用，但可能切断语义', '按结构切分：按标题、段落、句子、代码函数等边界，保持语义完整', '递归切分：先按大边界切，超长再按更小边界切，兼顾结构与长度', '语义切分：按相邻句子嵌入相似度的变化点切分', '小块检索、大块返回（small-to-big）/ 给块附加标题等元数据，提升召回与上下文完整性'],
+    explanation: 'RAG 综述在索引优化部分讨论了切块策略、元数据附加与小到大检索等方法。',
+    source: RAGSURVEY },
+
+  // ---------- 04-M4.3 Embedding 与向量检索 ----------
+  { id: 'q-04-m4-3-a', pointId: '04-M4.3', type: 'choice',
+    question: 'HNSW 的核心结构是？',
+    options: ['哈希表', '多层邻近图：上层稀疏、下层稠密，查询从顶层入口贪心搜索逐层下沉，复杂度约为对数级', '倒排索引', 'B+ 树'],
+    answer: 1,
+    explanation: 'HNSW 构建分层的可导航小世界图，元素按指数衰减的概率分配到各层；查询从顶层开始贪心路由并逐层细化。',
+    source: HNSW },
+  { id: 'q-04-m4-3-b', pointId: '04-M4.3', type: 'code',
+    question: '用 NumPy 实现余弦相似度 top-k 检索：输入查询向量 q (d,) 与文档矩阵 D (n, d)，返回相似度最高的 k 个下标（降序）与对应分数。',
+    reference: `import numpy as np
+
+def cosine_topk(q, D, k=5):
+    qn = q / (np.linalg.norm(q) + 1e-12)
+    Dn = D / (np.linalg.norm(D, axis=1, keepdims=True) + 1e-12)
+    sims = Dn @ qn
+    k = min(k, len(sims))
+    idx = np.argpartition(-sims, k - 1)[:k]        # O(n) 选出前 k
+    idx = idx[np.argsort(-sims[idx])]               # 再对 k 个排序
+    return idx, sims[idx]`,
+    tests: `rng = np.random.default_rng(0)
+D = rng.normal(size=(100, 16)); q = D[42] * 3
+idx, s = cosine_topk(q, D, 5)
+assert idx[0] == 42 and abs(s[0] - 1) < 1e-9
+assert np.all(np.diff(s) <= 0)
+full = np.argsort(-(D @ q) / np.linalg.norm(D, axis=1))[:5]
+assert set(idx) == set(full)`,
+    explanation: '先归一化再做内积即余弦相似度；向量库里预先归一化后可直接用内积索引。大规模时用 HNSW / IVF-PQ 等近似最近邻替代暴力检索。',
+    source: FAISS },
+  { id: 'q-04-m4-3-c', pointId: '04-M4.3', type: 'short',
+    question: '比较暴力检索、IVF、PQ 与 HNSW 等向量索引的取舍。',
+    keyPoints: ['暴力（Flat）检索：精确，但每次查询 O(n·d)，适合小规模或做基准', 'IVF：先聚类成倒排桶，只搜索最近的若干桶（nprobe），用召回换速度', 'PQ（乘积量化）：把向量切段分别量化成码字，大幅压缩内存并加速距离计算，有精度损失', 'HNSW：图索引，召回高、查询快，但内存开销大、构建较慢', '调参在召回率、延迟、内存之间折中，可组合（如 IVF-PQ）'],
+    explanation: 'Faiss 论文系统梳理了这些索引类型及其速度、精度与内存的权衡。',
+    source: FAISS },
+
+  // ---------- 04-M4.4 BM25 与混合检索 ----------
+  { id: 'q-04-m4-4-a', pointId: '04-M4.4', type: 'choice',
+    question: 'BM25 中参数 k1 与 b 分别控制什么？',
+    options: ['k1 控制词频饱和，b 控制文档长度归一化的强度', 'k1 控制 IDF，b 控制停用词', '两者都控制向量维度', 'k1 控制学习率，b 控制 batch'],
+    answer: 0,
+    explanation: 'k1 决定词频饱和特性：限制单个查询词对得分的影响，使其趋于渐近线；b 决定文档长度归一化程度，b = 0 时不做长度归一化。',
+    source: BM25 },
+  { id: 'q-04-m4-4-b', pointId: '04-M4.4', type: 'code',
+    question: '实现倒数排名融合（RRF）：输入多路检索的排序列表（文档 id 列表，名次从 1 开始），按 score(d) = Σ 1/(k + rank) 融合，返回按分数降序的 id 列表（k 默认 60）。',
+    reference: `from collections import defaultdict
+
+def rrf(rankings, k=60):
+    score = defaultdict(float)
+    for ranking in rankings:
+        for rank, doc in enumerate(ranking, start=1):
+            score[doc] += 1.0 / (k + rank)
+    return sorted(score, key=lambda d: -score[d])`,
+    tests: `bm25 = ['a', 'b', 'c']
+dense = ['c', 'a', 'd']
+out = rrf([bm25, dense])
+assert out[0] == 'a'                 # 1/61 + 1/62 最高
+assert set(out) == {'a', 'b', 'c', 'd'}
+assert out.index('c') < out.index('b')`,
+    explanation: 'RRF 只用名次、不依赖各路分数的尺度，适合融合 BM25 与向量检索。Elasticsearch 的 rank_constant 默认值即为 60，值越大低名次文档的影响越大。',
+    source: RRF },
+  { id: 'q-04-m4-4-c', pointId: '04-M4.4', type: 'short',
+    question: '为什么要做 BM25 + 向量的混合检索？向量库选型要看哪些方面？',
+    keyPoints: ['BM25 擅长精确词匹配（专有名词、编号、代码、罕见词）', '向量检索擅长语义匹配（同义改写、跨语言），但对精确词不敏感', '两者互补，融合（RRF 或加权）通常提升召回', '选型：数据规模与索引类型、延迟 / 吞吐、内存成本', '选型：元数据过滤、增量更新、混合检索原生支持、运维与生态'],
+    explanation: 'Elasticsearch 用 RRF retriever 组合多个子检索器（如 BM25 与 kNN），各子检索器在公式中等权。',
+    source: RRF },
+
+  // ---------- 04-M4.5 重排 ----------
+  { id: 'q-04-m4-5-a', pointId: '04-M4.5', type: 'choice',
+    question: 'cross-encoder 重排器（如 monoBERT）与双编码器检索器的区别是？',
+    options: ['没有区别', 'cross-encoder 把查询与文档拼接后联合编码，直接输出相关性分数，更准但无法离线预计算文档向量，只适合对少量候选重排', 'cross-encoder 更快', 'cross-encoder 不需要训练'],
+    answer: 1,
+    explanation: 'Nogueira 与 Cho 把 BERT 用作段落重排器：输入 [CLS] 查询 [SEP] 段落，在 MS MARCO 上取得显著提升。代价是每个候选都要跑一次完整模型。',
+    source: MONOBERT },
+  { id: 'q-04-m4-5-b', pointId: '04-M4.5', type: 'choice',
+    question: 'ColBERT 的「late interaction」是怎么计算相关性的？',
+    options: ['查询与文档各压成一个向量做内积', '查询与文档分别编码为逐 token 向量；对每个查询 token 取与文档 token 的最大相似度（MaxSim），再求和', '用 BM25 打分', '交叉注意力联合编码'],
+    answer: 1,
+    explanation: 'ColBERT 分别独立编码查询与文档（文档可离线预计算），再用廉价的 MaxSim 交互求和，在表达力与效率之间取得平衡。',
+    source: COLBERT },
+  { id: 'q-04-m4-5-c', pointId: '04-M4.5', type: 'short',
+    question: '设计一个两阶段「召回 + 重排」检索流程，说明各阶段的取舍。',
+    keyPoints: ['第一阶段召回：BM25 / 双编码器 / 混合检索，追求高召回、低延迟，取几十到几百个候选', '第二阶段重排：cross-encoder 或 ColBERT 对候选精排，追求高精度', '重排后只取 top-n 放进 LLM 上下文，控制 token 成本', '延迟与成本随候选数线性增长，需要折中候选数量', '可用领域数据微调重排器，并用 nDCG / MRR 等指标评估'],
+    explanation: 'monoBERT 与 ColBERT 都定位于在初排之上重排；ColBERT 也可直接做端到端检索。',
+    source: COLBERT },
+
+  // ---------- 04-M4.6 高级 RAG ----------
+  { id: 'q-04-m4-6-a', pointId: '04-M4.6', type: 'choice',
+    question: 'HyDE 的做法是？',
+    options: ['直接用原始查询检索', '先让 LLM 针对查询生成一篇假设性文档，再用其嵌入检索真实文档；假文档可能含错误细节，由编码器的稠密瓶颈过滤', '训练一个新的检索器', '用知识图谱检索'],
+    answer: 1,
+    explanation: 'HyDE（Hypothetical Document Embeddings）在无相关性标注的零样本场景下显著优于 Contriever，接近有监督微调的检索器。',
+    source: HYDE },
+  { id: 'q-04-m4-6-b', pointId: '04-M4.6', type: 'choice',
+    question: 'Self-RAG 的关键机制是？',
+    options: ['固定每次检索 5 篇文档', '训练模型生成特殊的反思 token，按需决定是否检索，并评判检索段落与自身生成的质量', '只用 BM25', '不使用检索'],
+    answer: 1,
+    explanation: 'Self-RAG 让单个 LM 按需检索，并通过 reflection tokens 评判检索与生成，推理时可据此控制行为。',
+    source: SELFRAG },
+  { id: 'q-04-m4-6-c', pointId: '04-M4.6', type: 'short',
+    question: 'GraphRAG 和 RAG-Fusion 分别解决什么问题？怎么做？',
+    keyPoints: ['GraphRAG 针对「数据集的主题是什么」这类全局问题，普通 RAG 难以回答（本质是面向查询的摘要）', 'GraphRAG 用 LLM 从文档抽取实体知识图谱，再为紧密相关的实体社区预先生成摘要', 'GraphRAG 回答时让每个社区摘要生成部分答案，再汇总成最终回答', 'RAG-Fusion 让 LLM 生成多个改写查询分别检索', 'RAG-Fusion 用倒数排名融合（RRF）合并多路结果后再生成'],
+    explanation: 'GraphRAG 要点出自 Edge 等的摘要；RAG-Fusion 出自 Rackauckas 的论文。',
+    source: GRAPHRAG },
+
+  // ---------- 04-M4.9 生产级 RAG 调优 ----------
+  { id: 'q-04-m4-9-a', pointId: '04-M4.9', type: 'choice',
+    question: 'Rewrite-Retrieve-Read 框架的思路是？',
+    options: ['先读后检索', '在检索前加一步查询改写（可用小模型作为可训练的改写器，以 LLM 阅读器的反馈做强化学习），再检索、再阅读生成', '只检索不生成', '用规则替换同义词'],
+    answer: 1,
+    explanation: 'Ma 等提出用改写弥合输入与检索所需知识之间的差距，并用 LLM reader 的反馈通过强化学习训练小的改写模型。',
+    source: REWRITE },
+  { id: 'q-04-m4-9-b', pointId: '04-M4.9', type: 'short',
+    question: '线上 RAG 召回率不足，有哪些系统性的提升手段？',
+    keyPoints: ['先建评测集，分别度量检索召回（Recall@k / MRR）与端到端答案质量，定位瓶颈', '查询侧：改写、扩展、多查询（RAG-Fusion）、HyDE、拆分子问题', '索引侧：调整切块与重叠、补充标题等元数据、清洗解析错误', '检索侧：BM25 + 向量多路召回再融合，调大候选数后用重排精选', '针对领域微调 embedding / 重排模型，并持续收集失败案例回流'],
+    explanation: 'RAG 综述把这些归为 Advanced RAG 的检索前（pre-retrieval）与检索后（post-retrieval）优化。',
+    source: RAGSURVEY },
+  { id: 'q-04-m4-9-c', pointId: '04-M4.9', type: 'choice',
+    question: 'RAG-Fusion 论文在 Infineon 产品问答上的评估中，发现的主要问题是什么？',
+    options: ['答案普遍不准确', '当生成的改写查询与原问题相关性不足时，部分回答会偏离主题', '无法使用向量库', '必须人工标注训练数据'],
+    answer: 1,
+    explanation: '摘要：RAG-Fusion 通过从多个角度改写原查询，给出了准确且全面的回答；但 some answers strayed off topic when the generated queries’ relevance to the original query is insufficient。此外多查询意味着更多检索与 LLM 调用，系统设计时要计入成本与延迟。',
+    source: RAGFUSION },
+
+  // ---------- 04-M6.1 Agent 安全与威胁模型 ----------
+  { id: 'q-04-m6-1-a', pointId: '04-M6.1', type: 'choice',
+    question: '什么是「间接提示注入」（indirect prompt injection）？',
+    options: ['用户直接在对话框输入恶意指令', '攻击者把指令藏在 Agent 会读取的外部数据（网页、邮件、文档、检索结果）中，模型处理这些数据时被劫持', '修改模型权重', '拒绝服务攻击'],
+    answer: 1,
+    explanation: 'Greshake 等指出 LLM 集成应用模糊了数据与指令的边界，攻击者可在数据中植入提示，远程影响应用行为，导致数据窃取、传播等危害。',
+    source: INJECT },
+  { id: 'q-04-m6-1-b', pointId: '04-M6.1', type: 'choice',
+    question: 'Simon Willison 提出的「Dual LLM」模式是怎样隔离不可信内容的？',
+    options: ['用两个相同模型投票', '特权 LLM 只接收可信输入并能调用工具；隔离 LLM 处理不可信内容但没有工具权限，其输出只以变量引用的形式传递，特权 LLM 不直接看到', '把所有内容都交给一个更大的模型', '加一个关键词过滤器'],
+    answer: 1,
+    explanation: '作者强调这是缓解而非彻底解决，需要由普通代码充当控制器在两者间传递变量。',
+    source: DUALLLM },
+  { id: 'q-04-m6-1-c', pointId: '04-M6.1', type: 'short',
+    question: '为一个能读邮件、发邮件、访问内部文档的 Agent 做威胁建模，列出主要风险和防护措施。',
+    keyPoints: ['风险：提示注入（OWASP LLM01），尤其是来自邮件 / 网页的间接注入', '风险：过度代理（Excessive Agency）——权限、功能或自主性过大导致越权操作', '风险：敏感信息泄露、通过工具或链接外泄数据', '防护：最小权限、按用户身份授权，工具作用域收窄；高风险操作需人工确认', '防护：隔离不可信内容、在沙箱中执行、记录审计日志并监控异常调用'],
+    explanation: 'OWASP Top 10 for LLM Applications（2025）中 LLM01 为 Prompt Injection，LLM06 为 Excessive Agency。',
+    source: OWASP },
+
+  // ---------- 04-M7.2 上下文工程 ----------
+  { id: 'q-04-m7-2-a', pointId: '04-M7.2', type: 'choice',
+    question: 'Anthropic 对「上下文工程」的定位是？',
+    options: ['只是写更长的提示词', '在 LLM 推理时策划和维护最优的 token 集合（系统提示、工具、示例、消息历史、外部数据等），目标是用尽可能少的高信号 token 达成期望行为', '训练更大的上下文窗口', '压缩模型参数'],
+    answer: 1,
+    explanation: '文章把上下文视为边际收益递减的有限资源，把提示工程看作上下文工程的一部分，强调找到最小的高信号 token 集合。',
+    source: CTXENG },
+  { id: 'q-04-m7-2-b', pointId: '04-M7.2', type: 'short',
+    question: '如何组织 Agent 的系统提示与上下文？',
+    keyPoints: ['系统提示用清晰直接的语言，处在合适的「高度」：既不写死脆弱的 if-else 逻辑，也不过于空泛', '用 XML 标签或 Markdown 标题把背景、指令、工具说明、输出格式分区', '工具集精简、职责不重叠，示例选少量多样的典型例子而非堆砌边界情况', '动态组装：按任务阶段按需加载信息（just-in-time），而不是一次塞满', '长程任务配合压缩、笔记与子 Agent 控制上下文规模'],
+    explanation: '以上均出自 Effective context engineering for AI agents 对系统提示、工具、示例与长程任务的建议。',
+    source: CTXENG },
+  { id: 'q-04-m7-2-c', pointId: '04-M7.2', type: 'choice',
+    question: '文章所说的「just-in-time」上下文策略是指？',
+    options: ['一开始把所有相关数据都预处理进上下文', '只保存文件路径、存储的查询、链接等轻量标识，运行时用工具按需把数据加载进上下文', '缓存模型输出', '实时微调模型'],
+    answer: 1,
+    explanation: '文章举例 Claude Code 用这种方式分析大型数据库：写定向查询、用 head / tail 等命令查看，而不把完整数据对象载入上下文。',
+    source: CTXENG },
+
+  // ---------- 04-M7.3 Lost in the Middle ----------
+  { id: 'q-04-m7-3-a', pointId: '04-M7.3', type: 'choice',
+    question: 'Lost in the Middle 发现模型对长上下文中关键信息位置的敏感性呈什么形态？',
+    options: ['位置无关', '关键信息在开头或结尾时效果最好，在中间时显著变差（U 形曲线）', '越靠后越好', '越靠前越差'],
+    answer: 1,
+    explanation: '论文在多文档问答与键值检索任务上观察到：即便是长上下文模型，相关信息位于输入中部时性能也会显著下降。',
+    source: LOSTMID },
+  { id: 'q-04-m7-3-b', pointId: '04-M7.3', type: 'short',
+    question: '基于 Lost in the Middle 的结论，RAG / Agent 中如何更好地利用长上下文？',
+    keyPoints: ['少而精：重排后只放最相关的片段，而不是检索越多越好', '把最关键的信息放在上下文开头或结尾（靠近问题处）', '对长文档先摘要 / 抽取再放入上下文', '把指令与问题放在上下文末尾附近，减少被中间内容淹没', '用针对位置的评测（如不同位置放置答案）验证系统'],
+    explanation: '论文还发现，检索文档数增加到一定程度后，开放域问答的效果提升很快饱和。',
+    source: LOSTMID },
+  { id: 'q-04-m7-3-c', pointId: '04-M7.3', type: 'choice',
+    question: 'Lost in the Middle 用了哪两类任务来研究长上下文利用？',
+    options: ['多文档问答与合成键值检索', '翻译与摘要', '代码生成与数学证明', '图像描述与视觉问答'],
+    answer: 0,
+    explanation: '论文控制相关文档 / 键值对在输入中的位置与上下文长度，测量模型准确率的变化。',
+    source: LOSTMID },
+
+  // ---------- 04-M7.4 Token 预算与检索预算 ----------
+  { id: 'q-04-m7-4-a', pointId: '04-M7.4', type: 'code',
+    question: '实现检索预算分配：给定按相关性降序的候选片段 [(text, tokens)] 与 token 预算，贪心选入不超预算的片段（跳过放不下的，继续尝试后面更短的），返回选中的文本列表。',
+    reference: `def pack_context(candidates, budget):
+    picked, used = [], 0
+    for text, tokens in candidates:            # 已按相关性降序
+        if used + tokens <= budget:
+            picked.append(text)
+            used += tokens
+    return picked`,
+    tests: `cands = [('A', 300), ('B', 500), ('C', 150), ('D', 100)]
+assert pack_context(cands, 600) == ['A', 'C', 'D']   # B 放不下被跳过
+assert pack_context(cands, 0) == []
+assert pack_context(cands, 2000) == ['A', 'B', 'C', 'D']`,
+    explanation: '先给系统提示、对话历史与输出预留 token，再把剩余预算分给检索结果；按相关性贪心是简单有效的基线。',
+    source: CTXENG },
+  { id: 'q-04-m7-4-b', pointId: '04-M7.4', type: 'choice',
+    question: 'Anthropic 在 Writing effective tools for AI agents 中提到，Claude Code 默认把单个工具响应限制在多少 token？',
+    options: ['1,000', '25,000', '200,000', '不限制'],
+    answer: 1,
+    explanation: '原文：For Claude Code, we restrict tool responses to 25,000 tokens by default，并建议对可能很大的响应做分页、过滤、截断，截断时附上引导说明。',
+    source: TOOLS_A },
+  { id: 'q-04-m7-4-c', pointId: '04-M7.4', type: 'short',
+    question: '如何为一个 Agent 系统制定 token 预算？',
+    keyPoints: ['把上下文窗口拆分预算：系统提示、工具定义、历史、检索结果、输出各占多少', '检索预算：控制 top-k 与每片段长度，重排后按预算装填', '工具响应：分页、过滤、截断，并提供参数让 Agent 自行控制返回规模', '历史：滑动窗口 + 摘要压缩，清理已用过的工具原始输出', '监控每次请求与每任务的 token 用量与成本，设置上限与告警'],
+    explanation: 'Anthropic 的工具与上下文工程两篇文章都强调 token 效率：上下文有限，应只保留高信号内容。',
+    source: TOOLS_A },
+
+  // ---------- 04-M7.5 工具作用域与上下文污染 ----------
+  { id: 'q-04-m7-5-a', pointId: '04-M7.5', type: 'choice',
+    question: 'Anthropic 为什么建议给工具加命名空间（如 asana_search、jira_search）？',
+    options: ['为了好看', 'Agent 可能接入几十个 MCP Server、上百个工具，功能重叠或含义模糊的工具会让 Agent 选错；命名空间划清功能边界', '为了减少网络请求', '因为 API 要求'],
+    answer: 1,
+    explanation: '文章建议按服务或资源给工具加前缀分组，帮助 Agent 在合适的时机选对工具，并减少需要加载进上下文的工具描述。',
+    source: TOOLS_A },
+  { id: 'q-04-m7-5-b', pointId: '04-M7.5', type: 'choice',
+    question: '关于工具设计，下列哪种做法符合文章的建议？',
+    options: ['把每个底层 API 端点都包装成一个工具', '优先实现少量面向任务的整合工具（如 schedule_event 一次完成查空档并创建），返回有意义的上下文而不是原始 ID', '返回尽可能多的原始字段', '让工具描述尽量简短到一个词'],
+    answer: 1,
+    explanation: '文章指出工具过多或重叠会分散 Agent；应围绕高价值工作流整合功能，并返回人类可读的高信号信息（如名称而非 UUID）。',
+    source: TOOLS_A },
+  { id: 'q-04-m7-5-c', pointId: '04-M7.5', type: 'short',
+    question: '什么是上下文污染？工具作用域如何缓解它？',
+    keyPoints: ['上下文污染：无关工具描述、冗长工具输出、错误信息堆积，挤占注意力并误导后续决策', '按任务 / 阶段只暴露需要的工具（作用域收窄），而不是全量挂载', '工具输出精简、分页、截断，必要时只返回摘要', '把子任务交给子 Agent，在干净上下文中完成后只回传结果', '清理已处理的工具结果、压缩历史'],
+    explanation: 'Anthropic 的上下文工程文章把清理工具结果与子 Agent 架构列为应对上下文污染的手段。',
+    source: CTXENG },
+
+  // ---------- 04-M8.1 Skill 与 Harness ----------
+  { id: 'q-04-m8-1-a', pointId: '04-M8.1', type: 'choice',
+    question: 'Claude Agent Skills 的「渐进式披露」（progressive disclosure）分哪几级加载？',
+    options: ['一次性全部加载', '第 1 级：YAML frontmatter 中的名称与描述，启动时常驻（每个 Skill 约 100 token）；第 2 级：被触发时加载 SKILL.md 正文；第 3 级：按需读取附带的文件或运行脚本', '只加载脚本', '按字母顺序加载'],
+    answer: 1,
+    explanation: '官方文档的分级表：元数据始终加载约 100 token / Skill；正文在触发时加载，建议 5k token 以内；资源文件在访问前不占上下文，脚本只把输出放进上下文。',
+    source: SKILLS },
+  { id: 'q-04-m8-1-b', pointId: '04-M8.1', type: 'choice',
+    question: 'Anthropic 在 Effective harnesses for long-running agents 中为跨多个上下文窗口的长任务设计了什么方案？',
+    options: ['一次性超长上下文', '初始化 Agent 首次运行时搭好环境，编码 Agent 每个会话做增量进展并为下个会话留下清晰的工件（进度记录、git 提交等）', '让人类每步接管', '不保存任何状态'],
+    answer: 1,
+    explanation: '文章指出长程 Agent 的核心难题是每个新会话都从零记忆开始，因此用 initializer agent + coding agent 的双重方案衔接各会话。',
+    source: HARNESS },
+  { id: 'q-04-m8-1-c', pointId: '04-M8.1', type: 'short',
+    question: '一个 Agent Harness 通常包含哪些部分？Skill 在其中扮演什么角色？',
+    keyPoints: ['Agent 循环：调用模型、解析工具调用、执行、回传结果', '工具与执行环境：文件系统、shell、代码执行、MCP 等', '上下文管理：系统提示、记忆 / 笔记、压缩与子 Agent', '权限与安全：权限规则、沙箱、人工审批、日志', 'Skill：以文件夹形式打包指令、脚本和资料，按需渐进加载，让通用 Agent 获得领域能力而不占满上下文'],
+    explanation: 'Skills 文档说明 Skill 运行在有文件系统和 bash 的代码执行环境中；Harness 文章展示了如何用环境、进度文件与提交记录支撑长任务。',
+    source: SKILLS },
+
+  // ---------- 04-M8.3 Agentic Coding ----------
+  { id: 'q-04-m8-3-a', pointId: '04-M8.3', type: 'choice',
+    question: '在 Claude Code 中，CLAUDE.md 的作用是？',
+    options: ['存放 API 密钥', '一个在每次对话开始时被读取的特殊文件，用来写构建命令、代码风格与工作流规则等无法从代码推断的持久上下文', '模型权重文件', '日志文件'],
+    answer: 1,
+    explanation: '官方 Best practices：CLAUDE.md is a special file that Claude reads at the start of every conversation；可用 /init 生成初稿，建议保持简短易读。',
+    source: CC_BP },
+  { id: 'q-04-m8-3-b', pointId: '04-M8.3', type: 'choice',
+    question: 'Claude Code 最佳实践中，为什么强调「给 Claude 一个验证工作的方法」？',
+    options: ['为了节省 token', '没有可运行的检查（测试、构建、截图对比）时，「看起来完成了」是唯一信号，人就得亲自充当验证者；有检查才能放心让它自主完成', '为了让模型更快', '因为法律要求'],
+    answer: 1,
+    explanation: '文档原意：给它一个能运行的检查，这决定了你是需要盯着会话，还是可以走开。',
+    source: CC_BP },
+  { id: 'q-04-m8-3-c', pointId: '04-M8.3', type: 'short',
+    question: '总结使用 Agentic Coding 工具（如 Claude Code、Cursor）的高效工作方式。',
+    keyPoints: ['先探索、再规划、后编码：先让它读代码理解现状，确认计划再动手', '提供具体上下文：指明文件、约束、期望行为与示例', '提供验证手段：测试、构建、lint、截图，让它自检', '用项目说明文件（如 CLAUDE.md）沉淀命令、规范与工作流', '配置权限与工具（MCP、hooks、子 Agent），小步提交、审查 diff'],
+    explanation: '以上对应 Claude Code Best practices 的各节：验证、Explore first then plan then code、提供具体上下文、CLAUDE.md、权限与扩展。',
+    source: CC_BP },
+
+  // ---------- 04-M8.4 HITL 人机协同 ----------
+  { id: 'q-04-m8-4-a', pointId: '04-M8.4', type: 'choice',
+    question: '在 LangGraph 中用 interrupt() 实现人工审批，需要哪些前提？',
+    options: ['什么都不需要', '一个持久化图状态的 checkpointer、配置中的 thread_id，以及在需要暂停处调用 interrupt()；恢复时用 Command(resume=...) 传回人类输入', '必须用多线程', '必须连接数据库触发器'],
+    answer: 1,
+    explanation: 'LangGraph 文档：interrupt 时保存图状态并无限期等待；用同一 thread_id 调用 Command(resume=...) 恢复，resume 的值成为 interrupt() 的返回值。',
+    source: LG_HITL },
+  { id: 'q-04-m8-4-b', pointId: '04-M8.4', type: 'choice',
+    question: 'LangGraph 从 interrupt 恢复时，节点从哪里继续执行？这带来什么要求？',
+    options: ['从 interrupt 那一行继续；没有额外要求', '从该节点开头重新执行，interrupt 之前的代码会再跑一次，所以之前的副作用必须幂等（或移到 interrupt 之后 / 拆到别的节点）', '从图的起点重新执行', '跳过该节点'],
+    answer: 1,
+    explanation: '文档的 Rules of interrupts：恢复时 runtime restarts the entire node from the beginning；因此 interrupt 前的副作用应幂等，也不要用 try/except 包住 interrupt。',
+    source: LG_HITL },
+  { id: 'q-04-m8-4-c', pointId: '04-M8.4', type: 'short',
+    question: '设计 Agent 的人工审批流（HITL），需要考虑哪些点？',
+    keyPoints: ['确定审批点：发邮件、付款、删数据、对外发布等不可逆或高风险操作', '暂停时持久化状态（checkpoint），支持长时间等待与跨进程恢复', '向审批人展示足够上下文：动作、参数、理由、影响，支持批准 / 拒绝 / 编辑参数', '恢复后的执行要幂等，避免重复执行副作用', '记录审批日志，设置超时与默认拒绝策略'],
+    explanation: 'LangGraph 文档列出的常见模式包括批准或拒绝、审查和编辑状态、在工具内中断以审查工具调用、校验人工输入。',
+    source: LG_HITL },
+
+  // ---------- 04-M8.5 权限管控 ----------
+  { id: 'q-04-m8-5-a', pointId: '04-M8.5', type: 'choice',
+    question: 'Claude Code 的权限规则（allow / ask / deny）按什么顺序评估？',
+    options: ['allow → ask → deny，越具体的规则优先', 'deny → ask → allow，按此顺序第一个匹配的规则决定结果，规则的具体程度不改变顺序', '随机', '只看 allow'],
+    answer: 1,
+    explanation: '文档：Rules are evaluated in order: deny, then ask, then allow。例如宽泛的 deny Bash(aws *) 会挡住所有匹配调用，即使有更具体的 allow Bash(aws s3 ls)。',
+    source: CC_PERM },
+  { id: 'q-04-m8-5-b', pointId: '04-M8.5', type: 'choice',
+    question: '按上述规则，同时配置了 deny「Bash(rm *)」和 allow「Bash(rm tmp.txt)」，Agent 执行 rm tmp.txt 会怎样？',
+    options: ['被允许', '被拒绝，因为 deny 先于 allow 评估且已匹配', '弹出询问', '随机'],
+    answer: 1,
+    explanation: 'deny 优先，具体的 allow 无法覆盖宽泛的 deny——这是「默认拒绝优先」的安全设计。',
+    source: CC_PERM },
+  { id: 'q-04-m8-5-c', pointId: '04-M8.5', type: 'short',
+    question: '如何为 Agent 设计权限管控体系？',
+    keyPoints: ['最小权限：按任务只授予必要的工具与资源范围', '规则分层：deny 优先、ask 用于高风险操作、allow 用于安全的常规操作', '身份与授权：Agent 以用户身份访问数据，遵守原有 ACL，避免越权读取', '沙箱隔离：文件系统、网络访问受限的执行环境', '审计与监控：记录所有工具调用，检测异常（越权尝试、批量外发）并告警'],
+    explanation: 'OWASP 把 Excessive Agency 列为 LLM 应用十大风险之一，建议最小化扩展功能与权限并对高影响操作要求人工批准。',
+    source: OWASP },
+
+  // ---------- 04-M8.6 Agent 可靠性 ----------
+  { id: 'q-04-m8-6-a', pointId: '04-M8.6', type: 'choice',
+    question: 'OpenAI Structured Outputs 与普通的 JSON 模式相比，提供了什么保证？',
+    options: ['只保证输出是合法 JSON', '保证输出遵守你提供的 JSON Schema（如必填字段、枚举值），无需担心缺字段或枚举值非法', '保证内容事实正确', '保证更快'],
+    answer: 1,
+    explanation: '文档：Structured Outputs ensures the model will always generate responses that adhere to your supplied JSON Schema；需在 json_schema 中设置 strict: true。它保证格式，不保证内容正确。',
+    source: OAI_SO },
+  { id: 'q-04-m8-6-b', pointId: '04-M8.6', type: 'code',
+    question: '实现带指数退避与幂等键的重试：call_with_retry(fn, max_retries, base_delay, sleep)，每次调用都传同一个 idempotency_key（uuid4 生成一次），仅对 TransientError 重试，第 i 次重试前等待 base_delay·2^i。',
+    reference: `import uuid
+
+class TransientError(Exception):
+    pass
+
+def call_with_retry(fn, max_retries=3, base_delay=0.5, sleep=None):
+    import time
+    sleep = sleep or time.sleep
+    key = str(uuid.uuid4())                 # 同一逻辑操作只生成一次
+    for attempt in range(max_retries + 1):
+        try:
+            return fn(idempotency_key=key)
+        except TransientError:
+            if attempt == max_retries:
+                raise
+            sleep(base_delay * (2 ** attempt))`,
+    tests: `calls, waits = [], []
+def flaky(idempotency_key):
+    calls.append(idempotency_key)
+    if len(calls) < 3:
+        raise TransientError()
+    return 'ok'
+assert call_with_retry(flaky, sleep=waits.append) == 'ok'
+assert len(set(calls)) == 1 and len(calls) == 3      # 重试复用同一个幂等键
+assert waits == [0.5, 1.0]
+try:
+    call_with_retry(lambda idempotency_key: 1 / 0, sleep=waits.append); assert False
+except ZeroDivisionError:
+    pass                                              # 非瞬时错误不重试`,
+    explanation: '服务端按幂等键去重：Stripe 文档说明同一 key 的重试会返回首次请求保存的结果。生产中还会加随机抖动（jitter）并设置总超时。',
+    source: STRIPE_IDEM },
+  { id: 'q-04-m8-6-c', pointId: '04-M8.6', type: 'short',
+    question: '如何提升 Agent 在生产环境中的可靠性？',
+    keyPoints: ['结构化输出：用 JSON Schema 约束工具参数与结果格式，解析失败时带错误信息重试', '幂等性：有副作用的操作带幂等键，重试不会重复执行', '重试与降级：对瞬时错误指数退避重试，失败时降级到更简单的路径或交给人工', '确定性：能用代码确定完成的步骤不交给模型，固定版本、temperature 等参数', '可观测：记录完整轨迹，设置步数 / 成本上限与超时，防止死循环'],
+    explanation: 'Stripe 文档说明了幂等键的服务端语义（同一 key 的重试返回保存的结果，key 至少保存 24 小时后才可能被清理）。',
+    source: STRIPE_IDEM },
 ]
