@@ -166,6 +166,15 @@ const SDPA_DOC: QuizSource = { title: 'PyTorch 文档：torch.nn.functional.scal
 const ORCA: QuizSource = { title: 'Orca: A Distributed Serving System for Transformer-Based Generative Models（OSDI 2022）', url: 'https://www.usenix.org/conference/osdi22/presentation/yu' }
 const SARATHI: QuizSource = { title: 'Sarathi-Serve（arXiv 2403.02310）', url: 'https://arxiv.org/abs/2403.02310' }
 const FAISS_OPS: QuizSource = { title: 'Faiss wiki：Special operations on indexes', url: 'https://github.com/facebookresearch/faiss/wiki/Special-operations-on-indexes' }
+const GOPHER: QuizSource = { title: 'Scaling Language Models: Methods, Analysis & Insights from Training Gopher（arXiv 2112.11446）', url: 'https://arxiv.org/abs/2112.11446' }
+const DEDUP: QuizSource = { title: 'Deduplicating Training Data Makes Language Models Better（arXiv 2107.06499）', url: 'https://arxiv.org/abs/2107.06499' }
+const FINEWEB: QuizSource = { title: 'The FineWeb Datasets（arXiv 2406.17557）', url: 'https://arxiv.org/abs/2406.17557' }
+const DCLM: QuizSource = { title: 'DataComp-LM（arXiv 2406.11794）', url: 'https://arxiv.org/abs/2406.11794' }
+const DOREMI: QuizSource = { title: 'DoReMi（arXiv 2305.10429）', url: 'https://arxiv.org/abs/2305.10429' }
+const SELFINST: QuizSource = { title: 'Self-Instruct（arXiv 2212.10560）', url: 'https://arxiv.org/abs/2212.10560' }
+const REPHRASE: QuizSource = { title: 'Rethinking Benchmark and Contamination for Language Models with Rephrased Samples（arXiv 2311.04850）', url: 'https://arxiv.org/abs/2311.04850' }
+const STAR: QuizSource = { title: 'STaR: Self-Taught Reasoner（arXiv 2203.14465）', url: 'https://arxiv.org/abs/2203.14465' }
+const DSKETCH: QuizSource = { title: 'datasketch 文档：MinHash LSH', url: 'https://ekzhu.com/datasketch/lsh.html' }
 
 export const QUIZ: QuizQuestion[] = [
   // ---------- 02-M1.1 自注意力机制 ----------
@@ -2718,4 +2727,242 @@ print('ok')`,
     keyPoints: ['分层：短期（当前上下文 / 会话摘要）与长期（向量库 / 结构化画像）', '写入：从对话中抽取要点，去重与冲突消解（新增、更新、删除）', '读取：按相关性、时间、重要性检索后注入上下文', '治理：用户可查看 / 删除，隐私与过期策略', '评测：记忆召回准确率、对回答质量与延迟 / 成本的影响'],
     explanation: 'Mem0 的流程是从对话中抽取、整合、检索要点信息；Generative Agents 的检索综合近因、重要性与相关性。',
     source: MEM0, extraSources: [GENAGENTS] },
+  // ---------- 10-M2.1 质量过滤与启发式规则 ----------
+  { id: 'q-10-m2-1-a', pointId: '10-M2.1', type: 'code',
+    question: '实现 Gopher 风格的部分启发式过滤 keep(doc)：保留满足以下全部条件的文档——词数在 50 到 100000 之间；平均词长在 3 到 10 之间；至少 80% 的词含字母；至少包含 2 个停用词（the, be, to, of, and, that, have, with）。按空白切词。',
+    reference: `STOP = {'the', 'be', 'to', 'of', 'and', 'that', 'have', 'with'}
+
+def keep(doc):
+    words = doc.split()
+    n = len(words)
+    if not 50 <= n <= 100000:
+        return False
+    mean_len = sum(len(w) for w in words) / n
+    if not 3 <= mean_len <= 10:
+        return False
+    if sum(any(c.isalpha() for c in w) for w in words) / n < 0.8:
+        return False
+    return sum(w.lower() in STOP for w in words) >= 2`,
+    tests: `good = ('The model learns to predict the next word and that is useful with enough data. ' * 5)
+assert keep(good)
+assert not keep('hello world')                           # 太短
+assert not keep('123 456 789 ' * 30 + 'the and')         # 含字母的词太少
+assert not keep('alpha beta gamma delta ' * 20)          # 没有停用词
+print('ok')`,
+    explanation: '这些阈值出自 Gopher 论文附录中 MassiveText 的质量过滤规则（另有符号词比、项目符号行比例、省略号结尾行比例等规则）。',
+    source: GOPHER },
+  { id: 'q-10-m2-1-b', pointId: '10-M2.1', type: 'choice',
+    question: 'FineWeb 论文对数据构建过程做了什么？',
+    options: ['完全不公开处理细节', '详细记录并逐项消融所有设计选择（包括去重与过滤策略），并公开代码与消融模型', '只做人工筛选', '只用维基百科'],
+    answer: 1,
+    explanation: 'FineWeb 摘要：从 96 个 Common Crawl 快照得到 15T token；仔细记录并消融全部设计选择，包括去重与过滤策略，并开源数据处理代码与所有消融模型。',
+    source: FINEWEB },
+  { id: 'q-10-m2-1-c', pointId: '10-M2.1', type: 'short',
+    question: '网页预训练数据的启发式过滤通常包括哪几类规则？为什么还需要模型过滤？',
+    keyPoints: ['长度类：词数、平均词长', '重复类：重复行 / 段落 / n-gram 比例', '格式类：符号比例、项目符号行、省略号结尾行、含字母词比例', '语言与内容类：语言识别、停用词、不良内容黑名单', '规则只能剔除明显的低质内容，DCLM 发现基于模型的过滤是构建高质量训练集的关键'],
+    explanation: 'Gopher 列出了长度、符号、重复等规则；DCLM 摘要指出 model-based filtering is key。',
+    source: GOPHER, extraSources: [DCLM] },
+
+  // ---------- 10-M2.2 精确去重与模糊去重 ----------
+  { id: 'q-10-m2-2-a', pointId: '10-M2.2', type: 'code',
+    question: '用 Python 实现 MinHash：minhash(tokens, num_perm=256, seed=1) 对词 5-gram 集合（shingles）计算签名（用 num_perm 个形如 (a·h + b) mod p 的哈希，h 为 shingle 的稳定哈希）；estimate(s1, s2) 返回签名相同位置的比例。',
+    reference: `import hashlib
+import random
+
+P = (1 << 61) - 1
+
+def _shingles(tokens, n=5):
+    return {' '.join(tokens[i:i + n]) for i in range(max(1, len(tokens) - n + 1))}
+
+def minhash(tokens, num_perm=256, seed=1):
+    rnd = random.Random(seed)
+    ab = [(rnd.randrange(1, P), rnd.randrange(0, P)) for _ in range(num_perm)]
+    hs = [int.from_bytes(hashlib.md5(s.encode()).digest()[:8], 'big') for s in _shingles(tokens)]
+    return [min((a * h + b) % P for h in hs) for a, b in ab]
+
+def estimate(s1, s2):
+    return sum(x == y for x, y in zip(s1, s2)) / len(s1)`,
+    tests: `a = ('the quick brown fox jumps over the lazy dog ' * 3 + 'and runs away into the forest today').split()
+b = a[:-2] + ['tonight', 'again']
+sa, sb = _shingles(a), _shingles(b)
+true_j = len(sa & sb) / len(sa | sb)
+est = estimate(minhash(a), minhash(b))
+assert abs(est - true_j) < 0.12, (est, true_j)
+assert estimate(minhash(a), minhash(a)) == 1.0
+print('ok')`,
+    explanation: '两个集合在随机哈希下最小值相同的概率等于其 Jaccard 相似度，故签名相同位置的比例是 Jaccard 的无偏估计；datasketch 等库即基于此。',
+    source: DSKETCH },
+  { id: 'q-10-m2-2-b', pointId: '10-M2.2', type: 'code',
+    question: 'MinHash LSH 把签名分成 b 个 band、每 band r 行；两文档只要有一个 band 完全相同就成为候选对。写 candidate_prob(s, b, r) 返回 Jaccard 为 s 的两文档成为候选的概率。',
+    reference: `def candidate_prob(s, b, r):
+    return 1 - (1 - s ** r) ** b`,
+    tests: `assert abs(candidate_prob(0.8, 20, 5) - (1 - (1 - 0.8 ** 5) ** 20)) < 1e-12
+assert candidate_prob(0.8, 20, 5) > 0.99 and candidate_prob(0.2, 20, 5) < 0.01   # S 形曲线
+print('ok')`,
+    explanation: '一个 band 全相同的概率是 s^r，b 个 band 都不同的概率是 (1−s^r)^b。它呈 S 形：高于阈值的相似对几乎必然命中，低于阈值的很少命中；datasketch 文档也说明了 LSH 的假阳性 / 假阴性权衡。',
+    source: DSKETCH },
+  { id: 'q-10-m2-2-c', pointId: '10-M2.2', type: 'choice',
+    question: 'Lee 等《Deduplicating Training Data Makes Language Models Better》报告去重带来哪些好处？',
+    options: ['只减少存储', '模型输出逐字记忆文本的频率降至约十分之一、达到同等或更好精度所需训练步数更少，并能减少训练-测试重叠', '让模型变大', '提升 tokenizer 速度'],
+    answer: 1,
+    explanation: '论文摘要：去重后模型发出记忆文本的频率降低十倍、所需训练步数更少；标准数据集中超过 4% 的验证集与训练集重叠，去重可使评测更准确。',
+    source: DEDUP },
+
+  // ---------- 10-M3.1 质量分类器与打分模型 ----------
+  { id: 'q-10-m3-1-a', pointId: '10-M3.1', type: 'choice',
+    question: 'DCLM 的基线实验得出的关键结论是？',
+    options: ['只要数据量足够就不需要过滤', '基于模型的过滤（model-based filtering）是组建高质量训练集的关键', '去重会降低效果', '只能用人工标注'],
+    answer: 1,
+    explanation: 'DCLM 摘要原文：find that model-based filtering is key to assembling a high-quality training set；DCLM-Baseline 7B 用 2.6T token 达到 MMLU 5-shot 64%。',
+    source: DCLM },
+  { id: 'q-10-m3-1-b', pointId: '10-M3.1', type: 'choice',
+    question: 'FineWeb-Edu 是什么？',
+    options: ['人工撰写的教材', '从 FineWeb 中筛出的 1.3T token 教育类文本，在 MMLU、ARC 等知识与推理基准上显著更好', '一个评测基准', '代码数据集'],
+    answer: 1,
+    explanation: 'FineWeb 摘要：FineWeb-Edu 是从 FineWeb 过滤出的 1.3 万亿 token 教育文本；正文中筛选用的是以 Llama-3-70B-Instruct 标注训练出的教育价值分类器。',
+    source: FINEWEB },
+  { id: 'q-10-m3-1-c', pointId: '10-M3.1', type: 'short',
+    question: '如何训练并使用一个预训练数据质量分类器？要注意什么？',
+    keyPoints: ['构造正负样本：高质量参考语料（或 LLM 打分结果）为正，随机网页为负', '用 fastText 等轻量模型或小型编码器训练，便于在海量数据上推理', '按分数阈值或分位数保留，阈值通过小模型消融实验确定', '风险：偏向参考语料的风格、降低多样性，需人工抽检并监控领域分布'],
+    explanation: 'FineWeb-Edu 用 LLM 标注训练分类器再过滤；DCLM 用受控实验比较不同过滤策略，发现模型过滤最关键。',
+    source: FINEWEB, extraSources: [DCLM] },
+
+  // ---------- 10-M3.2 数据配比 ----------
+  { id: 'q-10-m3-2-a', pointId: '10-M3.2', type: 'choice',
+    question: 'DoReMi 如何确定各领域的配比？',
+    options: ['在下游任务上网格搜索', '先用 Group DRO 训练一个小代理模型得到领域权重，再按权重重采样训练大模型', '按各领域原始大小', '人工指定'],
+    answer: 1,
+    explanation: 'DoReMi 摘要：用 Group DRO 在各领域上训练小代理模型（实验中 280M）产生领域权重，再用来训练 30 倍大的 8B 模型，无需下游任务知识。',
+    source: DOREMI },
+  { id: 'q-10-m3-2-b', pointId: '10-M3.2', type: 'choice',
+    question: 'DoReMi 在 The Pile 上相对默认领域权重的效果是？',
+    options: ['所有领域困惑度都变差', '所有领域的困惑度都改善（即使某领域被降权），下游 few-shot 平均精度提升 6.5 个点，达到基线精度所需训练步数少 2.6 倍', '只改善维基百科', '效果相同但更慢'],
+    answer: 1,
+    explanation: '均出自 DoReMi 摘要。',
+    source: DOREMI },
+  { id: 'q-10-m3-2-c', pointId: '10-M3.2', type: 'short',
+    question: '制定预训练数据配比时要考虑哪些维度？怎么验证？',
+    keyPoints: ['领域（网页、书籍、代码、数学、学术等）', '语言（中英文及多语种比例）', '质量分层（高质量数据可上采样多轮，低质量下采样）', '可用小代理模型自动求配比（如 DoReMi），或做小规模消融后外推', '用下游基准与各领域困惑度共同评估，防止某些能力退化'],
+    explanation: 'DoReMi 指出领域配比对 LM 性能影响很大，并给出代理模型求权重的方法。',
+    source: DOREMI },
+
+  // ---------- 10-M3.3 数据消融实验设计 ----------
+  { id: 'q-10-m3-3-a', pointId: '10-M3.3', type: 'choice',
+    question: 'DCLM 作为数据实验测试平台，固定了什么、让参与者改变什么？',
+    options: ['固定数据，改变模型结构', '提供标准语料、基于 OpenLM 的固定训练配方与 53 项评测；参与者在 412M–7B 规模上尝试去重、过滤、配比等数据策略', '只能改学习率', '什么都不固定'],
+    answer: 1,
+    explanation: 'DCLM 摘要：提供 240T token 标准语料、有效的预训练配方与 53 项下游评测，参与者实验数据策划策略。',
+    source: DCLM },
+  { id: 'q-10-m3-3-b', pointId: '10-M3.3', type: 'short',
+    question: '如何设计一次数据消融实验，判断一种新的过滤策略是否有效？',
+    keyPoints: ['控制变量：模型结构、训练配方、token 预算都固定，只改变数据', '用较小模型（及多个规模）训练，降低成本并观察趋势', '选择在该规模下信号稳定的评测，并多随机种子比较、看方差', '对比基线（不过滤 / 现有过滤），同时看下游指标与困惑度', '注意小规模结论外推到大规模的风险'],
+    explanation: 'FineWeb 对每项设计选择都训练消融模型并公开；DCLM 用标准配方在多个规模上比较数据策略。',
+    source: FINEWEB, extraSources: [DCLM] },
+  { id: 'q-10-m3-3-c', pointId: '10-M3.3', type: 'choice',
+    question: '数据消融中，为什么要固定训练 token 数而不是固定训练轮数？',
+    options: ['为了省磁盘', '过滤会改变数据集大小；固定轮数会让不同方案看到的 token 数不同，混入“训练量”这个变量', '轮数无法设置', '固定轮数更公平'],
+    answer: 1,
+    explanation: '比较数据质量时要排除训练计算量的差异。DCLM 等平台按固定的计算 / token 预算比较不同数据集。',
+    source: DCLM },
+
+  // ---------- 10-M3.4 数据污染检测 ----------
+  { id: 'q-10-m3-4-a', pointId: '10-M3.4', type: 'code',
+    question: '实现 n-gram 重叠污染检测 contaminated(test_text, train_ngrams, n=13)：把测试样本按空白切词、转小写，若任一 n-gram 出现在训练集 n-gram 集合中就判为污染。再写 build_ngrams(docs, n=13)。',
+    reference: `def _grams(text, n):
+    w = text.lower().split()
+    return {tuple(w[i:i + n]) for i in range(len(w) - n + 1)}
+
+def build_ngrams(docs, n=13):
+    s = set()
+    for d in docs:
+        s |= _grams(d, n)
+    return s
+
+def contaminated(test_text, train_ngrams, n=13):
+    return any(g in train_ngrams for g in _grams(test_text, n))`,
+    tests: `train = ['one two three four five six seven eight nine ten eleven twelve thirteen fourteen']
+g = build_ngrams(train)
+assert contaminated('ONE two three four five six seven eight nine ten eleven twelve thirteen', g)
+assert not contaminated('uno dos tres cuatro cinco seis siete ocho nueve diez once doce trece', g)   # 翻译即可绕过
+print('ok')`,
+    explanation: 'GPT-3 论文用 13-gram 重叠衡量训练集与基准的重叠；但 Yang 等指出 n-gram 匹配可被改写、翻译等简单变体绕过。',
+    source: GPT3, extraSources: [REPHRASE] },
+  { id: 'q-10-m3-4-b', pointId: '10-M3.4', type: 'choice',
+    question: '《Rethinking Benchmark and Contamination…》的主要发现是？',
+    options: ['n-gram 去污染已经足够', '改写、翻译等简单变体可绕过字符串匹配去污染；不去除这些变体时 13B 模型可过拟合基准，达到与 GPT-4 相当的分数', '污染不影响分数', '只有代码基准有污染'],
+    answer: 1,
+    explanation: '论文摘要：并提出基于 LLM 的更强去污染方法，发现 RedPajama-Data-1T、StarCoder-Data 中有 8–18% 的 HumanEval 重叠，GPT-3.5/4 生成的合成数据中也存在污染。',
+    source: REPHRASE },
+  { id: 'q-10-m3-4-c', pointId: '10-M3.4', type: 'short',
+    question: '数据污染检测有哪些方法？各自局限是什么？',
+    keyPoints: ['n-gram / 子串精确匹配：便宜可扩展，但改写、翻译即可绕过', '嵌入相似度召回 + LLM 判定：能抓改写，成本更高', '基于模型行为：比较原题与改写题 / 新题的表现差距', '根本办法：使用发布在训练截止后的新题、一次性考试', '合成数据也可能把基准内容带进训练集'],
+    explanation: '均对应 Yang 等论文摘要的结论与建议（包括呼吁开发 fresh one-time exams）。',
+    source: REPHRASE },
+
+  // ---------- 10-M4.1 合成数据生成 ----------
+  { id: 'q-10-m4-1-a', pointId: '10-M4.1', type: 'choice',
+    question: 'Self-Instruct 的流程是？',
+    options: ['人工写全部指令', '从语言模型生成指令、输入与输出样本，过滤无效或相似的样本后，再用来微调原模型', '只用公开数据集', '用 RLHF 训练'],
+    answer: 1,
+    explanation: 'Self-Instruct 摘要；应用到原始 GPT-3 后在 Super-NaturalInstructions 上绝对提升 33%，与 InstructGPT-001 相当。',
+    source: SELFINST },
+  { id: 'q-10-m4-1-b', pointId: '10-M4.1', type: 'choice',
+    question: 'STaR（Self-Taught Reasoner）在模型答错时怎么做？',
+    options: ['直接丢弃', '给出正确答案，让模型再生成一个能推出该答案的推理过程（rationalization）', '让人工写推理', '降低学习率'],
+    answer: 1,
+    explanation: 'STaR 摘要：生成推理来回答问题；答错时给定正确答案再生成推理；在最终得到正确答案的推理上微调；循环迭代。',
+    source: STAR },
+  { id: 'q-10-m4-1-c', pointId: '10-M4.1', type: 'short',
+    question: '常见的合成数据生成方式有哪些？',
+    keyPoints: ['自举生成：用少量种子示例让模型生成新指令与回答（Self-Instruct）', '蒸馏：用更强的教师模型回答问题，学生模型学习其输出', '改写：对已有数据换说法、换格式、翻译，以增加多样性', '自我推理迭代：生成推理并只保留得到正确答案的样本（STaR）', '都需要过滤去重与质量验证'],
+    explanation: 'Self-Instruct 与 STaR 分别代表指令自举与推理自举。',
+    source: SELFINST, extraSources: [STAR] },
+
+  // ---------- 10-M4.2 合成数据验证与筛选 ----------
+  { id: 'q-10-m4-2-a', pointId: '10-M4.2', type: 'code',
+    question: 'Self-Instruct 只保留与已有指令 ROUGE-L 都小于 0.7 的新指令。实现 rouge_l(a, b)（按空白切词，F 值 = 2PR/(P+R)，基于最长公共子序列）与 filter_new(pool, candidates, thr=0.7)：依次处理候选，满足条件的加入 pool，返回被接受的列表。',
+    reference: `def _lcs(x, y):
+    dp = [0] * (len(y) + 1)
+    for a in x:
+        prev = 0
+        for j, b in enumerate(y, 1):
+            cur = dp[j]
+            dp[j] = prev + 1 if a == b else max(dp[j], dp[j - 1])
+            prev = cur
+    return dp[-1]
+
+def rouge_l(a, b):
+    x, y = a.split(), b.split()
+    l = _lcs(x, y)
+    if l == 0:
+        return 0.0
+    p, r = l / len(y), l / len(x)
+    return 2 * p * r / (p + r)
+
+def filter_new(pool, candidates, thr=0.7):
+    accepted = []
+    for c in candidates:
+        if all(rouge_l(c, p) < thr for p in pool):
+            pool.append(c)
+            accepted.append(c)
+    return accepted`,
+    tests: `assert rouge_l('a b c d', 'a b c d') == 1.0
+assert abs(rouge_l('a b c d', 'a x c y') - 0.5) < 1e-12
+pool = ['write a poem about the sea']
+out = filter_new(pool, ['write a poem about the ocean', 'translate this sentence into french', 'translate this sentence into german'])
+assert out == ['translate this sentence into french']
+print('ok')`,
+    explanation: 'Self-Instruct 论文的过滤步骤：新指令与池中任意已有指令的 ROUGE-L 相似度须小于 0.7，以保证多样性；还会过滤含特定关键词（如图片）的无效指令。',
+    source: SELFINST },
+  { id: 'q-10-m4-2-b', pointId: '10-M4.2', type: 'short',
+    question: '合成数据如何做验证与筛选？',
+    keyPoints: ['格式与规则校验：长度、结构、是否可解析', '去重与多样性：与已有数据的相似度阈值（如 ROUGE-L / 嵌入）', '正确性：数学 / 代码类用答案比对、执行单测等可验证信号，只保留通过的样本', '用奖励模型或 LLM 评审打分，并人工抽检', '去污染：与评测集比对，合成数据也可能带入基准内容'],
+    explanation: 'Self-Instruct 过滤无效与相似样本；STaR 只保留得到正确答案的推理；Yang 等发现 GPT-3.5/4 生成的合成数据中也存在污染。',
+    source: SELFINST, extraSources: [STAR, REPHRASE] },
+  { id: 'q-10-m4-2-c', pointId: '10-M4.2', type: 'choice',
+    question: '为什么合成数据也需要做去污染？',
+    options: ['合成数据不可能包含评测题', 'Yang 等发现 GPT-3.5/4 生成的合成数据集中也存在与基准重叠的内容，存在无意污染风险', '因为合成数据太短', '只是为了减小体积'],
+    answer: 1,
+    explanation: '见《Rethinking Benchmark and Contamination…》摘要。',
+    source: REPHRASE },
 ]
