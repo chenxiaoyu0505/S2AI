@@ -12,7 +12,7 @@ S2AI（science to AI）—— 一棵预制的公开 AI 学习树：**理论是�
 ## 黄金法则
 
 1. **只改数据文件和页面组件，不动构建配置**（除非主人明确要求）。
-2. **改完必须跑 `npm run build` 验证零报错**；只要动了数据文件（`theory.ts` / `leaves.ts` / `inbox.ts` / `cards.ts` / `content.ts`），再跑 `python scripts/check-tree.py` 校验树上无断链——两个都过才提交。
+2. **改完必须跑 `npm run build` 验证零报错**；只要动了数据文件（`theory.ts` / `leaves.ts` / `inbox.ts` / `cards.ts` / `content.ts` / `quiz.ts`），再跑 `python scripts/check-tree.py` 校验树上无断链——两个都过才提交。
 3. 个人化内容**只允许**写进 `src/data/content.local.ts`（已被 .gitignore 排除，永不进 git）。任何个人笔记、面经、复盘都放那里。
 4. 提交信息用中文、一句话说清楚改了什么。
 
@@ -38,6 +38,7 @@ src/
     leaves.ts        叶子清单数据：长在树上的项目与实践项（Agent 可追加）
     inbox.ts         收集箱数据（Agent 收录：新叶子 + 新枝节暂存区）
     cards.ts         学习卡片数据（Agent 制作，含模型种子卡）
+    quiz.ts          闯关自测题库（按学习点编号挂载，一个模块 = 一关）
   sections/        ★ 页面板块（理论地图、叶子清单、收集箱、学习卡片在这里）
   pages/Home.tsx   tab 容器与首页布局（注册新 tab 要改这里）
   components/ui/   shadcn 组件（直接用，不要新造轮子）
@@ -180,6 +181,22 @@ AGENTS.md          本文件
 1. 数据改动后跑 `python scripts/export-widgets.py` → 生成 `dashboard/widgets/{theory,leaves,inbox,cards}.html`（每个文件只内嵌自己板块的数据切片）。
 2. 把四个 html 分别覆盖到对应组件工作区的 `workspace/index.html`（组件 widgetId 记录在主人的 Kimi Work 里，换了机器就问主人或 `Widget.list`）。
 3. 跑 `python scripts/export-dashboard.py` 顺手刷新单文件看板，然后 commit + push 让网页版同步。
+
+### 12. 给模块加闯关自测题（题目收录约定）
+
+主人说"给 02-M1 出几道自测题"时：
+
+1. **挂载点**：`pointId` 写理论点完整编号（如 `02-M1.3`，查 `theory.ts`）。不改 `theory.ts`；关卡由 pointId 自动推导（`02-M1.3` → 第 `02-M1` 关），模块有题时理论地图上自动出现「自测」入口。
+2. **追加到 `src/data/quiz.ts` 的 `QUIZ` 数组**，id 用 `q-` 前缀（如 `q-02-m1-3-a`），全局唯一。三种题型：
+   - `choice`：`options`（2–6 个）+ `answer`（正确选项下标，从 0 开始），自动判分。
+   - `short`：`keyPoints`（3–5 条要点），用户作答后对照勾选，得分 = 命中比例。
+   - `code`：`reference`（参考实现）+ `tests`（测试用例 / 自检方法），用户自评。
+   - 所有题型必填 `question`、`explanation`；`source` 选填但强烈建议，优先原始论文 / 官方文档，链接先验证能打开。
+3. **质量红线**：答案和解析必须核对过一手来源，拿不准的不要出；每个 ★★★ 学习点建议 3 题、每关至少 1 道手撕题；遵守 DESIGN.md 的用词（谈学习，不出现"面试/考点/必问"）。
+4. **格式约定**（check-tree 用正则解析）：每题以两空格缩进的 `{ id: ...` 开头；字符串用单引号，代码用反引号模板串；`options` / `keyPoints` 数组以 `],` 换行结束。
+5. 跑 `npm run build`、`npm run lint` 和 `python scripts/check-tree.py`（会校验 pointId 挂得上树、id 唯一、answer 不越界、各题型字段齐全），commit（信息如 `quiz: 新增 02-M2 自测题 9 道`）。
+
+玩法规则：≥80% 通关，≥90% 两星，100% 三星；关卡不上锁，通关后高亮下一关；篇章内 ≥2 关有题时开放 Boss 关（全篇章随机 8 题）；未得满分的题进错题本。进度存本机 `localStorage`（键 `s2ai-quiz-v1`），可在自测弹窗里导出 / 导入 JSON。
 
 ## 不要做
 

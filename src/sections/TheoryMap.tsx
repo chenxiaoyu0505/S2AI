@@ -13,6 +13,7 @@ import { CARDS } from '@/data/cards'
 import { jumpTo } from '@/lib/jump'
 import HL from '@/components/HL'
 import IndexNote from '@/components/IndexNote'
+import { QuizEntry } from '@/sections/Quiz'
 
 const STORE_KEY = 'ai-study-theory-v1'
 // 展开的篇章也持久化：不再写死默认展开，切 tab / 刷新后保持用户自己的选择
@@ -258,6 +259,7 @@ export default function TheoryMap({ focus }: { focus?: { ref?: string; chapters?
                     <div key={mo.name}>
                       <p className="text-xs font-medium text-muted-foreground mb-1">{mo.name}
                         <span className="ml-2 font-normal text-muted-foreground/80">{points.length} 学习点</span>
+                        <QuizEntry chapterId={ch.id} moduleName={mo.name} />
                       </p>
                       <div className="grid gap-1 md:grid-cols-2">
                         {points.map(p => {
