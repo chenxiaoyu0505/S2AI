@@ -152,6 +152,15 @@ const SPOTLIGHT: QuizSource = { title: 'Spotlighting（arXiv 2403.14720）', url
 const HYBRIDFLOW: QuizSource = { title: 'HybridFlow / verl（arXiv 2409.19256）', url: 'https://arxiv.org/abs/2409.19256' }
 const OPENRLHF: QuizSource = { title: 'OpenRLHF（arXiv 2405.11143）', url: 'https://arxiv.org/abs/2405.11143' }
 const WENG_RH: QuizSource = { title: 'Reward Hacking in Reinforcement Learning（Lilian Weng, 2024）', url: 'https://lilianweng.github.io/posts/2024-11-28-reward-hacking/' }
+const CLIPP: QuizSource = { title: 'CLIP: Learning Transferable Visual Models From Natural Language Supervision（arXiv 2103.00020）', url: 'https://arxiv.org/abs/2103.00020' }
+const LLAVA: QuizSource = { title: 'LLaVA: Visual Instruction Tuning（arXiv 2304.08485）', url: 'https://arxiv.org/abs/2304.08485' }
+const LLAVA15: QuizSource = { title: 'LLaVA-1.5: Improved Baselines with Visual Instruction Tuning（arXiv 2310.03744）', url: 'https://arxiv.org/abs/2310.03744' }
+const BLIP2: QuizSource = { title: 'BLIP-2（arXiv 2301.12597）', url: 'https://arxiv.org/abs/2301.12597' }
+const FLAMINGO: QuizSource = { title: 'Flamingo（arXiv 2204.14198）', url: 'https://arxiv.org/abs/2204.14198' }
+const QWEN2VL: QuizSource = { title: 'Qwen2-VL（arXiv 2409.12191）', url: 'https://arxiv.org/abs/2409.12191' }
+const INTERNVL: QuizSource = { title: 'InternVL（arXiv 2312.14238）', url: 'https://arxiv.org/abs/2312.14238' }
+const DDPM: QuizSource = { title: 'Denoising Diffusion Probabilistic Models（arXiv 2006.11239）', url: 'https://arxiv.org/abs/2006.11239' }
+const DDIM: QuizSource = { title: 'Denoising Diffusion Implicit Models（arXiv 2010.02502）', url: 'https://arxiv.org/abs/2010.02502' }
 
 export const QUIZ: QuizQuestion[] = [
   // ---------- 02-M1.1 自注意力机制 ----------
@@ -993,7 +1002,7 @@ assert round(zero_model_state_gb(psi, 64, 3), 2) == 1.88    # 16Ψ/Nd`,
     question: '概述 DP、TP、PP、EP、SP 五种并行各切什么、通信特点是什么。',
     keyPoints: ['DP：复制模型、切数据，反向后 all-reduce 梯度（ZeRO / FSDP 进一步切模型状态）', 'TP：层内切权重矩阵（如 Megatron 的列切 / 行切），每层都有集合通信，通常放在节点内高带宽互联上', 'PP：按层切成多个阶段，阶段间点对点传激活，需 micro-batch 减少气泡', 'EP：MoE 的不同专家放到不同设备，token 经 all-to-all 分发与汇聚', 'SP：沿序列维切分 LayerNorm、dropout 等 TP 未覆盖的部分，降低激活显存'],
     explanation: '大规模训练通常组合多种并行（如 TP 在节点内、PP 跨节点、DP 最外层）。SP 的定义见 Korthikanti 等。',
-    source: RECOMP },
+    source: RECOMP, extraSources: [MEGATRON, GPIPE] },
 
   // ---------- 03-M4.3 ZeRO 与 FSDP ----------
   { id: 'q-03-m4-3-a', pointId: '03-M4.3', type: 'choice',
@@ -1275,7 +1284,7 @@ assert sum(len(m['content']) // 4 for m in out) <= 40`,
     question: '对比 MemGPT / Letta、Mem0、MemOS 的设计思路。',
     keyPoints: ['MemGPT / Letta：把 LLM 当作操作系统，自主通过函数调用在主上下文与外部存储（archival / recall）之间换入换出', 'Mem0：面向生产的记忆层，从对话中抽取、整合、检索显著事实，可选图记忆', 'MemOS：把记忆作为一等系统资源统一调度，覆盖参数记忆、激活记忆与明文记忆', '共同点：都在有限上下文之外提供持久记忆并按需检索', '选型看重点：Agent 自主管理（MemGPT）/ 轻量接入（Mem0）/ 系统级统一管理（MemOS）'],
     explanation: 'MemOS 论文提出用 MemCube 统一封装明文、激活与参数三类记忆，并像操作系统一样调度。',
-    source: MEMOS },
+    source: MEMOS, extraSources: [MEMGPT, MEM0] },
   // ---------- 04-M4.1 RAG 基础流程 ----------
   { id: 'q-04-m4-1-a', pointId: '04-M4.1', type: 'choice',
     question: 'Lewis 等 2020 年的 RAG 模型由哪两部分记忆组成？',
@@ -1428,7 +1437,7 @@ assert out.index('c') < out.index('b')`,
     question: 'GraphRAG 和 RAG-Fusion 分别解决什么问题？怎么做？',
     keyPoints: ['GraphRAG 针对「数据集的主题是什么」这类全局问题，普通 RAG 难以回答（本质是面向查询的摘要）', 'GraphRAG 用 LLM 从文档抽取实体知识图谱，再为紧密相关的实体社区预先生成摘要', 'GraphRAG 回答时让每个社区摘要生成部分答案，再汇总成最终回答', 'RAG-Fusion 让 LLM 生成多个改写查询分别检索', 'RAG-Fusion 用倒数排名融合（RRF）合并多路结果后再生成'],
     explanation: 'GraphRAG 要点出自 Edge 等的摘要；RAG-Fusion 出自 Rackauckas 的论文。',
-    source: GRAPHRAG },
+    source: GRAPHRAG, extraSources: [RAGFUSION] },
 
   // ---------- 04-M4.9 生产级 RAG 调优 ----------
   { id: 'q-04-m4-9-a', pointId: '04-M4.9', type: 'choice',
@@ -1954,7 +1963,7 @@ assert adv.shape == (2, 4)`,
     question: '从训练与提示两方面列举防御间接提示注入的手段。',
     keyPoints: ['训练侧：指令层级训练，让模型优先遵循系统 / 开发者指令', '训练侧：结构化指令微调（如 StruQ），区分指令通道与数据通道', '提示侧：Spotlighting——用分隔符、数据标记或编码（如 base64）标示外部内容来源', '系统侧：最小权限、高风险操作人工确认、隔离不可信内容（Dual LLM）', '评测：持续做注入攻击红队测试，没有单一方法能彻底解决'],
     explanation: 'Spotlighting 论文提出 delimiting、datamarking、encoding 三种变换，在实验中大幅降低了攻击成功率。',
-    source: SPOTLIGHT },
+    source: SPOTLIGHT, extraSources: [IHIER, STRUQ] },
 
   // ---------- 05-M7.2 RL Infra ----------
   { id: 'q-05-m7-2-a', pointId: '05-M7.2', type: 'choice',
@@ -1993,4 +2002,133 @@ assert adv.shape == (2, 4)`,
     answer: 1,
     explanation: '论文发现加大 KL 惩罚系数使训练停在更小的 KL 处，但金标准 RM 分数关于 KL 距离的前沿基本不变，因此其效果近似于提前停止。',
     source: RMOVER },
+  // ---------- 06-M1.2 CLIP 对比学习 ----------
+  { id: 'q-06-m1-2-a', pointId: '06-M1.2', type: 'choice',
+    question: 'CLIP 的预训练任务是什么？',
+    options: ['给图像预测固定类别标签', '判断一批图像与一批文本中哪段文本对应哪张图像', '根据图像逐字生成描述', '重建被遮挡的图像块'],
+    answer: 1,
+    explanation: '论文摘要：预测“哪段 caption 对应哪张图”这一简单预训练任务，在约 4 亿图文对上从零学到强图像表征。',
+    source: CLIPP },
+  { id: 'q-06-m1-2-b', pointId: '06-M1.2', type: 'short',
+    question: 'CLIP 如何实现零样本分类？为什么它不需要下游标注数据？',
+    keyPoints: ['预训练后用自然语言引用 / 描述视觉概念', '把类别名写成文本（如 “a photo of a {label}”）编码成文本向量', '与图像向量计算相似度，取最相似的类别', '类别集合由文本给定，换任务只需换文本，无需针对数据集训练'],
+    explanation: '论文摘要：预训练后用自然语言引用已学到的视觉概念，实现到下游任务的零样本迁移，在 30 多个数据集上常与全监督基线相当。',
+    source: CLIPP },
+  { id: 'q-06-m1-2-c', pointId: '06-M1.2', type: 'code',
+    question: '用 PyTorch 实现 CLIP 风格的对称对比损失：输入一批配对的图像特征与文本特征（N×D）和温度 t，先 L2 归一化，再对相似度矩阵在图像→文本、文本→图像两个方向做交叉熵并取平均。',
+    reference: `import torch
+import torch.nn.functional as F
+
+def clip_loss(img, txt, t=0.07):
+    img = F.normalize(img, dim=-1)
+    txt = F.normalize(txt, dim=-1)
+    logits = img @ txt.T / t
+    labels = torch.arange(img.size(0))
+    return (F.cross_entropy(logits, labels) + F.cross_entropy(logits.T, labels)) / 2`,
+    tests: `torch.manual_seed(0)
+x = torch.randn(8, 16)
+assert clip_loss(x, x) < clip_loss(x, torch.randn(8, 16))   # 完全对齐时损失更小
+a, b = torch.randn(4, 16), torch.randn(4, 16)
+assert torch.allclose(clip_loss(a, b), clip_loss(b, a))      # 对称
+print('ok')`,
+    explanation: '对角线是正样本，同一批其余样本都是负样本；两个方向的交叉熵取平均即对称损失，原论文中温度是可学习参数。',
+    source: CLIPP },
+
+  // ---------- 06-M2.1 连接器 ----------
+  { id: 'q-06-m2-1-a', pointId: '06-M2.1', type: 'choice',
+    question: 'BLIP-2 用什么模块连接冻结的图像编码器与冻结的 LLM？',
+    options: ['两层 MLP 投影', '轻量的 Querying Transformer（Q-Former）', '在 LLM 每层插入门控交叉注意力', '直接把像素作为 token 输入'],
+    answer: 1,
+    explanation: '论文摘要：BLIP-2 以轻量的 Querying Transformer 弥合模态鸿沟，并分两阶段预训练（先表征学习，再生成学习）。',
+    source: BLIP2 },
+  { id: 'q-06-m2-1-b', pointId: '06-M2.1', type: 'short',
+    question: '比较三类连接器：MLP 投影（LLaVA）、Q-Former（BLIP-2）、交叉注意力（Flamingo）。',
+    keyPoints: ['MLP：把每个视觉 patch 特征投影到词嵌入空间，结构简单；LLaVA-1.5 指出这种全连接连接器出人意料地强且省数据', 'Q-Former：用少量可学习查询从冻结图像编码器中抽取信息，可训练参数少', '交叉注意力：视觉信息通过插入 LM 层间的交叉注意力注入，而不是作为输入 token', 'Flamingo 借此桥接预训练视觉 / 语言模型，并处理任意交错的图文序列'],
+    explanation: 'MLP 结论见 LLaVA-1.5 摘要；Q-Former 见 BLIP-2；Flamingo 摘要强调桥接预训练视觉与语言模型、处理任意交错图文数据（门控交叉注意力层见正文）。',
+    source: LLAVA15, extraSources: [BLIP2, FLAMINGO] },
+  { id: 'q-06-m2-1-c', pointId: '06-M2.1', type: 'code',
+    question: '用 PyTorch 实现 LLaVA-1.5 式的两层 MLP 连接器：把视觉编码器输出（B×N×Dv）映射到 LLM 隐维度 Dt，中间用 GELU。',
+    reference: `import torch
+import torch.nn as nn
+
+class Projector(nn.Module):
+    def __init__(self, dv, dt):
+        super().__init__()
+        self.net = nn.Sequential(nn.Linear(dv, dt), nn.GELU(), nn.Linear(dt, dt))
+
+    def forward(self, x):
+        return self.net(x)`,
+    tests: `p = Projector(1024, 4096)
+y = p(torch.randn(2, 576, 1024))
+assert y.shape == (2, 576, 4096)      # token 数不变，只变维度
+print('ok')`,
+    explanation: 'LLaVA 原版用单个线性层，LLaVA-1.5 改为 MLP 投影；每个视觉 token 独立映射，视觉 token 数不变（336px、patch 14 时为 24×24=576）。',
+    source: LLAVA15 },
+
+  // ---------- 06-M2.2 主流 VLM ----------
+  { id: 'q-06-m2-2-a', pointId: '06-M2.2', type: 'choice',
+    question: 'Qwen2-VL 用什么机制摆脱“固定输入分辨率”？',
+    options: ['把所有图像缩放到 224×224', 'Naive Dynamic Resolution：不同分辨率图像动态转换为不同数量的视觉 token', '只保留中心裁剪区域', '把图像转成文字描述再输入'],
+    answer: 1,
+    explanation: '论文摘要：Naive Dynamic Resolution 让模型把不同分辨率的图像动态处理成不同数量的视觉 token，并配合 M-RoPE 融合文本、图像、视频的位置信息。',
+    source: QWEN2VL },
+  { id: 'q-06-m2-2-b', pointId: '06-M2.2', type: 'choice',
+    question: 'InternVL（2023）的核心思路是？',
+    options: ['完全不用视觉编码器', '把视觉基础模型扩大到 60 亿参数，并与 LLM 渐进对齐', '只用合成数据训练', '用 CNN 取代 ViT'],
+    answer: 1,
+    explanation: '论文摘要：InternVL 将视觉基础模型扩展到 6B 参数，并用网络规模图文数据渐进地与 LLM 对齐。',
+    source: INTERNVL },
+  { id: 'q-06-m2-2-c', pointId: '06-M2.2', type: 'short',
+    question: '概括 LLaVA、Qwen2-VL、InternVL 各自的代表性设计。',
+    keyPoints: ['LLaVA：视觉编码器 + LLM 端到端训练，首次用纯语言 GPT-4 生成多模态指令数据做视觉指令微调', 'Qwen2-VL：Naive Dynamic Resolution（动态视觉 token 数）+ M-RoPE，图像与视频统一处理', 'InternVL：把视觉编码器扩到 6B 参数，与 LLM 渐进对齐'],
+    explanation: '三点分别出自三篇论文摘要。',
+    source: LLAVA, extraSources: [QWEN2VL, INTERNVL] },
+
+  // ---------- 06-M2.3 多模态训练流程 ----------
+  { id: 'q-06-m2-3-a', pointId: '06-M2.3', type: 'choice',
+    question: 'BLIP-2 的两阶段预训练依次是？',
+    options: ['先生成学习、再表征学习', '先从冻结图像编码器引导视觉-语言表征学习，再从冻结 LLM 引导视觉到语言的生成学习', '先全参微调 LLM、再训练图像编码器', '只有一个阶段'],
+    answer: 1,
+    explanation: '论文摘要原文：第一阶段 bootstrap 表征学习（冻结图像编码器），第二阶段 bootstrap 生成学习（冻结语言模型）。',
+    source: BLIP2 },
+  { id: 'q-06-m2-3-b', pointId: '06-M2.3', type: 'short',
+    question: '典型 VLM 训练为什么分“对齐预训练 → 指令微调”两步？各步通常训练哪些参数？',
+    keyPoints: ['对齐阶段：用图文对让视觉特征映射到 LLM 词嵌入空间，常冻结视觉编码器与 LLM，只训连接器', '指令微调阶段：用多模态指令数据训练对话 / 遵循指令能力，连接器与 LLM 一起更新', '先对齐再微调，避免随机初始化的连接器一开始就破坏 LLM', 'LLaVA 首次用 GPT-4 生成多模态指令数据做这一步'],
+    explanation: 'LLaVA 论文正文采用两阶段：特征对齐预训练（只更新投影层）+ 端到端微调（投影层与 LLM）；摘要说明指令数据由纯语言 GPT-4 生成。',
+    source: LLAVA },
+  { id: 'q-06-m2-3-c', pointId: '06-M2.3', type: 'choice',
+    question: 'LLaVA-1.5 在 LLaVA 基础上的简单改动包括？',
+    options: ['换成 Q-Former', 'CLIP-ViT-L-336px + MLP 投影，并加入面向学术任务的 VQA 数据与简短回答格式提示', '去掉指令微调', '把 LLM 冻结不训练'],
+    answer: 1,
+    explanation: '论文摘要：使用 CLIP-ViT-L-336px 与 MLP 投影、加入学术任务 VQA 数据及回答格式提示；13B 模型仅用 120 万公开数据，单台 8×A100 约 1 天训完。',
+    source: LLAVA15 },
+
+  // ---------- 06-M3.2 Diffusion ----------
+  { id: 'q-06-m3-2-a', pointId: '06-M3.2', type: 'choice',
+    question: 'DDIM 相比 DDPM 的关键区别是？',
+    options: ['需要全新的训练目标', '构造非马尔可夫的扩散过程，训练目标与 DDPM 相同，但反向采样可快得多', '引入判别器做对抗训练', '只能做无条件生成'],
+    answer: 1,
+    explanation: '论文摘要：DDIM 与 DDPM 训练过程相同；构造的非马尔可夫过程得到相同训练目标，采样在墙钟时间上快 10–50 倍，并可在隐空间做语义插值。',
+    source: DDIM },
+  { id: 'q-06-m3-2-b', pointId: '06-M3.2', type: 'short',
+    question: '说明 DDPM 的前向加噪、训练目标与采样过程。',
+    keyPoints: ['前向过程逐步加高斯噪声，可一步写成 x_t = √ᾱ_t·x_0 + √(1−ᾱ_t)·ε', '训练时随机取 t，让网络预测加入的噪声 ε，用 MSE（简化目标）', '采样从纯噪声出发，沿马尔可夫链逐步去噪', '缺点是需要很多步（原论文 T = 1000），DDIM 等方法用于加速'],
+    explanation: '闭式前向公式与简化的噪声预测目标见 DDPM 论文；“需模拟很多步马尔可夫链”这一缺点见 DDIM 摘要。',
+    source: DDPM, extraSources: [DDIM] },
+  { id: 'q-06-m3-2-c', pointId: '06-M3.2', type: 'code',
+    question: '用 PyTorch 实现 DDPM 的前向加噪 q_sample(x0, t, eps, alpha_bar)：x_t = √ᾱ_t·x0 + √(1−ᾱ_t)·eps，t 为每个样本的步号（形状 B），x0 形状 B×C×H×W。',
+    reference: `import torch
+
+def q_sample(x0, t, eps, alpha_bar):
+    a = alpha_bar[t].view(-1, *([1] * (x0.dim() - 1)))
+    return a.sqrt() * x0 + (1 - a).sqrt() * eps`,
+    tests: `betas = torch.linspace(1e-4, 0.02, 1000)
+alpha_bar = torch.cumprod(1 - betas, dim=0)
+x0 = torch.randn(2, 3, 4, 4); eps = torch.randn_like(x0)
+xt = q_sample(x0, torch.tensor([0, 999]), eps, alpha_bar)
+assert torch.allclose(xt[0], x0[0], atol=0.05)          # t=0 几乎无噪声
+assert torch.allclose(xt[1], eps[1], atol=0.05)         # t=T-1 几乎是纯噪声
+print('ok')`,
+    explanation: '线性 β 从 1e-4 到 0.02、T=1000 是 DDPM 原论文设置；ᾱ_T 接近 0，故末步近似纯高斯噪声。',
+    source: DDPM },
 ]
