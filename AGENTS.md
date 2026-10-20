@@ -191,7 +191,7 @@ AGENTS.md          本文件
    - `choice`：`options`（2–6 个）+ `answer`（正确选项下标，从 0 开始），自动判分。
    - `short`：`keyPoints`（3–5 条要点），用户作答后对照勾选，得分 = 命中比例。
    - `code`：`reference`（参考实现）+ `tests`（测试用例 / 自检方法），用户自评。
-   - 所有题型必填 `question`、`explanation`；`source` 必填（check-tree 会校验），优先原始论文 / 官方文档，链接先验证能打开。
+   - 所有题型必填 `question`、`explanation`；一题涉及多个方法 / 工具时，用 `extraSources` 补充其余来源；`source` 必填（check-tree 会校验），优先原始论文 / 官方文档，链接先验证能打开。
 3. **质量红线**：答案和解析必须核对过一手来源，拿不准的不要出；每个 ★★★ 学习点建议 3 题、每关至少 1 道手撕题；遵守 DESIGN.md 的用词（谈学习，不出现"面试/考点/必问"）。
 4. **格式约定**（check-tree 用正则解析）：每题以两空格缩进的 `{ id: ...` 开头；字符串用单引号，代码用反引号模板串；`options` / `keyPoints` 数组以 `],` 换行结束。
 5. 跑 `npm run build`、`npm run lint` 和 `python scripts/check-tree.py`（会校验 pointId 挂得上树、id 唯一、answer 不越界、各题型字段齐全），commit（信息如 `quiz: 新增 02-M2 自测题 9 道`）。

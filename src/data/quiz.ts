@@ -18,6 +18,7 @@ export interface QuizQuestion {
   tests?: string           // code：测试用例 / 自检方法（文本）
   explanation: string      // 解析（所有题型必填）
   source: QuizSource       // 出处（必填，优先原始论文 / 官方文档）
+  extraSources?: QuizSource[] // 补充出处：一题涉及多个方法 / 工具时，为其余部分列出各自来源
 }
 
 const AIAYN: QuizSource = { title: 'Attention Is All You Need（arXiv 1706.03762）', url: 'https://arxiv.org/abs/1706.03762' }
@@ -72,6 +73,7 @@ const INTQ: QuizSource = { title: 'Quantization and Training of NNs for Integer-
 const INT8: QuizSource = { title: 'LLM.int8()（arXiv 2208.07339）', url: 'https://arxiv.org/abs/2208.07339' }
 const GPTQP: QuizSource = { title: 'GPTQ（arXiv 2210.17323）', url: 'https://arxiv.org/abs/2210.17323' }
 const AWQP: QuizSource = { title: 'AWQ（arXiv 2306.00978）', url: 'https://arxiv.org/abs/2306.00978' }
+const GGUF: QuizSource = { title: 'ggml 文档：GGUF 文件格式', url: 'https://github.com/ggml-org/ggml/blob/master/docs/gguf.md' }
 const SMOOTH: QuizSource = { title: 'SmoothQuant（arXiv 2211.10438）', url: 'https://arxiv.org/abs/2211.10438' }
 const ZERO: QuizSource = { title: 'ZeRO（arXiv 1910.02054）', url: 'https://arxiv.org/abs/1910.02054' }
 const RECOMP: QuizSource = { title: 'Reducing Activation Recomputation（arXiv 2205.05198）', url: 'https://arxiv.org/abs/2205.05198' }
@@ -122,6 +124,34 @@ const CC_PERM: QuizSource = { title: 'Claude Code 文档：Permissions', url: 'h
 const LG_HITL: QuizSource = { title: 'LangGraph 文档：Interrupts（human-in-the-loop）', url: 'https://langchain-ai.github.io/langgraph/concepts/human_in_the_loop/' }
 const OAI_SO: QuizSource = { title: 'OpenAI 文档：Structured outputs', url: 'https://developers.openai.com/api/docs/guides/structured-outputs' }
 const STRIPE_IDEM: QuizSource = { title: 'Stripe 文档：Idempotent requests', url: 'https://docs.stripe.com/api/idempotent_requests' }
+const PPO: QuizSource = { title: 'Proximal Policy Optimization（arXiv 1707.06347）', url: 'https://arxiv.org/abs/1707.06347' }
+const TRPO: QuizSource = { title: 'Trust Region Policy Optimization（arXiv 1502.05477）', url: 'https://arxiv.org/abs/1502.05477' }
+const GAE: QuizSource = { title: 'Generalized Advantage Estimation（arXiv 1506.02438）', url: 'https://arxiv.org/abs/1506.02438' }
+const INSTRUCTGPT: QuizSource = { title: 'InstructGPT（arXiv 2203.02155）', url: 'https://arxiv.org/abs/2203.02155' }
+const LIMA: QuizSource = { title: 'LIMA: Less Is More for Alignment（arXiv 2305.11206）', url: 'https://arxiv.org/abs/2305.11206' }
+const CEDOC: QuizSource = { title: 'PyTorch 文档：CrossEntropyLoss（ignore_index）', url: 'https://docs.pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html' }
+const SUMHF: QuizSource = { title: 'Learning to summarize from human feedback（arXiv 2009.01325）', url: 'https://arxiv.org/abs/2009.01325' }
+const RMOVER: QuizSource = { title: 'Scaling Laws for Reward Model Overoptimization（arXiv 2210.10760）', url: 'https://arxiv.org/abs/2210.10760' }
+const DPOP: QuizSource = { title: 'Direct Preference Optimization（arXiv 2305.18290）', url: 'https://arxiv.org/abs/2305.18290' }
+const IPO: QuizSource = { title: 'IPO：A General Theoretical Paradigm（arXiv 2310.12036）', url: 'https://arxiv.org/abs/2310.12036' }
+const KTO: QuizSource = { title: 'KTO（arXiv 2402.01306）', url: 'https://arxiv.org/abs/2402.01306' }
+const ORPO: QuizSource = { title: 'ORPO（arXiv 2403.07691）', url: 'https://arxiv.org/abs/2403.07691' }
+const SIMPO: QuizSource = { title: 'SimPO（arXiv 2405.14734）', url: 'https://arxiv.org/abs/2405.14734' }
+const DPOVSPPO: QuizSource = { title: 'Is DPO Superior to PPO for LLM Alignment?（arXiv 2404.10719）', url: 'https://arxiv.org/abs/2404.10719' }
+const DSMATH: QuizSource = { title: 'DeepSeekMath / GRPO（arXiv 2402.03300）', url: 'https://arxiv.org/abs/2402.03300' }
+const DAPO: QuizSource = { title: 'DAPO（arXiv 2503.14476）', url: 'https://arxiv.org/abs/2503.14476' }
+const R1: QuizSource = { title: 'DeepSeek-R1（arXiv 2501.12948）', url: 'https://arxiv.org/abs/2501.12948' }
+const RLVRLIMIT: QuizSource = { title: 'Does RL Really Incentivize Reasoning Capacity Beyond the Base Model?（arXiv 2504.13837）', url: 'https://arxiv.org/abs/2504.13837' }
+const PRM: QuizSource = { title: 'Let’s Verify Step by Step（arXiv 2305.20050）', url: 'https://arxiv.org/abs/2305.20050' }
+const PROCOUT: QuizSource = { title: 'Process- and outcome-based feedback（arXiv 2211.14275）', url: 'https://arxiv.org/abs/2211.14275' }
+const SEARCHR1: QuizSource = { title: 'Search-R1（arXiv 2503.09516）', url: 'https://arxiv.org/abs/2503.09516' }
+const RAGEN: QuizSource = { title: 'RAGEN（arXiv 2504.20073）', url: 'https://arxiv.org/abs/2504.20073' }
+const IHIER: QuizSource = { title: 'The Instruction Hierarchy（arXiv 2404.13208）', url: 'https://arxiv.org/abs/2404.13208' }
+const STRUQ: QuizSource = { title: 'StruQ（arXiv 2402.06363）', url: 'https://arxiv.org/abs/2402.06363' }
+const SPOTLIGHT: QuizSource = { title: 'Spotlighting（arXiv 2403.14720）', url: 'https://arxiv.org/abs/2403.14720' }
+const HYBRIDFLOW: QuizSource = { title: 'HybridFlow / verl（arXiv 2409.19256）', url: 'https://arxiv.org/abs/2409.19256' }
+const OPENRLHF: QuizSource = { title: 'OpenRLHF（arXiv 2405.11143）', url: 'https://arxiv.org/abs/2405.11143' }
+const WENG_RH: QuizSource = { title: 'Reward Hacking in Reinforcement Learning（Lilian Weng, 2024）', url: 'https://lilianweng.github.io/posts/2024-11-28-reward-hacking/' }
 
 export const QUIZ: QuizQuestion[] = [
   // ---------- 02-M1.1 自注意力机制 ----------
@@ -915,7 +945,7 @@ assert quantize_sym_int8(np.zeros(4))[0].tolist() == [0, 0, 0, 0]`,
     question: '说明 AWQ 的核心观察与做法，并解释 GGUF 是什么。',
     keyPoints: ['AWQ 观察：权重并非同等重要，只保护约 1% 的显著权重就能大幅降低量化误差', '显著权重按激活幅度（而非权重幅度）挑选', '做法：对显著通道做逐通道缩放而不是混合精度，对硬件友好', 'AWQ 不依赖反向传播或重建，对校准集过拟合风险小', 'GGUF：ggml / llama.cpp 使用的单文件模型格式，包含张量与元数据，便于加载与本地推理，支持多种量化类型'],
     explanation: 'AWQ 要点出自论文摘要；GGUF 的定义见 ggml 官方文档：一种用于存储 GGML 推理模型的二进制文件格式。',
-    source: AWQP },
+    source: AWQP, extraSources: [GGUF] },
 
   // ---------- 03-M4.1 显存构成估算（训练） ----------
   { id: 'q-03-m4-1-a', pointId: '03-M4.1', type: 'choice',
@@ -1644,4 +1674,323 @@ except ZeroDivisionError:
     keyPoints: ['结构化输出：用 JSON Schema 约束工具参数与结果格式，解析失败时带错误信息重试', '幂等性：有副作用的操作带幂等键，重试不会重复执行', '重试与降级：对瞬时错误指数退避重试，失败时降级到更简单的路径或交给人工', '确定性：能用代码确定完成的步骤不交给模型，固定版本、temperature 等参数', '可观测：记录完整轨迹，设置步数 / 成本上限与超时，防止死循环'],
     explanation: 'Stripe 文档说明了幂等键的服务端语义（同一 key 的重试返回保存的结果，key 至少保存 24 小时后才可能被清理）。',
     source: STRIPE_IDEM },
+  // ---------- 05-M1.4 PPO / TRPO / GAE ----------
+  { id: 'q-05-m1-4-a', pointId: '05-M1.4', type: 'choice',
+    question: 'PPO 的裁剪目标 L^CLIP 是什么形式？',
+    options: ['E[r_t·A_t]', 'E[min(r_t·A_t, clip(r_t, 1−ε, 1+ε)·A_t)]，r_t 为新旧策略概率比', 'E[A_t²]', 'E[log π·V]'],
+    answer: 1,
+    explanation: 'PPO 论文第 3 节：取未裁剪与裁剪目标的较小值，得到原目标的悲观下界，防止概率比偏离 1 太远；论文实验中 ε = 0.2 效果最好。',
+    source: PPO },
+  { id: 'q-05-m1-4-b', pointId: '05-M1.4', type: 'choice',
+    question: 'TRPO 与 PPO 在限制策略更新幅度上的区别是？',
+    options: ['两者都不限制', 'TRPO 用 KL 散度约束的信赖域，需要共轭梯度等二阶近似求解；PPO 用概率比裁剪的一阶目标近似这一效果，实现更简单', 'PPO 用二阶方法，TRPO 用一阶', 'TRPO 只适用于离散动作'],
+    answer: 1,
+    explanation: 'TRPO 在平均 KL 约束下最大化替代目标；PPO 的动机正是保留 TRPO 的稳定性，同时只用一阶优化。',
+    source: TRPO },
+  { id: 'q-05-m1-4-c', pointId: '05-M1.4', type: 'code',
+    question: '用 NumPy 实现 GAE：输入长度为 T 的 rewards、values（长度 T+1，最后一个是 bootstrap 值）、dones，返回 advantages 与 returns（= advantages + values[:T]）。',
+    reference: `import numpy as np
+
+def gae(rewards, values, dones, gamma=0.99, lam=0.95):
+    T = len(rewards)
+    adv = np.zeros(T)
+    last = 0.0
+    for t in reversed(range(T)):
+        nonterminal = 1.0 - dones[t]
+        delta = rewards[t] + gamma * values[t + 1] * nonterminal - values[t]
+        last = delta + gamma * lam * nonterminal * last
+        adv[t] = last
+    return adv, adv + np.asarray(values[:T])`,
+    tests: `r = np.array([1.0, 1.0, 1.0]); v = np.array([0.0, 0.0, 0.0, 0.0]); d = np.array([0, 0, 1])
+adv, ret = gae(r, v, d, gamma=1.0, lam=1.0)
+assert np.allclose(adv, [3, 2, 1])            # λ=1, V=0 时就是蒙特卡洛回报
+adv0, _ = gae(r, np.array([0.5, 0.5, 0.5, 9.0]), d, gamma=0.9, lam=0.0)
+assert np.allclose(adv0, [1 + 0.9 * 0.5 - 0.5, 1 + 0.9 * 0.5 - 0.5, 1 - 0.5])  # λ=0 退化为单步 TD 误差`,
+    explanation: 'A_t = Σ (γλ)^l δ_{t+l}，δ_t = r_t + γV(s_{t+1}) − V(s_t)。λ 在偏差与方差之间折中：λ = 0 为单步 TD（低方差高偏差），λ = 1 为蒙特卡洛（高方差低偏差）。',
+    source: GAE },
+
+  // ---------- 05-M2.1 后训练全流程 ----------
+  { id: 'q-05-m2-1-a', pointId: '05-M2.1', type: 'choice',
+    question: 'InstructGPT 的训练流程依次是？',
+    options: ['RM → SFT → PPO', '用示范数据做 SFT → 用人工排序比较数据训练奖励模型 → 用 PPO 针对奖励模型优化策略', '只做 SFT', 'PPO → SFT → RM'],
+    answer: 1,
+    explanation: '论文 Figure 2 的三步：SFT、RM、PPO；第 2、3 步可迭代进行。',
+    source: INSTRUCTGPT },
+  { id: 'q-05-m2-1-b', pointId: '05-M2.1', type: 'choice',
+    question: 'InstructGPT 论文中，人类评估者对 1.3B InstructGPT 与 175B GPT-3 的偏好结果是？',
+    options: ['更偏好 175B GPT-3', '更偏好 1.3B InstructGPT 的输出，尽管其参数量少 100 多倍', '两者无差别', '没有做人工评估'],
+    answer: 1,
+    explanation: '摘要：outputs from the 1.3B parameter InstructGPT model are preferred to outputs from the 175B GPT-3, despite having 100x fewer parameters。',
+    source: INSTRUCTGPT },
+  { id: 'q-05-m2-1-c', pointId: '05-M2.1', type: 'short',
+    question: '什么是「对齐税」（alignment tax）？InstructGPT 怎么缓解？',
+    keyPoints: ['对齐税：RLHF 后模型在部分公开 NLP 基准上性能回退', 'InstructGPT 提出 PPO-ptx：PPO 更新时混入预训练分布的梯度（预训练语言模型损失）', 'PPO-ptx 显著减少了回退，且不损害人类偏好评分', 'RL 目标中还有对 SFT 模型的逐 token KL 惩罚，防止偏离太远', '后训练要在偏好提升与通用能力保持之间权衡'],
+    explanation: '论文在 SQuAD、DROP、HellaSwag、WMT 翻译等任务上观察到回退，并用 PPO-ptx 缓解。',
+    source: INSTRUCTGPT },
+
+  // ---------- 05-M2.2 SFT 数据构造 ----------
+  { id: 'q-05-m2-2-a', pointId: '05-M2.2', type: 'choice',
+    question: 'LIMA 论文的实验设置与核心结论是？',
+    options: ['用 100 万条数据 RLHF', '只用 1,000 条精心挑选的指令数据对 65B LLaMA 做标准监督微调（不用 RL），效果很强；表明知识几乎都来自预训练，少量高质量数据即可教会输出格式', '数据越多越好', '必须用人类偏好'],
+    answer: 1,
+    explanation: '论文提出 Superficial Alignment Hypothesis；受控人工评估中 LIMA 在 43% 的情况下与 GPT-4 相当或更优。',
+    source: LIMA },
+  { id: 'q-05-m2-2-b', pointId: '05-M2.2', type: 'code',
+    question: 'SFT 时通常只在回答部分计算损失。给定拼接后的 input_ids 与每条样本 prompt 的长度，构造 labels（prompt 位置与 padding 置为 −100），并用 PyTorch 计算移位后的交叉熵。',
+    reference: `import torch, torch.nn.functional as F
+
+def sft_labels(input_ids, prompt_lens, pad_id):
+    labels = input_ids.clone()
+    for i, n in enumerate(prompt_lens):
+        labels[i, :n] = -100                       # 不在 prompt 上计算损失
+    labels[input_ids == pad_id] = -100
+    return labels
+
+def sft_loss(logits, labels):
+    # 第 t 个位置预测第 t+1 个 token
+    return F.cross_entropy(logits[:, :-1].reshape(-1, logits.size(-1)),
+                           labels[:, 1:].reshape(-1), ignore_index=-100)`,
+    tests: `ids = torch.tensor([[5, 6, 7, 8, 0], [5, 9, 9, 0, 0]])
+lab = sft_labels(ids, [2, 1], pad_id=0)
+assert lab.tolist() == [[-100, -100, 7, 8, -100], [-100, 9, 9, -100, -100]]
+logits = torch.randn(2, 5, 10, requires_grad=True)
+loss = sft_loss(logits, lab); loss.backward()
+assert torch.isfinite(loss)
+assert logits.grad[0, 0].abs().sum() == 0   # 位置 0 预测的是 prompt 内 token，被忽略、无梯度`,
+    explanation: 'CrossEntropyLoss 的 ignore_index 默认就是 −100，被忽略的位置不贡献损失与梯度。注意因果 LM 的标签要相对 logits 右移一位。',
+    source: CEDOC },
+  { id: 'q-05-m2-2-c', pointId: '05-M2.2', type: 'short',
+    question: '构造 SFT 数据时，如何权衡质量与数量？有哪些常见做法？',
+    keyPoints: ['质量优先：少量高质量、风格一致的数据往往胜过大量噪声数据（LIMA）', '多样性：覆盖不同任务类型、领域、难度与格式，避免分布单一', '一致性：统一回答风格与格式，清理错误、重复与有害样本', '数据来源：人工撰写、从强模型蒸馏 / 改写、真实用户问题，并做去重与过滤', '训练细节：只在回答上算损失、控制 epoch 防过拟合，留出评测集验证'],
+    explanation: 'LIMA 的消融显示，提升数据多样性与质量比单纯扩大数量更有效。',
+    source: LIMA },
+
+  // ---------- 05-M3.1 Reward Model 训练 ----------
+  { id: 'q-05-m3-1-a', pointId: '05-M3.1', type: 'choice',
+    question: 'InstructGPT 的奖励模型损失是什么形式？',
+    options: ['回归人类打分的 MSE', '成对排序损失：−log σ(r(x, y_w) − r(x, y_l))，y_w 为人类更偏好的回答', '交叉熵分类 10 档', 'KL 散度'],
+    answer: 1,
+    explanation: '这是 Bradley-Terry 形式的成对比较损失。InstructGPT 每个 prompt 让标注者对 K = 4~9 个回答排序，把同一 prompt 的 C(K,2) 个比较放进同一个 batch 元素，避免过拟合。',
+    source: INSTRUCTGPT },
+  { id: 'q-05-m3-1-b', pointId: '05-M3.1', type: 'choice',
+    question: 'Gao 等研究奖励模型过度优化时，用什么替代真人评估？发现了什么？',
+    options: ['人工逐条打分；没有过优化', '用一个固定的「金标准」RM 充当人类、为代理 RM 提供标签；随着对代理 RM 优化加深，金标准分数先升后降，且函数形式与优化方式（RL / best-of-n）有关', '用 BLEU', '用困惑度'],
+    answer: 1,
+    explanation: '这是古德哈特定律在 RLHF 中的定量刻画；论文还发现系数随 RM 参数量平滑变化。',
+    source: RMOVER },
+  { id: 'q-05-m3-1-c', pointId: '05-M3.1', type: 'short',
+    question: '训练一个可靠的奖励模型要注意什么？',
+    keyPoints: ['数据：成对比较 / 排序数据，标注规范清晰，检查标注者一致性', '模型：通常从 SFT 模型初始化，把 LM 头换成输出标量的头', '损失：成对 Bradley-Terry 损失，同一 prompt 的多个比较放在一起避免过拟合', '评估：在留出的偏好数据上看准确率，并检查长度等偏差', '使用：RM 是不完美代理，RL 时需 KL 约束、监控过优化，必要时迭代更新 RM'],
+    explanation: 'Stiennon 等的摘要工作同样用成对比较训练 RM，并观察到对 RM 过度优化会让真实质量下降。',
+    source: SUMHF },
+
+  // ---------- 05-M3.2 PPO for LLM ----------
+  { id: 'q-05-m3-2-a', pointId: '05-M3.2', type: 'choice',
+    question: 'InstructGPT 的 RL 阶段，最终优化的奖励包含什么？',
+    options: ['只有 RM 分数', 'RM 分数减去 β 倍的、当前策略相对 SFT 模型的逐 token KL 惩罚（PPO-ptx 还加预训练损失项）', '只有 KL', '人类实时打分'],
+    answer: 1,
+    explanation: 'KL 惩罚缓解对奖励模型的过度优化，防止策略输出偏离 SFT 分布太远。',
+    source: INSTRUCTGPT },
+  { id: 'q-05-m3-2-b', pointId: '05-M3.2', type: 'choice',
+    question: '标准 PPO-RLHF 训练时通常需要同时维护哪些模型？',
+    options: ['只有策略模型', 'Actor（策略）、Critic（价值模型）、Reference（冻结的 SFT 参考模型）、Reward Model 四个', '只有奖励模型', 'Actor 和 Reward Model 两个'],
+    answer: 1,
+    explanation: 'Critic 用于估计价值、计算优势（GAE）；Reference 用于计算 KL；RM 给出奖励。显存与调度开销大，这也是 GRPO 去掉 Critic、RL 框架（如 HybridFlow）优化调度的动机。',
+    source: HYBRIDFLOW },
+  { id: 'q-05-m3-2-c', pointId: '05-M3.2', type: 'short',
+    question: '说明 PPO 中 Critic 的作用，以及 LLM 场景下训练 Critic 的难点。',
+    keyPoints: ['Critic 估计状态价值 V(s)，作为基线降低策略梯度方差', '用 V 与奖励计算 TD 误差和 GAE 优势', 'LLM 场景奖励通常只在序列末尾给出（稀疏），逐 token 价值难以学准', 'Critic 一般与策略同规模，额外占用大量显存与计算', '因此出现去掉 Critic、用组内相对奖励作基线的方法（如 GRPO）'],
+    explanation: 'DeepSeekMath 论文指出 PPO 的价值函数通常与策略同规模，带来显著开销，且只在最后一个 token 有奖励时难以训练准确的逐 token 价值。',
+    source: DSMATH },
+
+  // ---------- 05-M3.3 DPO 及变体 ----------
+  { id: 'q-05-m3-3-a', pointId: '05-M3.3', type: 'code',
+    question: '实现 DPO 损失：输入策略模型与参考模型在 chosen / rejected 回答上的序列对数概率（已对 token 求和），返回平均损失与隐式奖励差。',
+    reference: `import torch.nn.functional as F
+
+def dpo_loss(pi_chosen, pi_rejected, ref_chosen, ref_rejected, beta=0.1):
+    chosen_reward = beta * (pi_chosen - ref_chosen)        # 隐式奖励 β·log(π/π_ref)
+    rejected_reward = beta * (pi_rejected - ref_rejected)
+    logits = chosen_reward - rejected_reward
+    return -F.logsigmoid(logits).mean(), logits.detach()`,
+    tests: `import torch
+z = torch.zeros(4)
+loss, m = dpo_loss(z, z, z, z)
+assert abs(loss.item() - torch.log(torch.tensor(2.0)).item()) < 1e-6   # 与参考一致时损失为 ln2
+better, _ = dpo_loss(torch.full((4,), 2.0), torch.full((4,), -2.0), z, z)
+assert better < loss                                                  # 拉开差距后损失下降`,
+    explanation: 'DPO 损失为 −log σ(β·log πθ(y_w)/π_ref(y_w) − β·log πθ(y_l)/π_ref(y_l))，把 RLHF 的 KL 约束奖励最大化问题化为在偏好数据上的分类损失，无需显式奖励模型与 RL 采样。',
+    source: DPOP },
+  { id: 'q-05-m3-3-b', pointId: '05-M3.3', type: 'choice',
+    question: '下列关于 DPO 变体的描述，哪项正确？',
+    options: ['KTO 需要成对偏好数据', 'SimPO 去掉参考模型，用长度归一化的平均对数概率作为隐式奖励，并加入目标间隔 γ', 'ORPO 需要先训练奖励模型', 'IPO 与 DPO 损失完全相同'],
+    answer: 1,
+    explanation: 'SimPO：reference-free，以平均对数概率为奖励并引入 target reward margin。KTO 只需「好 / 不好」的二元信号；ORPO 在 SFT 损失上加赔率比项，无需参考模型；IPO 用平方损失缓解 DPO 在确定性偏好下的过拟合。',
+    source: SIMPO },
+  { id: 'q-05-m3-3-c', pointId: '05-M3.3', type: 'short',
+    question: '概述 IPO、KTO、ORPO 各自针对 DPO 的什么问题、怎么改。',
+    keyPoints: ['IPO：指出 DPO 依赖 Bradley-Terry 假设，偏好接近确定时会过拟合、忽略 KL 正则；改用对隐式奖励差的平方回归损失', 'KTO：基于前景理论，只需单条样本的「好 / 不好」标签，不需要成对数据', 'ORPO：把偏好优化并入 SFT，用赔率比惩罚被拒回答，无需参考模型和单独的对齐阶段', '共同目标：降低数据、显存或训练流程成本，提升稳定性', '选择时看数据形态（成对 / 二元）与是否有参考模型预算'],
+    explanation: '分别见 IPO（Azar 等）、KTO（Ethayarajh 等）、ORPO（Hong 等）论文。',
+    source: IPO, extraSources: [KTO, ORPO] },
+
+  // ---------- 05-M3.4 RLHF vs DPO ----------
+  { id: 'q-05-m3-4-a', pointId: '05-M3.4', type: 'choice',
+    question: 'Xu 等「Is DPO Superior to PPO for LLM Alignment?」的结论是？',
+    options: ['DPO 在所有任务上都更好', '理论与实验显示 DPO 可能存在根本局限；找出关键实现因素后，PPO 在对话到代码生成的各测试中都超过其他对齐方法', '两者完全等价', 'PPO 无法用于 LLM'],
+    answer: 1,
+    explanation: '摘要原意如上；论文指出学术基准上 DPO 常领先，部分原因是 PPO 的实现细节没有调好。',
+    source: DPOVSPPO },
+  { id: 'q-05-m3-4-b', pointId: '05-M3.4', type: 'short',
+    question: '对比 RLHF（PPO）与 DPO 的优缺点。',
+    keyPoints: ['DPO：无需奖励模型和在线采样，实现简单、稳定、省资源', 'DPO：离线学习固定偏好数据，可能偏好分布外的回答，效果受数据覆盖度限制', 'PPO：在线采样探索，能利用奖励模型泛化，调好后上限更高', 'PPO：需维护多个模型，超参与实现细节敏感，工程成本高', '实践中常结合：先 SFT，再 DPO 或迭代 / 在线 DPO，或用 PPO / GRPO 做可验证奖励的 RL'],
+    explanation: 'Xu 等的理论分析指出 DPO 可能找到利用分布外回答的解。',
+    source: DPOVSPPO },
+  { id: 'q-05-m3-4-c', pointId: '05-M3.4', type: 'choice',
+    question: 'DPO 论文的核心推导是什么？',
+    options: ['把奖励模型换成规则', '利用 KL 约束奖励最大化问题最优策略的闭式解，把奖励用策略与参考策略的对数概率比表示，代入 Bradley-Terry 偏好模型，得到只依赖策略的损失', '用强化学习训练奖励模型', '用对比学习预训练'],
+    answer: 1,
+    explanation: '论文副标题 Your Language Model is Secretly a Reward Model 即指隐式奖励 r(x,y) = β·log π(y|x)/π_ref(y|x) + 常数。',
+    source: DPOP },
+
+  // ---------- 05-M4.1 GRPO ----------
+  { id: 'q-05-m4-1-a', pointId: '05-M4.1', type: 'code',
+    question: '实现 GRPO 的组内相对优势（结果监督）：输入形状 (B, G) 的奖励（每个问题采样 G 个回答），返回 (r − 组均值) / (组标准差 + eps)。',
+    reference: `import numpy as np
+
+def grpo_advantages(rewards, eps=1e-6):
+    r = np.asarray(rewards, dtype=float)
+    mean = r.mean(axis=1, keepdims=True)
+    std = r.std(axis=1, keepdims=True)
+    return (r - mean) / (std + eps)`,
+    tests: `adv = grpo_advantages([[1, 0, 0, 1], [1, 1, 1, 1]])
+assert np.allclose(adv[0], [1, -1, -1, 1], atol=1e-4)
+assert np.allclose(adv[1], 0)          # 全对（或全错）的组优势为 0，不提供梯度信号
+assert adv.shape == (2, 4)`,
+    explanation: '结果监督下，同一回答的每个 token 都使用这个优势。全对 / 全错的组没有学习信号，这正是 DAPO 动态采样要过滤的情况。',
+    source: DSMATH },
+  { id: 'q-05-m4-1-b', pointId: '05-M4.1', type: 'choice',
+    question: 'GRPO 相对 PPO 的主要改动是？',
+    options: ['去掉奖励模型', '去掉价值模型（Critic），用同一问题多次采样输出的组内平均奖励作为基线；KL 惩罚直接加在损失里而不是加到奖励中', '去掉裁剪', '改为离线学习'],
+    answer: 1,
+    explanation: 'DeepSeekMath 提出 GRPO 以减少 PPO 的显存占用；KL 项使用无偏估计 π_ref/π − log(π_ref/π) − 1。',
+    source: DSMATH },
+  { id: 'q-05-m4-1-c', pointId: '05-M4.1', type: 'short',
+    question: 'DAPO 针对 GRPO 在大规模长 CoT 训练中的问题提出了哪四项技术？',
+    keyPoints: ['Clip-Higher：解耦上下裁剪范围，提高上界，避免熵塌缩、保持探索', 'Dynamic Sampling：过滤组内奖励全对或全错（优势为 0）的样本，保持有效梯度', 'Token-Level Policy Gradient Loss：按 token 而非按样本平均损失，长回答的 token 不被稀释', 'Overlong Reward Shaping：对超长截断样本做软惩罚，减少奖励噪声', '论文用 Qwen2.5-32B 基座在 AIME 2024 上达到 50 分，并基于 verl 开源'],
+    explanation: 'DAPO = Decoupled Clip and Dynamic sAmpling Policy Optimization。',
+    source: DAPO },
+
+  // ---------- 05-M4.2 RLVR 与 R1 ----------
+  { id: 'q-05-m4-2-a', pointId: '05-M4.2', type: 'choice',
+    question: 'DeepSeek-R1-Zero 是怎样训练的？',
+    options: ['大量 SFT 后再 RL', '不经过 SFT，直接在基座模型上用 GRPO 做大规模 RL，奖励为基于规则的准确性奖励与格式奖励', '只用人类偏好 RLHF', '蒸馏自其他模型'],
+    answer: 1,
+    explanation: 'R1 报告：R1-Zero 用规则奖励（答案是否正确、是否按格式把思考放在指定标签里），未使用神经奖励模型以避免 reward hacking；训练中自发出现反思等行为。R1 则加入冷启动数据与多阶段训练改善可读性。',
+    source: R1 },
+  { id: 'q-05-m4-2-b', pointId: '05-M4.2', type: 'choice',
+    question: 'Yue 等用大 k 的 pass@k 考察 RLVR 后发现了什么？',
+    options: ['RLVR 在所有 k 下都显著超过基座', 'RLVR 模型在小 k（如 k = 1）时更好，但 k 很大时基座模型的 pass@k 更高；推理能力来源并受限于基座，而蒸馏能引入新的推理模式', 'RLVR 完全无效', 'pass@k 与 k 无关'],
+    answer: 1,
+    explanation: '论文认为当前 RLVR 主要提升采样效率，并未诱导出基座之外的全新推理模式；六种流行 RLVR 算法表现相近。',
+    source: RLVRLIMIT },
+  { id: 'q-05-m4-2-c', pointId: '05-M4.2', type: 'short',
+    question: '什么是可验证奖励（RLVR）？设计时要注意什么？',
+    keyPoints: ['奖励由程序可靠判定：数学答案比对、代码单元测试、格式校验等，而非学习得到的奖励模型', '优点：不易被 reward hacking，成本低、可大规模扩展', '答案抽取与判定要鲁棒（等价形式、单位、格式），否则引入奖励噪声', '题目难度要匹配模型能力，太难或太易都会让组内奖励无差异', '可加格式奖励、长度控制；只适用于有客观答案的任务'],
+    explanation: 'DeepSeek-R1 用规则奖励而非神经奖励模型，理由是后者在大规模 RL 中易被 hack 且需额外训练资源。',
+    source: R1 },
+
+  // ---------- 05-M4.3 PRM vs ORM ----------
+  { id: 'q-05-m4-3-a', pointId: '05-M4.3', type: 'choice',
+    question: 'Lightman 等（Let’s Verify Step by Step）比较过程监督与结果监督的结论是？',
+    options: ['结果监督更好', '在 MATH 上，过程监督训练的奖励模型显著优于结果监督；最佳模型解决了 MATH 代表性子集 78% 的题，并发布了 80 万条步骤级标注 PRM800K', '两者没有差别', '过程监督不需要标注'],
+    answer: 1,
+    explanation: '论文还发现主动学习能显著提升过程监督的效率。',
+    source: PRM },
+  { id: 'q-05-m4-3-b', pointId: '05-M4.3', type: 'choice',
+    question: 'Uesato 等在 GSM8K 上比较过程与结果监督，得到什么结论？',
+    options: ['过程监督在最终答案错误率上大幅领先', '纯结果监督能以更少标注达到相近的最终答案错误率；但要保证推理步骤正确，需要过程监督或模仿过程反馈的奖励模型', '结果监督完全无效', '两者都不能提升'],
+    answer: 1,
+    explanation: '论文把最终答案错误率从 16.8% 降到 12.7%，答案正确样本中的推理错误率从 14.0% 降到 3.4%。',
+    source: PROCOUT },
+  { id: 'q-05-m4-3-c', pointId: '05-M4.3', type: 'short',
+    question: '比较 PRM 与 ORM 的优缺点与典型用法。',
+    keyPoints: ['ORM：只看最终结果打分，标注便宜（甚至可由答案自动判定），但信号稀疏，可能奖励「答案对但过程错」', 'PRM：逐步打分，信号稠密，能定位错误步骤，更利于可解释与可靠推理', 'PRM 标注成本高（如 PRM800K 的人工步骤标注），步骤划分也有歧义', '典型用法：best-of-N 重排 / 验证器、搜索时引导（如 beam / 树搜索）、RL 中的稠密奖励', 'PRM 用作 RL 奖励时同样可能被 hack，需要谨慎'],
+    explanation: '两篇论文共同表明：只看最终答案正确率时 ORM 已够用，但关注推理过程可靠性时过程监督更有优势。',
+    source: PRM },
+
+  // ---------- 05-M4.5 Agentic RL ----------
+  { id: 'q-05-m4-5-a', pointId: '05-M4.5', type: 'choice',
+    question: 'Search-R1 在多轮「推理 + 搜索」RL 中，为什么要对检索返回的 token 做掩码（retrieved token masking）？',
+    options: ['为了节省显存', '检索内容不是策略生成的，不应计入策略梯度损失；屏蔽它们使 RL 训练更稳定', '为了隐藏隐私', '为了加速检索'],
+    answer: 1,
+    explanation: 'Search-R1 让 LLM 在逐步推理中自主生成搜索查询并接收实时检索结果，用 retrieved token masking 稳定训练，奖励只用简单的结果奖励。',
+    source: SEARCHR1 },
+  { id: 'q-05-m4-5-b', pointId: '05-M4.5', type: 'short',
+    question: '与单轮 RLVR 相比，多轮工具调用的 Agentic RL 有哪些额外难点？',
+    keyPoints: ['轨迹长、奖励稀疏且延迟，信用分配更难', '环境 / 工具返回的 token 需从损失中屏蔽，只优化模型自己生成的部分', 'rollout 需与真实或模拟环境交互，速度慢、有副作用，需要沙箱与异步调度', '训练易不稳定：如回声陷阱（Echo Trap，奖励方差断崖与梯度尖峰）', '奖励设计：结果奖励 + 格式 / 过程奖励，防止 reward hacking'],
+    explanation: 'RAGEN 论文研究多轮 Agent RL（StarPO 框架），报告了 Echo Trap 现象及稳定化方法。',
+    source: RAGEN },
+  { id: 'q-05-m4-5-c', pointId: '05-M4.5', type: 'choice',
+    question: 'RAGEN 论文中观察到的「Echo Trap」指什么？',
+    options: ['模型重复用户输入', '多轮 Agent RL 训练中反复出现的不稳定模式：奖励方差断崖式下降并伴随梯度尖峰', '检索结果重复', '日志回显'],
+    answer: 1,
+    explanation: 'RAGEN 提出 StarPO 框架研究多轮 Agent RL，并给出稳定化变体 StarPO-S（轨迹过滤、引入 critic、梯度稳定化）来缓解。',
+    source: RAGEN },
+
+  // ---------- 05-M6.2 提示注入与指令隔离 ----------
+  { id: 'q-05-m6-2-a', pointId: '05-M6.2', type: 'choice',
+    question: 'OpenAI 的 Instruction Hierarchy 工作提出了什么？',
+    options: ['所有指令一律平等', '训练模型区分指令优先级：系统消息 > 用户消息 > 第三方内容（如工具输出）；低优先级内容与高优先级指令冲突时选择性忽略', '禁止模型使用工具', '只接受英文指令'],
+    answer: 1,
+    explanation: '论文认为提示注入等攻击的根源之一是模型把所有输入视为同等优先级，并用合成数据训练出指令层级，提升鲁棒性且对常规能力影响很小。',
+    source: IHIER },
+  { id: 'q-05-m6-2-b', pointId: '05-M6.2', type: 'choice',
+    question: 'StruQ 防御提示注入的思路是？',
+    options: ['关键词过滤', '结构化查询：用安全前端把提示与数据放进不同的、带保留分隔符的通道，并用结构化指令微调让模型只执行提示部分的指令、忽略数据中的指令', '加大模型', '人工审核所有输入'],
+    answer: 1,
+    explanation: 'StruQ 把指令与数据从格式上分离，再训练模型遵循这种分离。',
+    source: STRUQ },
+  { id: 'q-05-m6-2-c', pointId: '05-M6.2', type: 'short',
+    question: '从训练与提示两方面列举防御间接提示注入的手段。',
+    keyPoints: ['训练侧：指令层级训练，让模型优先遵循系统 / 开发者指令', '训练侧：结构化指令微调（如 StruQ），区分指令通道与数据通道', '提示侧：Spotlighting——用分隔符、数据标记或编码（如 base64）标示外部内容来源', '系统侧：最小权限、高风险操作人工确认、隔离不可信内容（Dual LLM）', '评测：持续做注入攻击红队测试，没有单一方法能彻底解决'],
+    explanation: 'Spotlighting 论文提出 delimiting、datamarking、encoding 三种变换，在实验中大幅降低了攻击成功率。',
+    source: SPOTLIGHT },
+
+  // ---------- 05-M7.2 RL Infra ----------
+  { id: 'q-05-m7-2-a', pointId: '05-M7.2', type: 'choice',
+    question: 'HybridFlow（verl）的核心设计是？',
+    options: ['只用单控制器', '把单控制器与多控制器范式混合：单控制器灵活编排 RLHF 数据流，多控制器高效执行各节点内的分布式计算；并用 3D-HybridEngine 在训练与生成间高效重分片 Actor', '只用 CPU', '不支持 PPO'],
+    answer: 1,
+    explanation: '摘要：传统单控制器调度开销大，现有多控制器方案不够灵活，HybridFlow 将两者混合；3D-HybridEngine 实现训练与生成阶段间零冗余的 Actor 重分片。',
+    source: HYBRIDFLOW },
+  { id: 'q-05-m7-2-b', pointId: '05-M7.2', type: 'short',
+    question: 'LLM 的 RL 训练系统有哪些主要瓶颈？常见的工程方案有哪些？',
+    keyPoints: ['rollout（生成）往往占大部分时间，长 CoT 下更明显，需要接入 vLLM 等高效推理引擎', '训练与推理需要不同的并行布局，权重要在两者间同步 / 重分片', '多模型（actor / critic / ref / RM）的放置：共置（colocate）分时复用 vs 分离部署', '长尾样本导致负载不均：异步 rollout、动态批处理', '框架：OpenRLHF（Ray + vLLM）、verl（HybridFlow）等'],
+    explanation: 'OpenRLHF 论文说明了用 Ray 调度、用 vLLM 加速生成的设计；HybridFlow 论文讨论了模型放置与重分片。',
+    source: OPENRLHF },
+  { id: 'q-05-m7-2-c', pointId: '05-M7.2', type: 'choice',
+    question: 'OpenRLHF 框架主要用什么来加速 RLHF 中的样本生成？',
+    options: ['纯 PyTorch 逐 token 生成', '集成 vLLM 做生成，并用 Ray 进行分布式调度', '只用 CPU 推理', '不做生成'],
+    answer: 1,
+    explanation: 'OpenRLHF 论文介绍其基于 Ray、vLLM、DeepSpeed 与 HuggingFace Transformers 构建，以提升 RLHF 训练效率。',
+    source: OPENRLHF },
+
+  // ---------- 05-M7.3 Reward Hacking ----------
+  { id: 'q-05-m7-3-a', pointId: '05-M7.3', type: 'choice',
+    question: '什么是 reward hacking？',
+    options: ['黑客攻击奖励服务器', '策略利用奖励函数的缺陷或歧义获得高奖励，却没有真正完成预期任务', '奖励太低', '训练太慢'],
+    answer: 1,
+    explanation: 'Lilian Weng 的综述把它定义为 RL agent 利用奖励函数的缺陷或模糊之处获得高奖励而没有真正学会预期任务，在 RLHF 中尤为常见（如迎合、篡改单元测试）。',
+    source: WENG_RH },
+  { id: 'q-05-m7-3-b', pointId: '05-M7.3', type: 'short',
+    question: 'RL 训练中如何发现和排查 reward hacking / 过优化？',
+    keyPoints: ['监控代理奖励与独立评估（金标准 RM、人工抽检、下游基准）是否背离', '监控回答长度、KL、熵等统计量的异常变化（如长度暴涨）', '人工阅读高奖励样本，寻找钻空子的模式（套话、格式投机、改测试）', '对可验证任务加强判定器的鲁棒性，堵住漏洞', '缓解：KL 约束、早停、RM 集成 / 迭代更新、加长度惩罚'],
+    explanation: 'Gao 等定量表明代理 RM 分数持续上升时金标准分数会先升后降；Weng 的综述总结了检测与缓解方法。',
+    source: RMOVER },
+  { id: 'q-05-m7-3-c', pointId: '05-M7.3', type: 'choice',
+    question: '在 Gao 等的 RL 实验里，KL 惩罚系数对过度优化有什么作用？',
+    options: ['KL 惩罚让金标准分数无限增长', 'KL 惩罚限制了策略离初始模型的距离，但在相同 KL 距离下并没有改善金标准分数与 KL 的关系曲线，作用类似早停', '没有影响', 'KL 惩罚会导致训练崩溃'],
+    answer: 1,
+    explanation: '论文发现加大 KL 惩罚系数使训练停在更小的 KL 处，但金标准 RM 分数关于 KL 距离的前沿基本不变，因此其效果近似于提前停止。',
+    source: RMOVER },
 ]

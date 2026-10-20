@@ -433,7 +433,9 @@ function Play({ view, onBack, onFinish }: { view: Extract<View, { kind: 'play' }
       {((q.type === 'choice' && picked !== null) || (q.type !== 'choice' && revealed)) && (
         <div className="rounded-md bg-muted/60 p-3 text-xs leading-relaxed space-y-1">
           <p><span className="font-medium">解析：</span>{q.explanation}</p>
-          {q.source && <p>出处：<a href={q.source.url} target="_blank" rel="noreferrer" className="text-primary hover:underline underline-offset-2">{q.source.title}</a></p>}
+          <p>出处：{[q.source, ...(q.extraSources ?? [])].map((s, k) => (
+            <span key={s.url}>{k > 0 && '；'}<a href={s.url} target="_blank" rel="noreferrer" className="text-primary hover:underline underline-offset-2">{s.title}</a></span>
+          ))}</p>
         </div>
       )}
 
